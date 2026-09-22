@@ -8,9 +8,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 try {
   if (window.supabase) {
     // Supabase client oluştur
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // Kolay erişim için global değişkene ata
-    window.supabaseClient = supabase;
+    window.supabaseClient = sbClient;
   } else {
     console.warn("Supabase kütüphanesi yüklenemedi. (İnternet bağlantısı olmayabilir veya CDN engellenmiş olabilir)");
     window.supabaseClient = null;
