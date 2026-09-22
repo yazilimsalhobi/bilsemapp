@@ -409,10 +409,17 @@ const DataHelpers = {
     // Sonraki günlerin dersleri
     const dayOrder = ['Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
     const todayName = BILSEM_DATA.dayIndexMap[now.getDay()];
-    const todayIdx = dayOrder.indexOf(todayName);
+    let todayIdx = dayOrder.indexOf(todayName);
+
+    // Bugün aktif gün değilse (Pazar veya Pazartesi), en yakın aktif güne göre ayarla
+    if (todayIdx === -1) {
+      // Haftanın günü: 0=Pazar, 1=Pazartesi
+      // Salı (index 0 in dayOrder) en yakın aktif gün
+      todayIdx = -1; // Döngü i=1'den başladığı için (0+1)%5=1 yerine -1 bırakıp offset hesaplamasını düzelt
+    }
 
     for (let i = 1; i <= 7; i++) {
-      const nextIdx = (todayIdx + i) % dayOrder.length;
+      const nextIdx = ((todayIdx + i) % dayOrder.length + dayOrder.length) % dayOrder.length;
       const nextDay = dayOrder[nextIdx];
       const groups = this.getGroupsByDay(nextDay);
       if (groups.length > 0) {

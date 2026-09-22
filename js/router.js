@@ -57,7 +57,10 @@ const Router = {
       App.closeModal();
     }
 
-    if (this.currentPage === page && params.length === 0) return;
+    // Sadece tam aynı sayfa+parametre ise atla
+    const paramsStr = params.join('/');
+    if (this.currentPage === page && this._lastParams === paramsStr) return;
+    this._lastParams = paramsStr;
 
     const container = this.pageContainer;
     if (!container) return;

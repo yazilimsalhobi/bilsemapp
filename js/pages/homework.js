@@ -192,9 +192,8 @@ const HomeworkPage = {
         <label class="form-label">Son Teslim Tarihi</label>
         <input type="date" class="form-input" id="hw-due">
       </div>
-      <div style="display: flex; gap: 8px; margin-top: var(--space-lg);">
-        <button class="btn btn-primary btn-block" onclick="HomeworkPage.createHomework()">💾 Kaydet</button>
-      </div>
+    `, `
+      <button class="btn btn-primary btn-block btn-lg" onclick="HomeworkPage.createHomework()">💾 Kaydet</button>
     `);
   },
 

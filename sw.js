@@ -3,7 +3,7 @@
  * Offline çalışma, cache yönetimi
  */
 
-const CACHE_NAME = 'bilsem-v5';
+const CACHE_NAME = 'bilsem-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -11,9 +11,12 @@ const ASSETS = [
   './css/components.css',
   './css/animations.css',
   './js/data.js',
+  './js/supabase.js',
   './js/store.js',
+  './js/auth.js',
   './js/router.js',
   './js/notifications.js',
+  './js/pages/login.js',
   './js/pages/home.js',
   './js/pages/schedule.js',
   './js/pages/attendance.js',
@@ -21,8 +24,11 @@ const ASSETS = [
   './js/pages/students.js',
   './js/pages/stats.js',
   './js/pages/settings.js',
+  './js/pages/annual_plan.js',
+  './js/pages/competitions.js',
   './js/app.js',
   './manifest.json',
+  './favicon.ico',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',

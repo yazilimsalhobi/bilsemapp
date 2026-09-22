@@ -11,9 +11,9 @@ const HomePage = {
 
     const now = new Date();
     const dayName = DataHelpers.getDayName(now);
-    const todayGroups = DataHelpers.getTodayGroups();
-    const currentLesson = DataHelpers.getCurrentLesson();
-    const nextLesson = DataHelpers.getNextLesson();
+    let todayGroups = DataHelpers.getTodayGroups();
+    let currentLesson = DataHelpers.getCurrentLesson();
+    let nextLesson = DataHelpers.getNextLesson();
     const stats = Store.getOverallStats();
     const dayColor = BILSEM_DATA.dayColors[dayName];
     const teacherFirst = BILSEM_DATA.school?.teacher ? BILSEM_DATA.school.teacher.split(' ')[0] : '';
@@ -192,7 +192,7 @@ const HomePage = {
         ${groups.map(group => {
           const isActive = currentLesson && currentLesson.id === group.id;
           const color = group.color;
-          const todayDate = DataHelpers.formatDate(new Date());
+          const todayDate = DataHelpers.formatDateShort(new Date());
           const savedNote = Store.getNote(group.id, todayDate)?.note || '';
           
           return `

@@ -213,14 +213,14 @@ const StatsPage = {
   },
 
   exportEOkul() {
-    let csvContent = "Ogrenci No,Adi Soyadi,Devamsizlik Sayisi\\n";
+    let csvContent = "Ogrenci No,Adi Soyadi,Devamsizlik Sayisi\n";
     BILSEM_DATA.groups.forEach(group => {
       const stats = Store.getAttendanceStats(group.id);
       if (stats) {
         Object.entries(stats).forEach(([id, stat]) => {
           if (stat.absent > 0) {
             // Gerçek bir e-okul sisteminde öğrenci no gereklidir.
-            csvContent += `${id},${stat.name},${stat.absent}\\n`;
+            csvContent += `${id},${stat.name},${stat.absent}\n`;
           }
         });
       }
@@ -240,12 +240,12 @@ const StatsPage = {
     const overallStats = Store.getOverallStats();
     const subject = encodeURIComponent("Fatsa BİLSEM - Haftalık İstatistik Raporu");
     const body = encodeURIComponent(
-      `Merhaba,\\n\\n` +
-      `Fatsa BİLSEM güncel istatistik raporu aşağıdadır:\\n\\n` +
-      `- Toplam Yoklama Sayısı: ${overallStats.totalSessions}\\n` +
-      `- Ortalama Devam Oranı: %${overallStats.attendanceRate}\\n` +
-      `- Verilen Toplam Ödev: ${overallStats.totalHomework}\\n` +
-      `- Tamamlanan Ödev: ${overallStats.completedHomework}\\n\\n` +
+      `Merhaba,\n\n` +
+      `Fatsa BİLSEM güncel istatistik raporu aşağıdadır:\n\n` +
+      `- Toplam Yoklama Sayısı: ${overallStats.totalSessions}\n` +
+      `- Ortalama Devam Oranı: %${overallStats.attendanceRate}\n` +
+      `- Verilen Toplam Ödev: ${overallStats.totalHomework}\n` +
+      `- Tamamlanan Ödev: ${overallStats.completedHomework}\n\n` +
       `İyi çalışmalar dilerim.`
     );
     

@@ -4,42 +4,63 @@
 
 const App = {
   async init() {
-    // Auth sistemini (Supabase) başlat ve oturumu bekle
-    await Auth.init();
+    try {
+      // Auth sistemini (Supabase) başlat ve oturumu bekle
+      await Auth.init();
 
-    // Tüm bulut verilerini (Gruplar, Öğrenciler, Yoklamalar) yükle
-    await Store.loadAllFromSupabase();
+      // Tüm bulut verilerini (Gruplar, Öğrenciler, Yoklamalar) yükle
+      await Store.loadAllFromSupabase();
 
-    // Kayıtlı verileri yükle (okul bilgisi vb.)
-    this.loadSavedData();
+      // Kayıtlı verileri yükle (okul bilgisi vb.)
+      this.loadSavedData();
 
-    // Toast sistemini başlat
-    Toast.init();
+      // Toast sistemini başlat
+      Toast.init();
 
-    // Router'ı başlat
-    this.setupRouter();
-    Router.init();
-    this.updateNavigationVisibility();
+      // Router'ı başlat
+      this.setupRouter();
+      Router.init();
+      this.updateNavigationVisibility();
 
-    // Bottom nav event'leri
-    this.setupNavigation();
+      // Bottom nav event'leri
+      this.setupNavigation();
 
-    // Bildirim sistemini başlat
-    Notifications.init();
+      // Bildirim sistemini başlat
+      Notifications.init();
 
-    // Tema yönetimi
-    this.loadTheme();
+      // Tema yönetimi
+      this.loadTheme();
 
-    // Splash screen kaldır
-    setTimeout(() => {
-      const splash = document.getElementById('splash-screen');
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => splash.remove(), 500);
+      console.log('🏫 Fatsa BİLSEM App başlatıldı!');
+    } catch (error) {
+      console.error('🚨 Uygulama başlatılırken hata:', error);
+      
+      // Toast sistemi henüz hazır olmayabilir, init et
+      if (!Toast.container) Toast.init();
+      Toast.show('Bağlantı hatası oluştu. Lütfen sayfayı yenileyin.', 'error', 8000);
+
+      // Yerel verilerle çalışmayı dene
+      try {
+        this.loadSavedData();
+        if (!Toast.container) Toast.init();
+        this.setupRouter();
+        Router.init();
+        this.updateNavigationVisibility();
+        this.setupNavigation();
+        this.loadTheme();
+      } catch (fallbackError) {
+        console.error('🚨 Yedek başlatma da başarısız:', fallbackError);
       }
-    }, 1200);
-
-    console.log('🏫 Fatsa BİLSEM App başlatıldı!');
+    } finally {
+      // Splash screen'i her durumda kaldır
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => splash.remove(), 500);
+        }
+      }, 800);
+    }
   },
 
   setupRouter() {

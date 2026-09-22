@@ -90,7 +90,6 @@ const AttendancePage = {
 
     const statuses = BILSEM_DATA.attendanceStatuses;
 
-    return `
     const user = Auth.getCurrentUser();
     const isParent = user && user.role === 'parent';
     

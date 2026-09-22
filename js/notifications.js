@@ -85,9 +85,10 @@ const Notifications = {
     todayGroups.forEach(group => {
       const lessonMinutes = DataHelpers.timeToMinutes(group.startTime);
       const diff = lessonMinutes - currentMinutes;
+      const reminderMin = Store.getSetting('reminderMinutes', 10);
 
-      // 10 dakika önce hatırlatma
-      if (diff === 10) {
+      // Ayarlanan süre önce hatırlatma
+      if (diff === reminderMin) {
         this.send(
           '📚 Ders Yaklaşıyor!',
           `${group.name} - ${group.subject}\n${group.startTime} - ${group.endTime}\n${group.students.length} öğrenci`,

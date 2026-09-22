@@ -630,7 +630,7 @@ const SettingsPage = {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
-      const lines = text.split('\\n');
+      const lines = text.split('\n');
       let count = 0;
 
       lines.forEach(line => {

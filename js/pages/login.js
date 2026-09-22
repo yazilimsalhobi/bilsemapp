@@ -48,7 +48,7 @@ const LoginPage = {
               <label class="form-label">Öğrenci Numarası (Sadece Veliler İçin)</label>
               <input type="text" id="reg-student-id" class="form-input" placeholder="Örn: s001 (İsteğe bağlı)">
             </div>
-            <button class="btn btn-primary btn-block" style="background: var(--success); border-color: var(--success);" onclick="LoginPage.handleRegister()" style="margin-top: var(--space-md);">Kayıt Ol</button>
+            <button class="btn btn-primary btn-block" style="background: var(--success); border-color: var(--success); margin-top: var(--space-md);" onclick="LoginPage.handleRegister()">Kayıt Ol</button>
           </div>
 
           <div class="divider" style="margin: var(--space-lg) 0;">veya</div>

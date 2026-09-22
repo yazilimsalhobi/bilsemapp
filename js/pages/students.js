@@ -273,7 +273,8 @@ const StudentsPage = {
         <label class="form-label">Telefon Numarası</label>
         <input type="tel" class="form-input" id="parent-phone" value="${existing?.parentPhone || ''}" placeholder="05XX XXX XX XX">
       </div>
-      <button class="btn btn-primary btn-block" onclick="StudentsPage.saveParentInfo('${studentId}')" style="margin-top: var(--space-md);">💾 Kaydet</button>
+    `, `
+      <button class="btn btn-primary btn-block btn-lg" onclick="StudentsPage.saveParentInfo('${studentId}')">💾 Kaydet</button>
     `);
   },
 
@@ -301,7 +302,8 @@ const StudentsPage = {
       <div class="form-group">
         <textarea class="form-input" id="student-note-input" rows="4" placeholder="Sağlık durumu, özel ilgi alanı, vb.">${note}</textarea>
       </div>
-      <button class="btn btn-primary btn-block" onclick="StudentsPage.saveStudentNote('${studentId}')" style="margin-top: var(--space-md);">💾 Kaydet</button>
+    `, `
+      <button class="btn btn-primary btn-block btn-lg" onclick="StudentsPage.saveStudentNote('${studentId}')">💾 Kaydet</button>
     `);
   },
 
