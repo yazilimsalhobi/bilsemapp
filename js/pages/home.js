@@ -17,7 +17,17 @@ const HomePage = {
     const stats = Store.getOverallStats();
     const dayColor = BILSEM_DATA.dayColors[dayName];
     const teacherFirst = BILSEM_DATA.school?.teacher ? BILSEM_DATA.school.teacher.split(' ')[0] : '';
-    const welcomeGreeting = teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim';
+    const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
+    const isParent = user && user.role === 'parent';
+    const welcomeGreeting = isParent ? `${user.studentName} Velisi` : (teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim');
+
+    if (isParent) {
+      // Veli ise, sadece öğrencisinin olduğu dersleri filtrele
+      const filterGroups = (groups) => groups.filter(g => g.students.some(s => s.id === user.studentId));
+      todayGroups = filterGroups(todayGroups);
+      if (currentLesson && !currentLesson.students.some(s => s.id === user.studentId)) currentLesson = null;
+      if (nextLesson && !nextLesson.students.some(s => s.id === user.studentId)) nextLesson = null;
+    }
 
     container.innerHTML = `
       <div class="page-container fade-in">
@@ -28,9 +38,10 @@ const HomePage = {
         </div>
 
         <!-- Aktif / Sonraki Ders -->
-        ${currentLesson ? this.renderCurrentLesson(currentLesson) : ''}
+        ${currentLesson ? this.renderCurrentLesson(currentLesson, isParent) : ''}
         ${!currentLesson && nextLesson ? this.renderNextLesson(nextLesson) : ''}
 
+        ${isParent ? '' : `
         <!-- Hızlı Eylemler -->
         <div class="section">
           <div class="section-header">
@@ -52,6 +63,18 @@ const HomePage = {
             <div class="quick-action" onclick="Router.go('stats')">
               <div class="quick-action-icon" style="background: rgba(253,203,110,0.15);">📊</div>
               <span class="quick-action-label">İstatistik</span>
+            </div>
+            <div class="quick-action" onclick="Router.go('settings')">
+              <div class="quick-action-icon" style="background: rgba(108,92,231,0.15);">⚙️</div>
+              <span class="quick-action-label">Ayarlar</span>
+            </div>
+            <div class="quick-action" onclick="Router.go('annual_plan')">
+              <div class="quick-action-icon" style="background: rgba(253,121,168,0.15);">📅</div>
+              <span class="quick-action-label">Yıllık Plan</span>
+            </div>
+            <div class="quick-action" onclick="Router.go('competitions')">
+              <div class="quick-action-icon" style="background: rgba(255,159,67,0.15);">🏆</div>
+              <span class="quick-action-label">Yarışmalar</span>
             </div>
           </div>
         </div>
@@ -85,17 +108,34 @@ const HomePage = {
           </div>
         </div>
 
+        <!-- Hatırlatmalarım -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">📌 Hatırlatmalarım</h2>
+          </div>
+          <div class="todo-container" style="background: var(--bg-card); border-radius: var(--radius-md); padding: var(--space-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <input type="text" id="new-todo-input" class="form-input" placeholder="Yeni hatırlatma ekle..." style="flex: 1;" onkeypress="if(event.key === 'Enter') HomePage.addTodo()">
+              <button class="btn btn-primary" onclick="HomePage.addTodo()">Ekle</button>
+            </div>
+            <div id="todo-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;">
+              <!-- ToDos here -->
+            </div>
+          </div>
+        </div>
+        `}
+
         <!-- Bugünün Dersleri -->
         <div class="section">
           <div class="section-header">
             <h2 class="section-title">${todayGroups.length > 0 ? '📅 Bugünün Dersleri' : '🌙 Bugün Ders Yok'}</h2>
-            ${todayGroups.length > 0 ? '<button class="section-action" onclick="Router.go(\'schedule\')">Tümünü Gör →</button>' : ''}
+            ${todayGroups.length > 0 && !isParent ? '<button class="section-action" onclick="Router.go(\'schedule\')">Tümünü Gör →</button>' : ''}
           </div>
-          ${todayGroups.length > 0 ? this.renderTodayGroups(todayGroups, currentLesson) : this.renderNoLesson()}
+          ${todayGroups.length > 0 ? this.renderTodayGroups(todayGroups, currentLesson, isParent) : this.renderNoLesson()}
         </div>
 
         <!-- Yaklaşan Ödevler -->
-        ${this.renderUpcomingHomework()}
+        ${this.renderUpcomingHomework(isParent)}
       </div>
     `;
 
@@ -103,9 +143,12 @@ const HomePage = {
     if (nextLesson || currentLesson) {
       this.startCountdown(nextLesson || currentLesson, !!currentLesson);
     }
+    
+    // Hatırlatmaları yükle
+    this.renderTodos();
   },
 
-  renderCurrentLesson(lesson) {
+  renderCurrentLesson(lesson, isParent = false) {
     return `
       <div class="countdown card-glass active-lesson-card glow-ring" style="border: 1px solid var(--success); margin-bottom: var(--space-lg);">
         <div class="countdown-info">
@@ -114,11 +157,13 @@ const HomePage = {
           <div style="font-size: var(--font-sm); color: var(--text-tertiary); margin-top: 2px;">
             ${lesson.subject} • ${lesson.startTime} - ${lesson.endTime}
           </div>
+          ${!isParent ? `
           <div style="margin-top: 8px; display: flex; gap: 8px;">
             <button class="btn btn-success btn-sm" onclick="Router.go('attendance', '${lesson.id}')">
               ✅ Yoklama Al
             </button>
           </div>
+          ` : ''}
         </div>
         <div class="countdown-timer" id="countdown-display">--:--</div>
       </div>
@@ -141,16 +186,19 @@ const HomePage = {
     `;
   },
 
-  renderTodayGroups(groups, currentLesson) {
+  renderTodayGroups(groups, currentLesson, isParent = false) {
     return `
       <div class="stagger-children">
         ${groups.map(group => {
           const isActive = currentLesson && currentLesson.id === group.id;
           const color = group.color;
+          const todayDate = DataHelpers.formatDate(new Date());
+          const savedNote = Store.getNote(group.id, todayDate)?.note || '';
+          
           return `
-            <div class="group-card ${isActive ? 'active-lesson' : ''}" onclick="Router.go('attendance', '${group.id}')" style="--card-color: ${color};">
+            <div class="group-card ${isActive ? 'active-lesson' : ''}" style="--card-color: ${color}; cursor: default;">
               <div style="position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: ${color};"></div>
-              <div class="group-card-header">
+              <div class="group-card-header" ${!isParent ? `onclick="Router.go('attendance', '${group.id}')" style="cursor: pointer;"` : ''}>
                 <div class="group-card-info">
                   <div class="group-card-name">${group.name}</div>
                   <div class="group-card-subject">${group.subject}</div>
@@ -160,7 +208,8 @@ const HomePage = {
                 </div>
               </div>
               ${isActive ? '<span class="active-badge">CANLI</span>' : ''}
-              <div class="group-card-students">
+              
+              <div class="group-card-students" style="margin-top: 12px;">
                 <div class="student-avatars">
                   ${group.students.slice(0, 4).map((s, i) => {
                     const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E'];
@@ -169,6 +218,22 @@ const HomePage = {
                   ${group.students.length > 4 ? `<div class="student-avatar" style="background: var(--bg-glass-strong); color: var(--text-secondary); font-size: 0.6rem;">+${group.students.length - 4}</div>` : ''}
                 </div>
                 <span class="student-count">${group.students.length} öğrenci</span>
+              </div>
+              
+              <div class="group-card-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05);">
+                 <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
+                   <strong style="color: var(--text-primary);">🎯 Kazanım:</strong> 
+                   <span ${!isParent ? 'contenteditable="true"' : ''}
+                         ${!isParent ? `onblur="Store.saveNote('${group.id}', '${todayDate}', this.innerText)"` : ''} 
+                         style="${!isParent ? 'border-bottom: 1px dashed rgba(255,255,255,0.3);' : ''} outline: none; min-width: 100px; display: inline-block; padding: 2px 4px;" 
+                         data-placeholder="${!isParent ? 'Kazanım girmek için tıklayın...' : 'Henüz girilmedi'}">${savedNote}</span>
+                 </div>
+                 ${!isParent ? `
+                 <div style="display: flex; gap: 8px;">
+                   <button class="btn btn-sm" style="flex: 1; background: rgba(0, 184, 148, 0.15); color: #00B894; border: 1px solid rgba(0, 184, 148, 0.3);" onclick="Router.go('attendance', '${group.id}')">✅ Yoklama Al</button>
+                   <button class="btn btn-sm" style="flex: 1; background: rgba(108, 92, 231, 0.15); color: #A29BFE; border: 1px solid rgba(108, 92, 231, 0.3);" onclick="Router.go('homework', '${group.id}')">📝 Ödev Ver</button>
+                 </div>
+                 ` : ''}
               </div>
             </div>
           `;
@@ -187,8 +252,17 @@ const HomePage = {
     `;
   },
 
-  renderUpcomingHomework() {
-    const activeHw = Store.getActiveHomework();
+  renderUpcomingHomework(isParent = false) {
+    let activeHw = Store.getActiveHomework();
+    const user = Auth.getCurrentUser();
+    
+    if (isParent) {
+      activeHw = activeHw.filter(hw => {
+        const group = DataHelpers.getGroupById(hw.groupId);
+        return group && group.students.some(s => s.id === user.studentId);
+      });
+    }
+
     if (activeHw.length === 0) return '';
 
     return `
@@ -270,5 +344,45 @@ const HomePage = {
 
     update();
     this.countdownInterval = setInterval(update, 30000);
+  },
+
+  renderTodos() {
+    const list = document.getElementById('todo-list');
+    if (!list) return;
+    const todos = Store.getTodos().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (todos.length === 0) {
+      list.innerHTML = '<div style="text-align: center; color: var(--text-tertiary); font-size: 0.9rem; padding: 16px;">Henüz hatırlatma eklenmemiş.</div>';
+      return;
+    }
+    list.innerHTML = todos.map(t => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border-left: 3px solid ${t.completed ? 'var(--success)' : 'var(--primary)'}; opacity: ${t.completed ? '0.6' : '1'};">
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer;" onclick="HomePage.toggleTodo('${t.id}')">
+          <input type="checkbox" ${t.completed ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+          <span style="font-size: 0.95rem; text-decoration: ${t.completed ? 'line-through' : 'none'};">${t.text}</span>
+        </div>
+        <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 0.7rem; min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px;" onclick="HomePage.deleteTodo('${t.id}')">✕</button>
+      </div>
+    `).join('');
+  },
+
+  addTodo() {
+    const input = document.getElementById('new-todo-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (text) {
+      Store.saveTodo(text);
+      input.value = '';
+      this.renderTodos();
+    }
+  },
+
+  toggleTodo(id) {
+    Store.toggleTodo(id);
+    this.renderTodos();
+  },
+
+  deleteTodo(id) {
+    Store.deleteTodo(id);
+    this.renderTodos();
   }
 };

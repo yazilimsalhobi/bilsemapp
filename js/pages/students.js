@@ -111,6 +111,8 @@ const StudentsPage = {
     const parentInfo = Store.getParentInfo(studentId);
     const attendanceRecords = Store.getStudentAttendance(studentId);
     const group = DataHelpers.getGroupById(student.groupId);
+    const studentNoteObj = Store.getStudentNote(studentId);
+    const studentNote = studentNoteObj?.note || student.note || '';
 
     // İstatistikler
     const totalSessions = attendanceRecords.length;
@@ -138,7 +140,7 @@ const StudentsPage = {
           <div style="color: var(--text-tertiary); font-size: var(--font-sm);">
             ${student.groupName} • ${student.subject} • ${student.day}
           </div>
-          ${student.note ? `<div class="chip" style="margin-top: 8px;">📍 ${student.note}</div>` : ''}
+          ${studentNote ? `<div class="chip" style="margin-top: 8px;">📍 ${studentNote.length > 50 ? studentNote.substring(0, 50) + '...' : studentNote}</div>` : ''}
         </div>
 
         <!-- Devam İstatistikleri -->
@@ -178,6 +180,17 @@ const StudentsPage = {
           </div>
           <div class="card" id="parent-info-card">
             ${this.renderParentInfo(studentId, parentInfo)}
+          </div>
+        </div>
+
+        <!-- Özel Durum -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">📌 Özel Durum / Not</h2>
+            <button class="section-action" onclick="StudentsPage.editStudentNote('${studentId}')">✏️ Düzenle</button>
+          </div>
+          <div class="card" style="padding: var(--space-md); line-height: 1.5; color: ${studentNote ? 'var(--text-primary)' : 'var(--text-tertiary)'};">
+            ${studentNote ? studentNote.replace(/\n/g, '<br>') : 'Henüz özel bir durum eklenmemiş.'}
           </div>
         </div>
 
@@ -273,6 +286,30 @@ const StudentsPage = {
     Toast.show('Veli bilgileri kaydedildi! ✅', 'success');
 
     // Sayfayı yenile
+    this.renderStudentDetail(document.getElementById('page-content'), studentId);
+  },
+
+  editStudentNote(studentId) {
+    const student = DataHelpers.getStudentById(studentId);
+    const existingObj = Store.getStudentNote(studentId);
+    const note = existingObj?.note || student.note || '';
+
+    App.showModal('📌 Özel Durum Ekle', `
+      <p style="color: var(--text-tertiary); font-size: var(--font-sm); margin-bottom: var(--space-md);">
+        ${student?.name || ''} — Öğrenci ile ilgili özel durum veya not ekleyin
+      </p>
+      <div class="form-group">
+        <textarea class="form-input" id="student-note-input" rows="4" placeholder="Sağlık durumu, özel ilgi alanı, vb.">${note}</textarea>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="StudentsPage.saveStudentNote('${studentId}')" style="margin-top: var(--space-md);">💾 Kaydet</button>
+    `);
+  },
+
+  saveStudentNote(studentId) {
+    const note = document.getElementById('student-note-input')?.value?.trim() || '';
+    Store.saveStudentNote(studentId, note);
+    App.closeModal();
+    Toast.show('Özel durum kaydedildi! ✅', 'success');
     this.renderStudentDetail(document.getElementById('page-content'), studentId);
   },
 

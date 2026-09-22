@@ -55,7 +55,14 @@ const SchedulePage = {
   },
 
   renderDaySchedule(day) {
-    const groups = DataHelpers.getGroupsByDay(day);
+    let groups = DataHelpers.getGroupsByDay(day);
+    const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
+    const isParent = user && user.role === 'parent';
+
+    if (isParent) {
+      groups = groups.filter(g => g.students.some(s => s.id === user.studentId));
+    }
+
     const dayColor = BILSEM_DATA.dayColors[day];
     const now = new Date();
     const isToday = DataHelpers.getDayName(now) === day;
@@ -125,6 +132,7 @@ const SchedulePage = {
               </div>
 
               <!-- Aksiyon Butonları -->
+              ${!isParent ? `
               <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
                 <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="event.stopPropagation(); Router.go('attendance', '${group.id}')">
                   ✅ Yoklama
@@ -136,6 +144,7 @@ const SchedulePage = {
                   👁️
                 </button>
               </div>
+              ` : ''}
             </div>
           `;
         }).join('')}

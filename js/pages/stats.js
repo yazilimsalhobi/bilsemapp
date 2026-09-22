@@ -107,10 +107,27 @@ const StatsPage = {
           </div>
         </div>
 
+        <!-- Raporlar ve e-Okul -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">📄 Rapor Gönderimi & e-Okul</h2>
+          </div>
+          <div class="card" style="padding: var(--space-lg);">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <button class="btn btn-success btn-block" onclick="StatsPage.exportEOkul()">
+                🏫 e-Okul Formatında İndir (Devamsızlık CSV)
+              </button>
+              <button class="btn btn-primary btn-block" onclick="StatsPage.sendEmailReport()">
+                ✉️ Genel Raporu E-posta ile Gönder
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Veri Yönetimi -->
         <div class="section">
           <div class="section-header">
-            <h2 class="section-title">⚙️ Veri Yönetimi</h2>
+            <h2 class="section-title">⚙️ Veri Yönetimi (Yedek)</h2>
           </div>
           <div class="card" style="padding: var(--space-lg);">
             <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -193,6 +210,46 @@ const StatsPage = {
     a.click();
     URL.revokeObjectURL(url);
     Toast.show('Veriler dışa aktarıldı! 📤', 'success');
+  },
+
+  exportEOkul() {
+    let csvContent = "Ogrenci No,Adi Soyadi,Devamsizlik Sayisi\\n";
+    BILSEM_DATA.groups.forEach(group => {
+      const stats = Store.getAttendanceStats(group.id);
+      if (stats) {
+        Object.entries(stats).forEach(([id, stat]) => {
+          if (stat.absent > 0) {
+            // Gerçek bir e-okul sisteminde öğrenci no gereklidir.
+            csvContent += `${id},${stat.name},${stat.absent}\\n`;
+          }
+        });
+      }
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `eOkul_Devamsizlik_${DataHelpers.formatDateShort()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    Toast.show('e-Okul CSV dosyası indirildi! 🏫', 'success');
+  },
+
+  sendEmailReport() {
+    const overallStats = Store.getOverallStats();
+    const subject = encodeURIComponent("Fatsa BİLSEM - Haftalık İstatistik Raporu");
+    const body = encodeURIComponent(
+      `Merhaba,\\n\\n` +
+      `Fatsa BİLSEM güncel istatistik raporu aşağıdadır:\\n\\n` +
+      `- Toplam Yoklama Sayısı: ${overallStats.totalSessions}\\n` +
+      `- Ortalama Devam Oranı: %${overallStats.attendanceRate}\\n` +
+      `- Verilen Toplam Ödev: ${overallStats.totalHomework}\\n` +
+      `- Tamamlanan Ödev: ${overallStats.completedHomework}\\n\\n` +
+      `İyi çalışmalar dilerim.`
+    );
+    
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   },
 
   importData(event) {

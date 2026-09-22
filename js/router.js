@@ -29,6 +29,18 @@ const Router = {
     const hash = window.location.hash.slice(1) || 'home';
     const [page, ...params] = hash.split('/');
 
+    // Auth Guard
+    if (page !== 'login' && (!window.Auth || !Auth.isAuthenticated())) {
+      this.navigate('login', []);
+      return;
+    }
+
+    // Zaten giriş yapmışsa login sayfasını atla
+    if (page === 'login' && window.Auth && Auth.isAuthenticated()) {
+      this.navigate('home', []);
+      return;
+    }
+
     if (this.routes[page]) {
       this.navigate(page, params);
     } else {

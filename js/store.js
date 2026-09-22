@@ -10,7 +10,9 @@ const Store = {
     PROJECTS: 'bilsem_projects',
     PARENTS: 'bilsem_parents',
     SETTINGS: 'bilsem_settings',
-    NOTES: 'bilsem_notes'
+    NOTES: 'bilsem_notes',
+    TODOS: 'bilsem_todos',
+    STUDENT_NOTES: 'bilsem_student_notes'
   },
 
   // ==================== GENEL CRUD ====================
@@ -276,6 +278,19 @@ const Store = {
     return this._get(this.KEYS.PARENTS) || {};
   },
 
+  // ==================== ÖĞRENCİ ÖZEL DURUM ====================
+
+  saveStudentNote(studentId, note) {
+    const all = this._get(this.KEYS.STUDENT_NOTES) || {};
+    all[studentId] = { note, updatedAt: new Date().toISOString() };
+    return this._set(this.KEYS.STUDENT_NOTES, all);
+  },
+
+  getStudentNote(studentId) {
+    const all = this._get(this.KEYS.STUDENT_NOTES) || {};
+    return all[studentId] || null;
+  },
+
   // ==================== NOTLAR ====================
 
   saveNote(groupId, date, note) {
@@ -288,6 +303,42 @@ const Store = {
   getNote(groupId, date) {
     const all = this._get(this.KEYS.NOTES) || {};
     return all[`${groupId}_${date}`] || null;
+  },
+
+  // ==================== TO-DO (HATIRLATMALAR) ====================
+
+  getTodos() {
+    return this._get(this.KEYS.TODOS) || [];
+  },
+
+  saveTodo(text) {
+    const all = this.getTodos();
+    const todo = {
+      id: 'todo_' + Date.now(),
+      text,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    all.push(todo);
+    this._set(this.KEYS.TODOS, all);
+    return todo;
+  },
+
+  toggleTodo(id) {
+    const all = this.getTodos();
+    const todo = all.find(t => t.id === id);
+    if (todo) {
+      todo.completed = !todo.completed;
+      this._set(this.KEYS.TODOS, all);
+    }
+    return todo;
+  },
+
+  deleteTodo(id) {
+    const all = this.getTodos();
+    const filtered = all.filter(t => t.id !== id);
+    this._set(this.KEYS.TODOS, filtered);
+    return true;
   },
 
   // ==================== AYARLAR ====================

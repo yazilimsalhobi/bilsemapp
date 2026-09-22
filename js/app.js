@@ -13,6 +13,7 @@ const App = {
     // Router'ı başlat
     this.setupRouter();
     Router.init();
+    this.updateNavigationVisibility();
 
     // Bottom nav event'leri
     this.setupNavigation();
@@ -36,6 +37,7 @@ const App = {
   },
 
   setupRouter() {
+    Router.register('login', (container) => LoginPage.render(container));
     Router.register('home', (container) => HomePage.render(container));
     Router.register('schedule', (container) => SchedulePage.render(container));
     Router.register('attendance', (container, params) => AttendancePage.render(container, params));
@@ -43,6 +45,8 @@ const App = {
     Router.register('students', (container, params) => StudentsPage.render(container, params));
     Router.register('stats', (container) => StatsPage.render(container));
     Router.register('settings', (container) => SettingsPage.render(container));
+    Router.register('annual_plan', (container) => AnnualPlanPage.render(container));
+    Router.register('competitions', (container) => CompetitionsPage.render(container));
   },
 
   setupNavigation() {
@@ -67,6 +71,36 @@ const App = {
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeModal();
+      }
+    });
+  },
+
+  updateNavigationVisibility() {
+    const bottomNav = document.querySelector('.bottom-nav');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    if (!window.Auth || !Auth.isAuthenticated()) {
+      if (bottomNav) bottomNav.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      return;
+    }
+
+    if (bottomNav) bottomNav.style.display = 'flex';
+    if (logoutBtn) logoutBtn.style.display = 'flex';
+
+    const user = Auth.getCurrentUser();
+    const isParent = user.role === 'parent';
+    
+    document.querySelectorAll('.nav-item').forEach(item => {
+      const page = item.dataset.page;
+      if (isParent) {
+        if (['home', 'schedule', 'attendance'].includes(page)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      } else {
+        item.style.display = 'flex';
       }
     });
   },

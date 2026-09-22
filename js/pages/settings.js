@@ -533,6 +533,15 @@ const SettingsPage = {
         <input type="text" class="form-input" id="new-student-name" placeholder="Yeni öğrenci adı soyadı" style="flex: 1;" onkeydown="if(event.key==='Enter') SettingsPage.addStudent('${groupId}')">
         <button class="btn btn-secondary btn-sm" onclick="SettingsPage.addStudent('${groupId}')" style="white-space: nowrap;">➕ Ekle</button>
       </div>
+
+      <div class="divider" style="margin: var(--space-sm) 0;"></div>
+      <div style="text-align: center;">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('csv-upload-${groupId}').click()">
+          📥 Excel/CSV'den Toplu Ekle
+        </button>
+        <input type="file" id="csv-upload-${groupId}" accept=".csv" style="display: none;" onchange="SettingsPage.importCSV(event, '${groupId}')">
+        <div style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 4px;">Sadece isim listesi içeren virgülle ayrılmış bir .csv dosyası yükleyin.</div>
+      </div>
     `, `
       <button class="btn btn-primary btn-block btn-lg" onclick="SettingsPage.saveGroupStudents('${groupId}')">
         💾 Öğrenci Değişikliklerini Kaydet
@@ -609,6 +618,40 @@ const SettingsPage = {
 
     // Listeyi yenile
     this.editGroupStudents(groupId);
+  },
+
+  importCSV(event, groupId) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const group = DataHelpers.getGroupById(groupId);
+    if (!group) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\\n');
+      let count = 0;
+
+      lines.forEach(line => {
+        const name = line.trim().replace(/;/g, '').replace(/,/g, '');
+        if (name && name.length > 2) {
+          group.students.push({
+            id: 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            name: name,
+            parentName: '',
+            parentPhone: ''
+          });
+          count++;
+        }
+      });
+
+      Store.setSetting('customGroups', BILSEM_DATA.groups);
+      Toast.show(`${count} öğrenci CSV'den aktarıldı! ✅`, 'success');
+      this.editGroupStudents(groupId);
+    };
+    reader.readAsText(file);
+    event.target.value = '';
   },
 
   // ========== VELİ BİLGİLERİ TOPLU DÜZENLEME ==========

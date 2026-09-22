@@ -130,6 +130,9 @@
           </div>
         </div>
         <div class="header-actions">
+          <button class="header-btn" id="logout-btn" onclick="Auth.logout()" title="Çıkış Yap" style="display: none;">
+            🚪
+          </button>
           <button class="header-btn" onclick="App.enableNotifications()" title="Bildirimleri Aç" id="notif-btn">
             🔔
           </button>
@@ -192,8 +195,10 @@
   <!-- Scripts (sıralı yükleme) -->
   <script src="js/data.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/router.js"></script>
   <script src="js/notifications.js"></script>
+  <script src="js/pages/login.js"></script>
   <script src="js/pages/home.js"></script>
   <script src="js/pages/schedule.js"></script>
   <script src="js/pages/attendance.js"></script>
@@ -201,6 +206,8 @@
   <script src="js/pages/students.js"></script>
   <script src="js/pages/stats.js"></script>
   <script src="js/pages/settings.js"></script>
+  <script src="js/pages/annual_plan.js"></script>
+  <script src="js/pages/competitions.js"></script>
   <script src="js/app.js"></script>
 
   <!-- Service Worker -->
