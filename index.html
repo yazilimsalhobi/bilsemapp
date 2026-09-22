@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Fatsa BİLSEM Ders Programı & Öğrenci Takip Uygulaması - Coğrafya & Sosyal Bilgiler">
+  <meta name="author" content="Fatsa BİLSEM">
+
+  <title>Fatsa BİLSEM — Ders & Öğrenci Takip</title>
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="msapplication-TileImage" content="icons/icon-512.png">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+
+  <!-- Splash Screen Inline Style -->
+  <style>
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: #0A0A14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+    .splash-logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #6C5CE7, #00CEC9);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      animation: pulseScale 1.5s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(108, 92, 231, 0.4);
+    }
+    .splash-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #A29BFE, #00CEC9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .splash-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      color: #6B6B80;
+      font-weight: 500;
+    }
+    .splash-loader {
+      width: 40px;
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 24px;
+    }
+    .splash-loader::after {
+      content: '';
+      display: block;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, #6C5CE7, #00CEC9);
+      border-radius: 10px;
+      animation: splashLoad 1s ease-in-out infinite;
+    }
+    @keyframes splashLoad {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    @keyframes pulseScale {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Welcome section styles */
+    .welcome-section {
+      margin-bottom: var(--space-lg);
+    }
+    .welcome-date {
+      font-size: var(--font-sm);
+      color: var(--text-tertiary);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .welcome-title {
+      font-size: var(--font-2xl);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-logo">🏫</div>
+    <div class="splash-title">Fatsa BİLSEM</div>
+    <div class="splash-subtitle">Ders Programı & Öğrenci Takip</div>
+    <div class="splash-loader"></div>
+  </div>
+
+  <!-- App Container -->
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="header-brand">
+          <div class="header-logo">🏫</div>
+          <div>
+            <div class="header-title">Fatsa BİLSEM</div>
+            <div class="header-subtitle">Coğrafya & Sosyal Bilgiler</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="header-btn" onclick="App.enableNotifications()" title="Bildirimleri Aç" id="notif-btn">
+            🔔
+          </button>
+          <button class="header-btn" onclick="App.toggleTheme()" title="Tema Değiştir">
+            🌓
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main id="page-content">
+      <!-- Sayfalar buraya yüklenir -->
+    </main>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Ana gezinme">
+    <a class="nav-item active" data-page="home" href="#home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Ana Sayfa</span>
+    </a>
+    <a class="nav-item" data-page="schedule" href="#schedule">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Program</span>
+    </a>
+    <a class="nav-item" data-page="attendance" href="#attendance">
+      <span class="nav-icon">✅</span>
+      <span class="nav-label">Yoklama</span>
+    </a>
+    <a class="nav-item" data-page="homework" href="#homework">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Ödev</span>
+    </a>
+    <a class="nav-item" data-page="students" href="#students">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Öğrenci</span>
+    </a>
+    <a class="nav-item" data-page="settings" href="#settings">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Ayarlar</span>
+    </a>
+  </nav>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title"></h3>
+      <button class="modal-close" onclick="App.closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts (sıralı yükleme) -->
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/pages/home.js"></script>
+  <script src="js/pages/schedule.js"></script>
+  <script src="js/pages/attendance.js"></script>
+  <script src="js/pages/homework.js"></script>
+  <script src="js/pages/students.js"></script>
+  <script src="js/pages/stats.js"></script>
+  <script src="js/pages/settings.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.warn('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
