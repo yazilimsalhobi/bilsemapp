@@ -31,7 +31,16 @@ const LoginPage = {
               <label class="form-label" style="color: var(--text-secondary); font-weight: 500;">Şifre</label>
               <input type="password" id="login-password" class="form-input" placeholder="Şifreniz" onkeypress="if(event.key === 'Enter') LoginPage.handleLogin()" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 14px;">
             </div>
-            <button class="btn btn-primary btn-block" onclick="LoginPage.handleLogin()" style="margin-top: var(--space-lg); padding: 14px; font-size: 1.1rem; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3);">Giriş Yap</button>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 20px; font-size: 0.9rem;">
+              <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" id="login-remember" checked style="accent-color: var(--primary); width: 16px; height: 16px;">
+                Beni Hatırla
+              </label>
+              <a href="#" onclick="LoginPage.handleForgotPassword(event)" style="color: var(--primary); text-decoration: none; font-weight: 500;">Şifremi Unuttum</a>
+            </div>
+
+            <button class="btn btn-primary btn-block" onclick="LoginPage.handleLogin()" style="padding: 14px; font-size: 1.1rem; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3);">Giriş Yap</button>
           </div>
 
           <!-- Kayıt Formu -->
@@ -151,6 +160,22 @@ const LoginPage = {
         App.updateNavigationVisibility();
         Router.go('home');
       }
+    } else {
+      Toast.show(result.message, 'error');
+    }
+  },
+
+  async handleForgotPassword(event) {
+    if (event) event.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+      Toast.show('Lütfen önce e-posta adresinizi üstteki kutucuğa girin.', 'error');
+      return;
+    }
+    Toast.show('Şifre sıfırlama e-postası gönderiliyor...', 'info');
+    const result = await Auth.resetPassword(email);
+    if (result.success) {
+      Toast.show('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success', 6000);
     } else {
       Toast.show(result.message, 'error');
     }

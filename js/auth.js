@@ -137,6 +137,17 @@ const Auth = {
     }
   },
 
+  async resetPassword(email) {
+    if (!window.supabaseClient) return { success: false, message: 'Sunucuya ulaşılamıyor.' };
+    const { data, error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) {
+      return { success: false, message: error.message };
+    }
+    return { success: true };
+  },
+
   async logout() {
     await window.supabaseClient.auth.signOut();
     this.currentUser = null;
