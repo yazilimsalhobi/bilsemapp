@@ -18,6 +18,11 @@ const Store = {
   // ==================== SUPABASE SENKRONİZASYONU ====================
 
   async loadAllFromSupabase() {
+    if (!window.supabaseClient) {
+      console.warn("Supabase bağlantısı yok, yerel verilerle devam ediliyor.");
+      return;
+    }
+
     console.log("Supabase verileri yükleniyor...");
     const { data: groups, error: gError } = await window.supabaseClient.from('groups').select('*');
     

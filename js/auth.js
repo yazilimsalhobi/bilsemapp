@@ -6,6 +6,11 @@ const Auth = {
   currentUser: null,
 
   async init() {
+    if (!window.supabaseClient) {
+      console.warn("Supabase istemcisi bulunamadı, çevrimdışı modda başlatılıyor.");
+      return;
+    }
+
     // Mevcut oturumu al
     const { data, error } = await window.supabaseClient.auth.getSession();
     
@@ -74,6 +79,8 @@ const Auth = {
   },
 
   async loginWithEmail(email, password) {
+    if (!window.supabaseClient) return { success: false, message: 'Bağlantı hatası: Sunucuya ulaşılamıyor.' };
+
     const { data, error } = await window.supabaseClient.auth.signInWithPassword({
       email,
       password,
@@ -87,6 +94,8 @@ const Auth = {
   },
 
   async registerWithEmail(email, password, studentId = null) {
+    if (!window.supabaseClient) return { success: false, message: 'Bağlantı hatası: Sunucuya ulaşılamıyor.' };
+
     const { data, error } = await window.supabaseClient.auth.signUp({
       email,
       password,
@@ -108,6 +117,10 @@ const Auth = {
   },
 
   async loginWithGoogle() {
+    if (!window.supabaseClient) {
+      Toast.show('Sunucuya bağlanılamadı, lütfen sayfayı yenileyin.', 'error');
+      return;
+    }
     const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
       provider: 'google',
     });
