@@ -49,9 +49,25 @@ const App = {
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
+
+        // Açık olan modal veya ekranları hemen kapat
+        this.closeModal();
+
         const page = item.dataset.page;
-        Router.go(page);
+        if (Router.currentPage === page) {
+          // Zaten aynı sayfadaysak en üste yumuşak kaydır
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          Router.go(page);
+        }
       });
+    });
+
+    // ESC tuşuna basıldığında da açık olan ekranı kapat
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.closeModal();
+      }
     });
   },
 
@@ -91,13 +107,14 @@ const App = {
     const modalFooter = document.getElementById('modal-footer');
 
     if (modal) modal.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+
     setTimeout(() => {
-      if (backdrop) backdrop.classList.remove('active');
       if (modalFooter) {
         modalFooter.innerHTML = '';
         modalFooter.style.display = 'none';
       }
-    }, 300);
+    }, 250);
   },
 
   // ====== VERİ YÜKLEME ======

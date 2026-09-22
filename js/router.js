@@ -40,6 +40,11 @@ const Router = {
    * Sayfaya git
    */
   navigate(page, params = []) {
+    // Açık olan modal ekranı varsa kapat
+    if (window.App && typeof App.closeModal === 'function') {
+      App.closeModal();
+    }
+
     if (this.currentPage === page && params.length === 0) return;
 
     const container = this.pageContainer;

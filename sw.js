@@ -3,7 +3,7 @@
  * Offline çalışma, cache yönetimi
  */
 
-const CACHE_NAME = 'bilsem-v4';
+const CACHE_NAME = 'bilsem-v5';
 const ASSETS = [
   './',
   './index.html',
