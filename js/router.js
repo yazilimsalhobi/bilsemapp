@@ -7,10 +7,14 @@ const Router = {
   routes: {},
   currentPage: null,
   pageContainer: null,
+  _initialized: false,
 
   init() {
     this.pageContainer = document.getElementById('page-content');
-    window.addEventListener('hashchange', () => this.handleRoute());
+    if (!this._initialized) {
+      window.addEventListener('hashchange', () => this.handleRoute());
+      this._initialized = true;
+    }
     // İlk yükleme
     this.handleRoute();
   },

@@ -5,53 +5,50 @@
 const App = {
   async init() {
     try {
+      // Toast sistemini hemen başlat
+      Toast.init();
+
+      // Router'ı önce kur (kayıt et), ama henüz başlatma
+      this.setupRouter();
+
+      // Bottom nav event'leri
+      this.setupNavigation();
+
+      // Tema yönetimi
+      this.loadTheme();
+
       // Auth sistemini (Supabase) başlat ve oturumu bekle
       await Auth.init();
 
-      // Tüm bulut verilerini (Gruplar, Öğrenciler, Yoklamalar) yükle
+      // Auth tamamlandıktan sonra bulut verilerini yükle
       await Store.loadAllFromSupabase();
 
       // Kayıtlı verileri yükle (okul bilgisi vb.)
       this.loadSavedData();
 
-      // Toast sistemini başlat
-      Toast.init();
-
-      // Router'ı başlat
-      this.setupRouter();
-      Router.init();
-      this.updateNavigationVisibility();
-
-      // Bottom nav event'leri
-      this.setupNavigation();
-
       // Bildirim sistemini başlat
       Notifications.init();
-
-      // Tema yönetimi
-      this.loadTheme();
 
       console.log('🏫 Fatsa BİLSEM App başlatıldı!');
     } catch (error) {
       console.error('🚨 Uygulama başlatılırken hata:', error);
       
-      // Toast sistemi henüz hazır olmayabilir, init et
       if (!Toast.container) Toast.init();
-      Toast.show('Bağlantı hatası oluştu. Lütfen sayfayı yenileyin.', 'error', 8000);
+      Toast.show('Bağlantı hatası oluştu. Çevrimdışı modda çalışılıyor.', 'error', 8000);
 
-      // Yerel verilerle çalışmayı dene
+      // Yerel verilerle çalışmayı dene — Router tekrar init edilmez!
       try {
         this.loadSavedData();
-        if (!Toast.container) Toast.init();
-        this.setupRouter();
-        Router.init();
-        this.updateNavigationVisibility();
-        this.setupNavigation();
-        this.loadTheme();
       } catch (fallbackError) {
         console.error('🚨 Yedek başlatma da başarısız:', fallbackError);
       }
     } finally {
+      // Router ve navigation'ı her durumda başlat (sadece bir kez)
+      if (!Router._initialized) {
+        Router.init();
+      }
+      this.updateNavigationVisibility();
+
       // Splash screen'i her durumda kaldır
       setTimeout(() => {
         const splash = document.getElementById('splash-screen');

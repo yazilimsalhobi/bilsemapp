@@ -33,12 +33,14 @@ const Auth = {
       if (session) {
         await this.fetchUserProfile(session.user);
         
-        // Eğer OAuth yönlendirmesinden gelindiyse anasayfaya git
-        if (window.location.hash.includes('access_token=')) {
-          if (window.App && typeof App.updateNavigationVisibility === 'function') {
-            App.updateNavigationVisibility();
-          }
-          if (window.Router) {
+        if (window.App && typeof App.updateNavigationVisibility === 'function') {
+          App.updateNavigationVisibility();
+        }
+
+        // Giriş sayfasındaysak veya OAuth yönlendirmesinden gelindiyse ana sayfaya git
+        if (window.Router && Router._initialized) {
+          const currentHash = window.location.hash.slice(1);
+          if (!currentHash || currentHash === 'login' || currentHash.includes('access_token=')) {
             Router.go('home');
           }
         }
