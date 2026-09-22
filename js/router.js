@@ -76,20 +76,26 @@ const Router = {
     setTimeout(() => {
       container.classList.remove('page-exit');
 
-      // Yeni sayfa içeriğini yükle
       if (this.routes[page]) {
-        this.currentPage = page;
-        this.routes[page](container, params);
+        try {
+          this.currentPage = page;
+          this.routes[page](container, params);
 
-        // Giriş animasyonu
-        container.classList.add('page-enter');
-        setTimeout(() => container.classList.remove('page-enter'), 400);
+          // Giriş animasyonu
+          container.classList.add('page-enter');
+          setTimeout(() => container.classList.remove('page-enter'), 400);
 
-        // Nav güncelle
-        this.updateNav(page);
+          // Nav güncelle
+          this.updateNav(page);
 
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+          console.error("Sayfa yüklenirken hata oluştu:", err);
+          if (window.Toast) {
+            Toast.show("Sayfa yüklenirken hata: " + err.message, "error", 10000);
+          }
+        }
       }
     }, 200);
   },
