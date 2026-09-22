@@ -13,6 +13,12 @@ const Router = {
     this.pageContainer = document.getElementById('page-content');
     if (!this._initialized) {
       window.addEventListener('hashchange', () => this.handleRoute());
+      if (typeof MutationObserver !== 'undefined' && typeof UI !== 'undefined') {
+        this._sectionObserver = new MutationObserver(() => {
+          if (!['login', 'setup'].includes(this.currentPage)) UI.collapseSections(this.pageContainer);
+        });
+        this._sectionObserver.observe(this.pageContainer, { childList: true, subtree: true });
+      }
       this._initialized = true;
     }
     // İlk yükleme
@@ -52,6 +58,17 @@ const Router = {
     if (page === 'login' && typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
       this.go('home');
       return;
+    }
+
+    if (page !== 'login' && typeof Store !== 'undefined' && Store.userId !== undefined) {
+      if (!Store.ready || Store.userId !== Auth.getCurrentUser()?.id) {
+        Store.loadAllFromSupabase().then(() => this.handleRoute());
+        return;
+      }
+      if (page !== 'setup' && !Store.getSetting('onboardingComplete', false)) {
+        this.go('setup');
+        return;
+      }
     }
 
     if (this.routes[page]) {

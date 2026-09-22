@@ -4,6 +4,19 @@
  */
 
 const Notifications = {
+  messageParent(studentId, groupId, date) {
+    const student = DataHelpers.getStudentById(studentId);
+    const parent = Store.getParentInfo(studentId) || student;
+    if (!student || !parent?.parentPhone) return;
+    const group = groupId ? DataHelpers.getGroupById(groupId) : null;
+    const message = group ? this.createAbsenceMessage(student.name, group.name, date) : 'Merhaba, ' + student.name + ' velisi.';
+    this.sendWhatsApp(parent.parentPhone, message);
+  },
+  callParent(studentId) {
+    const parent = Store.getParentInfo(studentId) || DataHelpers.getStudentById(studentId);
+    const phone = (parent?.parentPhone || '').replace(/[^+0-9]/g, '');
+    if (phone) window.open('tel:' + phone);
+  },
   timers: [],
   permission: 'default',
 

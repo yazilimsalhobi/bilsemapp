@@ -3,7 +3,7 @@
  * Offline çalışma, cache yönetimi
  */
 
-const CACHE_NAME = 'bilsem-v10';
+const CACHE_NAME = 'bilsem-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,11 @@ const ASSETS = [
   './css/components.css',
   './css/animations.css',
   './js/data.js',
+  './js/ui.js',
+  './js/importers.js',
+  './js/dashboard.js',
+  './js/pages/setup.js',
+  './js/pages/import.js',
   './js/supabase.js',
   './js/store.js',
   './js/auth.js',
@@ -57,18 +62,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch — Network first, fallback to cache
+// Cache only public application assets, never account API responses or uploads.
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Cache güncelle
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  const asset = './' + url.pathname.slice(new URL(self.registration.scope).pathname.length);
+  if (!ASSETS.includes(asset)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const response = await fetch(event.request);
+      if (response.ok) await cache.put(new Request(url.origin + url.pathname), response.clone());
+      return response;
+    } catch (error) {
+      const cached = await cache.match(event.request, { ignoreSearch: true });
+      if (cached) return cached;
+      throw error;
+    }
+  })());
 });
 
 // Push notifications

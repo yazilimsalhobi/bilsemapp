@@ -38,10 +38,11 @@ const HomeworkPage = {
           <button class="tab" onclick="HomeworkPage.switchTab('projects', this)">Projeler</button>
         </div>
 
-        <div id="homework-content">
+        <div class="section" data-accordion-title="Ödev ve proje listesi"><div id="homework-content">
           ${this.renderActiveHomework(activeHw)}
         </div>
 
+        </div>
         <!-- FAB: Yeni Ödev -->
         <button class="btn btn-primary btn-fab" onclick="HomeworkPage.showNewModal()">➕</button>
       </div>
@@ -123,7 +124,7 @@ const HomeworkPage = {
           ${dueDate ? `<span class="homework-due ${urgency}">${urgencyText}</span>` : ''}
         </div>
         <div class="homework-group">
-          ${group ? `${group.name} • ${group.day}` : ''} 
+          ${group ? `${UI.escape(group.name)} • ${group.day}` : ''}
           ${hw.completed ? '<span style="color: var(--success);">✅ Tamamlandı</span>' : ''}
         </div>
         ${hw.description ? `<div style="font-size: var(--font-sm); color: var(--text-tertiary); margin-top: 4px;">${hw.description.substring(0, 100)}${hw.description.length > 100 ? '...' : ''}</div>` : ''}
@@ -177,7 +178,7 @@ const HomeworkPage = {
       <div class="form-group">
         <label class="form-label">Grup Seçin</label>
         <select class="form-select" id="hw-group">
-          ${BILSEM_DATA.groups.map(g => `<option value="${g.id}">${g.name} — ${g.day} (${g.subject})</option>`).join('')}
+          ${BILSEM_DATA.groups.map(g => `<option value="${g.id}">${UI.escape(g.name)} — ${g.day} (${UI.escape(g.subject)})</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
@@ -279,10 +280,10 @@ const HomeworkPage = {
             return `
               <div class="attendance-item">
                 <div class="student-card-avatar" style="background: ${AttendancePage.getAvatarColor(index)}; width: 36px; height: 36px; font-size: 0.8rem;">
-                  ${student.name.charAt(0)}
+                  ${UI.escape(student.name.charAt(0))}
                 </div>
                 <div class="student-info" style="flex: 1;">
-                  <div class="student-name">${student.name}</div>
+                  <div class="student-name">${UI.escape(student.name)}</div>
                   <div class="student-note" style="color: ${currentStatusObj?.color || 'var(--text-tertiary)'};">${currentStatusObj?.icon || ''} ${currentStatusObj?.label || 'Verildi'}</div>
                 </div>
                 <select class="form-select" style="width: auto; padding: 6px 30px 6px 10px; font-size: var(--font-xs);"

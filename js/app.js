@@ -61,6 +61,8 @@ const App = {
   },
 
   setupRouter() {
+    Router.register('setup', (container) => SetupPage.render(container));
+    Router.register('import', (container) => ImportPage.render(container));
     Router.register('login', (container) => LoginPage.render(container));
     Router.register('home', (container) => HomePage.render(container));
     Router.register('schedule', (container) => SchedulePage.render(container));
@@ -117,6 +119,10 @@ const App = {
 
     const user = Auth.getCurrentUser();
     const isParent = user.role === 'parent';
+    const brand = document.querySelector('.header-title');
+    const subtitle = document.querySelector('.header-subtitle');
+    if (brand) brand.textContent = BILSEM_DATA.school.name || 'BİLSEM';
+    if (subtitle) subtitle.textContent = BILSEM_DATA.school.department || 'Kişisel ders takibi';
     
     document.querySelectorAll('.nav-item').forEach(item => {
       const page = item.dataset.page;
@@ -187,7 +193,7 @@ const App = {
       }
 
       const savedGroups = Store.getSetting('customGroups');
-      if (savedGroups && Array.isArray(savedGroups) && savedGroups.length > 0) {
+      if (savedGroups && Array.isArray(savedGroups) && savedGroups.length >= 0) {
         BILSEM_DATA.groups = savedGroups;
       }
     } catch (e) {

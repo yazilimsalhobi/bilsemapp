@@ -24,7 +24,7 @@ const CompetitionsPage = {
 
           <div class="stagger-children">
             ${this.competitions.map(comp => `
-              <div class="card" style="padding: var(--space-lg); margin-bottom: var(--space-md); border-top: 4px solid var(--primary);">
+              <div class="card" data-accordion-title="${UI.escape(comp.title)}" style="padding: var(--space-lg); margin-bottom: var(--space-md); border-top: 4px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                   <h3 style="font-size: var(--font-md); font-weight: 700; color: var(--text-primary); margin: 0; padding-right: 16px;">${comp.title}</h3>
                   <span class="chip chip-sm" style="background: rgba(108, 92, 231, 0.1); color: var(--primary); white-space: nowrap;">${comp.type}</span>

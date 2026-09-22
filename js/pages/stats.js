@@ -56,7 +56,7 @@ const StatsPage = {
                 }
                 return `
                   <div class="chart-bar-item">
-                    <span class="chart-bar-label" title="${group.name}">${group.name}</span>
+                    <span class="chart-bar-label" title="${UI.escape(group.name)}">${UI.escape(group.name)}</span>
                     <div class="chart-bar-track">
                       <div class="chart-bar-fill" style="width: ${avgRate}%; background: linear-gradient(90deg, ${group.color}, ${group.color}CC);">
                         ${avgRate > 15 ? `%${avgRate}` : ''}
@@ -186,8 +186,8 @@ const StatsPage = {
           <div class="card" style="padding: 12px; margin-bottom: 6px; border-left: 3px solid ${w.rate < 50 ? 'var(--danger)' : 'var(--warning)'};">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-weight: 600; font-size: var(--font-base);">${w.name}</div>
-                <div style="font-size: var(--font-xs); color: var(--text-tertiary);">${w.groupName}</div>
+                <div style="font-weight: 600; font-size: var(--font-base);">${UI.escape(w.name)}</div>
+                <div style="font-size: var(--font-xs); color: var(--text-tertiary);">${UI.escape(w.groupName)}</div>
               </div>
               <div style="text-align: right;">
                 <div style="font-weight: 700; color: var(--danger);">${w.absent} devamsızlık</div>

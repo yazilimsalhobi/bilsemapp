@@ -10,3 +10,12 @@ Desktop.ini
 *.ntvs*
 *.njsproj
 *.sln
+
+# Private administrator source documents and local tools
+private-backup/
+*.pdf
+ders_programi.txt
+node_modules/
+tests/migration-preview.html
+
+!tests/fixtures/*.pdf

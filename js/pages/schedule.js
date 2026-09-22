@@ -6,12 +6,14 @@ const SchedulePage = {
   render(container) {
     const activeDays = BILSEM_DATA.activeDays;
     const todayName = DataHelpers.getDayName();
-    const defaultDay = activeDays.includes(todayName) ? todayName : activeDays[0];
+    const defaultDay = activeDays.includes(todayName) ? todayName : activeDays[0] || 'Pazartesi';
+    this.selectedDay = defaultDay;
 
     container.innerHTML = `
       <div class="page-container fade-in">
         <h1 class="page-title">📅 Ders <span>Programı</span></h1>
 
+        <label class="form-label">Haftayı seçin<input class="form-input" type="date" value="${this.referenceDate || UI.date()}" onchange="SchedulePage.referenceDate=this.value; SchedulePage.selectDay(SchedulePage.selectedDay)"></label>
         <!-- Gün Sekmeleri -->
         <div class="day-tabs" id="day-tabs">
           ${activeDays.map(day => {
@@ -39,6 +41,7 @@ const SchedulePage = {
   },
 
   selectDay(day) {
+    this.selectedDay = day;
     // Tab aktifliğini güncelle
     const color = BILSEM_DATA.dayColors[day];
     document.querySelectorAll('.day-tab').forEach(tab => {
@@ -65,6 +68,9 @@ const SchedulePage = {
 
     const dayColor = BILSEM_DATA.dayColors[day];
     const now = new Date();
+    const lessonDate = new Date((this.referenceDate || UI.date()) + 'T12:00:00');
+    lessonDate.setDate(lessonDate.getDate() - (lessonDate.getDay() + 6) % 7 + (UI.days.indexOf(day) + 6) % 7);
+    const planDate = UI.date(lessonDate);
     const isToday = DataHelpers.getDayName(now) === day;
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -87,19 +93,19 @@ const SchedulePage = {
           const attendance = Store.getAttendance(group.id, DataHelpers.formatDateShort());
 
           return `
-            <div class="group-card ${isActive ? 'active-lesson' : ''}" 
+            <div class="group-card ${isActive ? 'active-lesson' : ''}" data-accordion-title="${UI.escape(group.name)} · ${group.startTime}–${group.endTime}" 
                  style="opacity: ${isPast ? '0.6' : '1'};">
               <div style="position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: ${dayColor.gradient};"></div>
               
               <div class="group-card-header">
                 <div class="group-card-info">
                   <div class="group-card-name" style="display: flex; align-items: center; gap: 8px;">
-                    ${group.name}
+                    ${UI.escape(group.name)}
                     ${isActive ? '<span class="active-badge">CANLI</span>' : ''}
                     ${isPast ? '<span class="chip chip-sm" style="opacity: 0.6;">Bitti</span>' : ''}
                     ${attendance ? '<span class="chip chip-sm" style="background: rgba(0,184,148,0.15); color: var(--success); border-color: var(--success);">✅ Yoklama alındı</span>' : ''}
                   </div>
-                  <div class="group-card-subject">${group.subject} • ${group.timeSlot}</div>
+                  <div class="group-card-subject">${UI.escape(group.subject)} • ${group.timeSlot}</div>
                 </div>
                 <div class="group-card-time">🕐 ${group.startTime} - ${group.endTime}</div>
               </div>
@@ -119,12 +125,13 @@ const SchedulePage = {
                 }).join('')}
               </div>
 
+              <div class="plan-topic"><strong>🎯 ${planDate} kazanımı</strong><p>${UI.escape(AnnualPlans.outcome(group.id, planDate) || 'Bu hafta için kazanım eklenmedi.')}</p></div>
               <!-- Öğrenci Listesi -->
               <div class="group-card-students">
                 <div class="student-avatars">
                   ${group.students.slice(0, 5).map((s, i) => {
                     const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E', '#A29BFE'];
-                    return `<div class="student-avatar" style="background: ${colors[i % colors.length]};" title="${s.name}">${s.name.charAt(0)}</div>`;
+                    return `<div class="student-avatar" style="background: ${colors[i % colors.length]};" title="${UI.escape(s.name)}">${UI.escape(s.name.charAt(0))}</div>`;
                   }).join('')}
                   ${group.students.length > 5 ? `<div class="student-avatar" style="background: var(--bg-glass-strong); color: var(--text-secondary);">+${group.students.length - 5}</div>` : ''}
                 </div>
@@ -156,7 +163,7 @@ const SchedulePage = {
     const group = DataHelpers.getGroupById(groupId);
     if (!group) return;
 
-    App.showModal(`${group.name} — Öğrenciler`, `
+    App.showModal(`${UI.escape(group.name)} — Öğrenciler`, `
       <div class="stagger-children">
         ${group.students.map((student, i) => {
           const parentInfo = Store.getParentInfo(student.id);
@@ -164,14 +171,14 @@ const SchedulePage = {
           return `
             <div class="student-card" onclick="Router.go('students', '${student.id}'); App.closeModal();">
               <div class="student-card-avatar" style="background: ${colors[i % colors.length]};">
-                ${student.name.charAt(0)}
+                ${UI.escape(student.name.charAt(0))}
               </div>
               <div class="student-card-info">
-                <div class="student-card-name">${student.name}</div>
+                <div class="student-card-name">${UI.escape(student.name)}</div>
                 <div class="student-card-group">${student.note || group.subject}</div>
               </div>
               ${parentInfo?.parentPhone ? `
-                <button class="btn btn-icon btn-ghost" onclick="event.stopPropagation(); Notifications.sendWhatsApp('${parentInfo.parentPhone}', 'Merhaba, ${student.name} velisi.');" title="WhatsApp">
+                <button class="btn btn-icon btn-ghost" onclick="event.stopPropagation(); Notifications.messageParent('${student.id}')" title="WhatsApp">
                   💬
                 </button>
               ` : ''}

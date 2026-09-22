@@ -140,7 +140,7 @@ const LoginPage = {
       Router._lastParams = null;
       App.updateNavigationVisibility();
       if (typeof Store !== 'undefined' && typeof Store.loadAllFromSupabase === 'function') {
-        Store.loadAllFromSupabase().catch(err => console.warn('Store yükleme hatası:', err));
+        await Store.loadAllFromSupabase();
       }
       Router.go('home');
     } else {
@@ -150,8 +150,8 @@ const LoginPage = {
 
   async handleRegister() {
     const email = document.getElementById('reg-email').value.trim();
-    const pass = document.getElementById('reg-password').value.trim();
-    const studentId = document.getElementById('reg-student-id').value.trim().toLowerCase() || null;
+    const pass = document.getElementById('reg-password').value;
+
 
     if (!email || pass.length < 6) {
       Toast.show('E-posta zorunludur ve şifre en az 6 karakter olmalıdır.', 'error');
@@ -159,20 +159,21 @@ const LoginPage = {
     }
 
     Toast.show('Kayıt yapılıyor...', 'info');
-    const result = await Auth.registerWithEmail(email, pass, studentId);
+    const result = await Auth.registerWithEmail(email, pass);
 
     if (result.success) {
       if (result.needsEmailConfirmation) {
         Toast.show('Kayıt başarılı! Lütfen e-posta adresinize gönderilen onay linkine tıklayarak hesabınızı doğrulayın.', 'success', 6000);
         document.getElementById('reg-email').value = '';
         document.getElementById('reg-password').value = '';
-        document.getElementById('reg-student-id').value = '';
+
         LoginPage.switchTab('login');
       } else {
         Toast.show('Kayıt başarılı! Hoş geldiniz.', 'success');
         // Router state sıfırla ve doğrudan yönlendir
         Router.currentPage = null;
         Router._lastParams = null;
+        await Store.loadAllFromSupabase();
         App.updateNavigationVisibility();
         window.location.hash = 'home';
         Router.handleRoute();

@@ -12,92 +12,106 @@ const Store = {
     SETTINGS: 'bilsem_settings',
     NOTES: 'bilsem_notes',
     TODOS: 'bilsem_todos',
-    STUDENT_NOTES: 'bilsem_student_notes'
+    STUDENT_NOTES: 'bilsem_student_notes',
+    ANNUAL_PLANS: 'bilsem_annual_plans'
   },
 
   // ==================== SUPABASE SENKRONİZASYONU ====================
 
-  async loadAllFromSupabase() {
-    if (!window.supabaseClient) {
-      console.warn("Supabase bağlantısı yok, yerel verilerle devam ediliyor.");
-      return;
-    }
+  userId: null,
+  ready: false,
+  _loading: null,
+  _syncTimer: null,
+  _writeQueue: Promise.resolve(),
+  _revision: 0,
+  _generation: 0,
+  syncError: '',
 
-    console.log("Supabase verileri yükleniyor...");
-    const { data: groups, error: gError } = await window.supabaseClient.from('groups').select('*');
-    
-    if (!gError && groups && groups.length === 0) {
-      // Veritabanı boş, başlangıç verilerini aktar (Seed)
-      console.log("Veritabanı boş, ilk veriler gönderiliyor...");
-      for (const group of BILSEM_DATA.groups) {
-        await window.supabaseClient.from('groups').insert({
-          id: group.id,
-          name: group.name,
-          day: group.day,
-          day_index: group.dayIndex,
-          start_time: group.startTime,
-          end_time: group.endTime,
-          time_slot: group.timeSlot,
-          subject: group.subject,
-          color: group.color
-        });
-        
-        const studentsToInsert = group.students.map(s => ({
-          id: s.id,
-          group_id: group.id,
-          name: s.name,
-          parent_name: s.parentName,
-          parent_phone: s.parentPhone
-        }));
-        
-        if (studentsToInsert.length > 0) {
-          await window.supabaseClient.from('students').insert(studentsToInsert);
+  storageKey(key, userId = this.userId) { return userId ? 'bilsem_user:' + userId + ':' + key : null; },
+  resetUser() {
+    this._generation++;
+    clearTimeout(this._syncTimer);
+    this.userId = null;
+    this.ready = false;
+    this._loading = null;
+    this.syncError = '';
+    this.applyWorkspace();
+  },
+  applyWorkspace() {
+    BILSEM_DATA.school = this.getSetting('schoolInfo', { name: '', teacher: '', department: '', year: '' });
+    BILSEM_DATA.groups = this.getSetting('customGroups', []);
+    BILSEM_DATA.activeDays = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].filter(day => BILSEM_DATA.groups.some(g => g.day === day));
+  },
+  async loadAllFromSupabase() {
+    const id = typeof Auth !== 'undefined' ? Auth.getCurrentUser()?.id : null;
+    if (!id) { this.resetUser(); return; }
+    if (this.userId === id && this.ready) return;
+    if (this.userId === id && this._loading) return this._loading;
+    this.resetUser();
+    this.userId = id;
+    this.applyWorkspace();
+    const revision = this._revision;
+    const generation = this._generation;
+    this._loading = (async () => {
+      try {
+        if (!window.supabaseClient) throw new Error('İnternet bağlantısı yok.');
+        const { data, error } = await window.supabaseClient.from('user_workspaces').select('payload').eq('user_id', id).maybeSingle();
+        if (error) throw error;
+        if (this.userId !== id || this._generation !== generation) return;
+        // Offline edits are never overwritten by a stale cloud response.
+        if (data && !localStorage.getItem(this.storageKey('dirty')) && revision === this._revision) {
+          for (const key of Object.values(this.KEYS)) {
+            if (data.payload[key] !== undefined) localStorage.setItem(this.storageKey(key), JSON.stringify(data.payload[key]));
+            else localStorage.removeItem(this.storageKey(key));
+          }
+        }
+      } catch (error) {
+        if (this.userId === id && this._generation === generation) this.syncError = 'Bulut bağlantısı kurulamadı. Bu hesaba ait cihaz kayıtları kullanılıyor.';
+        console.warn('[Store] Workspace load:', error.message);
+      } finally {
+        if (this.userId === id && this._generation === generation) {
+          this.ready = true;
+          this._loading = null;
+          this.applyWorkspace();
+          if (!this.syncError && localStorage.getItem(this.storageKey('dirty'))) this.scheduleSync();
         }
       }
-      return; // İlk yüklemede mevcut BILSEM_DATA'yı kullan
-    }
-
-    if (groups && groups.length > 0) {
-      const { data: students } = await window.supabaseClient.from('students').select('*');
-      
-      // BILSEM_DATA'yı buluttaki verilerle güncelle
-      BILSEM_DATA.groups = groups.map(g => ({
-        id: g.id,
-        name: g.name,
-        day: g.day,
-        dayIndex: g.day_index,
-        startTime: g.start_time,
-        endTime: g.end_time,
-        timeSlot: g.time_slot,
-        subject: g.subject,
-        color: g.color,
-        students: students ? students.filter(s => s.group_id === g.id).map(s => ({
-          id: s.id,
-          name: s.name,
-          parentName: s.parent_name || '',
-          parentPhone: s.parent_phone || ''
-        })) : []
-      }));
-    }
-
-    // Yoklamaları buluttan çek ve localStorage'ı güncelle (Senkron UI için)
-    const { data: attendanceData } = await window.supabaseClient.from('attendance').select('*');
-    if (attendanceData) {
-      const allAtt = {};
-      attendanceData.forEach(a => {
-        const key = `${a.group_id}_${a.date}`;
-        if (!allAtt[key]) allAtt[key] = { groupId: a.group_id, date: a.date, records: [] };
-        allAtt[key].records.push({ studentId: a.student_id, status: a.status });
-      });
-      this._set(this.KEYS.ATTENDANCE, allAtt);
-    }
+    })();
+    return this._loading;
+  },
+  scheduleSync() {
+    clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => this.syncNow(), 600);
+  },
+  async syncNow() {
+    const id = this.userId;
+    if (!id || !window.supabaseClient) return false;
+    const revision = this._revision;
+    const payload = Object.fromEntries(Object.values(this.KEYS).map(key => [key, this._get(key)]));
+    const write = async () => {
+      if (this.userId !== id) return false;
+      try {
+        const { error } = await window.supabaseClient.from('user_workspaces').upsert({ user_id: id, payload, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        if (error) throw error;
+        if (this.userId === id && revision === this._revision) localStorage.removeItem(this.storageKey('dirty'));
+        if (this.userId === id) this.syncError = '';
+        return true;
+      } catch (error) {
+        if (this.userId === id) this.syncError = 'Veriler bu cihazda kaydedildi; bulut kaydı bekliyor. Ayarlardan yeniden deneyebilirsiniz.';
+        console.warn('[Store] Workspace save:', error.message);
+        return false;
+      }
+    };
+    this._writeQueue = this._writeQueue.then(write, write);
+    return this._writeQueue;
   },
 
   // ==================== GENEL CRUD ====================
 
   _get(key) {
     try {
-      const data = localStorage.getItem(key);
+      if (!this.userId) return null;
+      const data = localStorage.getItem(this.storageKey(key));
       return data ? JSON.parse(data) : null;
     } catch (e) {
       console.error(`Store._get(${key}) hatası:`, e);
@@ -107,7 +121,11 @@ const Store = {
 
   _set(key, value) {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      if (!this.userId) return false;
+      localStorage.setItem(this.storageKey(key), JSON.stringify(value));
+      localStorage.setItem(this.storageKey('dirty'), '1');
+      this._revision++;
+      this.scheduleSync();
       return true;
     } catch (e) {
       console.error(`Store._set(${key}) hatası:`, e);
@@ -136,25 +154,6 @@ const Store = {
     // UI için hızlıca LocalStorage'a kaydet
     this._set(this.KEYS.ATTENDANCE, all);
 
-    // Arka planda Supabase'e gönder
-    try {
-      // Önce bu günün kayıtlarını sil
-      await window.supabaseClient.from('attendance').delete().match({ group_id: groupId, date: date });
-      
-      // Yeni kayıtları ekle
-      const inserts = records.map(r => ({
-        group_id: groupId,
-        student_id: r.studentId,
-        date: date,
-        status: r.status
-      }));
-      if (inserts.length > 0) {
-        await window.supabaseClient.from('attendance').insert(inserts);
-      }
-    } catch (e) {
-      console.error("Supabase yoklama kayıt hatası", e);
-    }
-    
     return true;
   },
 
@@ -452,7 +451,9 @@ const Store = {
   setSetting(key, value) {
     const settings = this._get(this.KEYS.SETTINGS) || {};
     settings[key] = value;
-    return this._set(this.KEYS.SETTINGS, settings);
+    const saved = this._set(this.KEYS.SETTINGS, settings);
+    if (saved && ['customGroups', 'schoolInfo'].includes(key)) this.applyWorkspace();
+    return saved;
   },
 
   // ==================== YARDIMCI ====================
@@ -503,6 +504,9 @@ const Store = {
       parents: this._get(this.KEYS.PARENTS),
       settings: this._get(this.KEYS.SETTINGS),
       notes: this._get(this.KEYS.NOTES),
+      annualPlans: this._get(this.KEYS.ANNUAL_PLANS),
+      todos: this._get(this.KEYS.TODOS),
+      studentNotes: this._get(this.KEYS.STUDENT_NOTES),
       exportDate: new Date().toISOString()
     };
   },
@@ -517,6 +521,10 @@ const Store = {
     if (data.parents) this._set(this.KEYS.PARENTS, data.parents);
     if (data.settings) this._set(this.KEYS.SETTINGS, data.settings);
     if (data.notes) this._set(this.KEYS.NOTES, data.notes);
+    if (data.annualPlans) this._set(this.KEYS.ANNUAL_PLANS, data.annualPlans);
+    if (data.todos) this._set(this.KEYS.TODOS, data.todos);
+    if (data.studentNotes) this._set(this.KEYS.STUDENT_NOTES, data.studentNotes);
+    this.applyWorkspace();
     return true;
   },
 
@@ -524,6 +532,11 @@ const Store = {
    * Tüm verileri sil
    */
   clearAll() {
-    Object.values(this.KEYS).forEach(key => localStorage.removeItem(key));
+    if (!this.userId) return;
+    Object.values(this.KEYS).forEach(key => localStorage.removeItem(this.storageKey(key)));
+    localStorage.setItem(this.storageKey('dirty'), '1');
+    this._revision++;
+    this.applyWorkspace();
+    this.scheduleSync();
   }
 };

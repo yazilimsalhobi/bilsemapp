@@ -34,79 +34,17 @@ const HomePage = {
         <!-- Karşılama -->
         <div class="welcome-section">
           <div class="welcome-date">${dayColor?.emoji || '📅'} ${dayName}, ${DataHelpers.formatDate(now)}</div>
-          <h1 class="welcome-title">Merhaba, <span class="text-gradient">${welcomeGreeting}</span> 👋</h1>
+          <h1 class="welcome-title">Merhaba, <span class="text-gradient">${UI.escape(welcomeGreeting)}</span> 👋</h1>
         </div>
 
+        ${Store.syncError ? `<div class="sync-notice">${UI.escape(Store.syncError)}</div>` : ''}
+        ${!BILSEM_DATA.groups.length ? '<div class="card import-card"><h2>İlk ders programınızı ekleyin</h2><p>Henüz grubunuz veya öğrenciniz yok.</p><button class="btn btn-primary" onclick="Router.go(\'import\')">Program yükle</button><button class="btn btn-secondary" onclick="SettingsPage.editGroups()">Elle grup ekle</button></div>' : ''}
         <!-- Aktif / Sonraki Ders -->
         ${currentLesson ? this.renderCurrentLesson(currentLesson, isParent) : ''}
         ${!currentLesson && nextLesson ? this.renderNextLesson(nextLesson) : ''}
 
         ${isParent ? '' : `
-        <!-- Hızlı Eylemler -->
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">⚡ Hızlı Erişim</h2>
-          </div>
-          <div class="quick-actions">
-            <div class="quick-action" onclick="Router.go('attendance')">
-              <div class="quick-action-icon" style="background: rgba(0,184,148,0.15);">✅</div>
-              <span class="quick-action-label">Yoklama Al</span>
-            </div>
-            <div class="quick-action" onclick="Router.go('homework')">
-              <div class="quick-action-icon" style="background: rgba(108,92,231,0.15);">📝</div>
-              <span class="quick-action-label">Ödev Ver</span>
-            </div>
-            <div class="quick-action" onclick="Router.go('students')">
-              <div class="quick-action-icon" style="background: rgba(0,206,201,0.15);">👥</div>
-              <span class="quick-action-label">Öğrenciler</span>
-            </div>
-            <div class="quick-action" onclick="Router.go('stats')">
-              <div class="quick-action-icon" style="background: rgba(253,203,110,0.15);">📊</div>
-              <span class="quick-action-label">İstatistik</span>
-            </div>
-            <div class="quick-action" onclick="Router.go('settings')">
-              <div class="quick-action-icon" style="background: rgba(108,92,231,0.15);">⚙️</div>
-              <span class="quick-action-label">Ayarlar</span>
-            </div>
-            <div class="quick-action" onclick="Router.go('annual_plan')">
-              <div class="quick-action-icon" style="background: rgba(253,121,168,0.15);">📅</div>
-              <span class="quick-action-label">Yıllık Plan</span>
-            </div>
-            <div class="quick-action" onclick="Router.go('competitions')">
-              <div class="quick-action-icon" style="background: rgba(255,159,67,0.15);">🏆</div>
-              <span class="quick-action-label">Yarışmalar</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Genel İstatistikler -->
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">📈 Genel Bakış</h2>
-          </div>
-          <div class="stats-grid stagger-children">
-            <div class="stat-card">
-              <div class="stat-card-icon">👥</div>
-              <div class="stat-card-value">${DataHelpers.getTotalStudentCount()}</div>
-              <div class="stat-card-label">Öğrenci</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-icon">📚</div>
-              <div class="stat-card-value">${DataHelpers.getTotalGroupCount()}</div>
-              <div class="stat-card-label">Grup</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-icon">📋</div>
-              <div class="stat-card-value">${stats.totalSessions}</div>
-              <div class="stat-card-label">Yoklama</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-icon">📝</div>
-              <div class="stat-card-value">${stats.activeHomework}</div>
-              <div class="stat-card-label">Aktif Ödev</div>
-            </div>
-          </div>
-        </div>
+        ${Dashboard.render()}
 
         <!-- Hatırlatmalarım -->
         <div class="section">
@@ -153,9 +91,9 @@ const HomePage = {
       <div class="countdown card-glass active-lesson-card glow-ring" style="border: 1px solid var(--success); margin-bottom: var(--space-lg);">
         <div class="countdown-info">
           <div class="countdown-label" style="color: var(--success);">🟢 ŞU AN DERSTESİNİZ</div>
-          <div class="countdown-group">${lesson.name}</div>
+          <div class="countdown-group">${UI.escape(lesson.name)}</div>
           <div style="font-size: var(--font-sm); color: var(--text-tertiary); margin-top: 2px;">
-            ${lesson.subject} • ${lesson.startTime} - ${lesson.endTime}
+            ${UI.escape(lesson.subject)} • ${lesson.startTime} - ${lesson.endTime}
           </div>
           ${!isParent ? `
           <div style="margin-top: 8px; display: flex; gap: 8px;">
@@ -176,9 +114,9 @@ const HomePage = {
       <div class="countdown card-glass" style="margin-bottom: var(--space-lg);">
         <div class="countdown-info">
           <div class="countdown-label">${prefix}</div>
-          <div class="countdown-group">${lesson.name}</div>
+          <div class="countdown-group">${UI.escape(lesson.name)}</div>
           <div style="font-size: var(--font-sm); color: var(--text-tertiary); margin-top: 2px;">
-            ${lesson.subject} • ${lesson.startTime} - ${lesson.endTime}
+            ${UI.escape(lesson.subject)} • ${lesson.startTime} - ${lesson.endTime}
           </div>
         </div>
         <div class="countdown-timer" id="countdown-display">--:--</div>
@@ -193,15 +131,16 @@ const HomePage = {
           const isActive = currentLesson && currentLesson.id === group.id;
           const color = group.color;
           const todayDate = DataHelpers.formatDateShort(new Date());
-          const savedNote = Store.getNote(group.id, todayDate)?.note || '';
+          const savedNote = Store.getNote(group.id, todayDate)?.note ?? AnnualPlans.outcome(group.id);
+          const planned = AnnualPlans.outcome(group.id);
           
           return `
             <div class="group-card ${isActive ? 'active-lesson' : ''}" style="--card-color: ${color}; cursor: default;">
               <div style="position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: ${color};"></div>
               <div class="group-card-header" ${!isParent ? `onclick="Router.go('attendance', '${group.id}')" style="cursor: pointer;"` : ''}>
                 <div class="group-card-info">
-                  <div class="group-card-name">${group.name}</div>
-                  <div class="group-card-subject">${group.subject}</div>
+                  <div class="group-card-name">${UI.escape(group.name)}</div>
+                  <div class="group-card-subject">${UI.escape(group.subject)}</div>
                 </div>
                 <div class="group-card-time">
                   🕐 ${group.startTime} - ${group.endTime}
@@ -213,7 +152,7 @@ const HomePage = {
                 <div class="student-avatars">
                   ${group.students.slice(0, 4).map((s, i) => {
                     const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E'];
-                    return `<div class="student-avatar" style="background: ${colors[i % colors.length]};">${s.name.charAt(0)}</div>`;
+                    return `<div class="student-avatar" style="background: ${colors[i % colors.length]};">${UI.escape(s.name.charAt(0))}</div>`;
                   }).join('')}
                   ${group.students.length > 4 ? `<div class="student-avatar" style="background: var(--bg-glass-strong); color: var(--text-secondary); font-size: 0.6rem;">+${group.students.length - 4}</div>` : ''}
                 </div>
@@ -226,7 +165,8 @@ const HomePage = {
                    <span ${!isParent ? 'contenteditable="true"' : ''}
                          ${!isParent ? `onblur="Store.saveNote('${group.id}', '${todayDate}', this.innerText)"` : ''} 
                          style="${!isParent ? 'border-bottom: 1px dashed rgba(255,255,255,0.3);' : ''} outline: none; min-width: 100px; display: inline-block; padding: 2px 4px;" 
-                         data-placeholder="${!isParent ? 'Kazanım girmek için tıklayın...' : 'Henüz girilmedi'}">${savedNote}</span>
+                         data-placeholder="${!isParent ? 'Kazanım girmek için tıklayın...' : 'Henüz girilmedi'}">${UI.escape(savedNote)}</span>
+                   ${planned ? `<small class="plan-source">📅 Yıllık plan · ${UI.escape(planned)}</small>` : ''}
                  </div>
                  ${!isParent ? `
                  <div style="display: flex; gap: 8px;">

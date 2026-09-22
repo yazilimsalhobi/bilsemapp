@@ -23,20 +23,20 @@ const SettingsPage = {
           <div class="card" style="padding: var(--space-lg); background: var(--bg-card); border: 1px solid var(--border-medium); border-radius: var(--radius-lg);">
             <div class="form-group">
               <label class="form-label">👨‍🏫 Öğretmen Adı Soyadı</label>
-              <input type="text" class="form-input" id="set-teacher" value="${savedSchool.teacher || school.teacher || ''}" placeholder="Ad Soyad">
+              <input type="text" class="form-input" id="set-teacher" value="${UI.escape(savedSchool.teacher || school.teacher || '')}" placeholder="Ad Soyad">
             </div>
             <div class="form-group">
               <label class="form-label">🏫 Okul / Kurum Adı</label>
-              <input type="text" class="form-input" id="set-school" value="${savedSchool.name || school.name || ''}" placeholder="Okul adı">
+              <input type="text" class="form-input" id="set-school" value="${UI.escape(savedSchool.name || school.name || '')}" placeholder="Okul adı">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="form-group">
                 <label class="form-label">📚 Branş / Bölüm</label>
-                <input type="text" class="form-input" id="set-dept" value="${savedSchool.department || school.department || ''}" placeholder="Branş">
+                <input type="text" class="form-input" id="set-dept" value="${UI.escape(savedSchool.department || school.department || '')}" placeholder="Branş">
               </div>
               <div class="form-group">
                 <label class="form-label">📅 Eğitim Yılı</label>
-                <input type="text" class="form-input" id="set-year" value="${savedSchool.year || school.year || ''}" placeholder="2026-2027">
+                <input type="text" class="form-input" id="set-year" value="${UI.escape(savedSchool.year || school.year || '')}" placeholder="2026-2027">
               </div>
             </div>
             <button class="btn btn-primary btn-block btn-lg" onclick="SettingsPage.savePersonalInfo()" style="margin-top: var(--space-sm);">
@@ -45,6 +45,7 @@ const SettingsPage = {
           </div>
         </div>
 
+        <div class="card import-card"><h2 class="section-title">Dosyadan aktarım</h2><div class="import-toolbar"><button class="btn btn-primary" onclick="Router.go('import')">PDF / fotoğraftan program yükle</button><button class="btn btn-secondary" onclick="Router.go('annual_plan')">Excel / Word yıllık plan yükle</button></div>${Auth.getCurrentUser()?.email?.toLowerCase() === 'admin@fatsabilsem.com' ? '<button class="btn btn-secondary" onclick="SetupPage.restoreLegacy()">Bu cihazdaki eski yönetici kayıtlarını aktar</button>' : ''}<p id="sync-status">${UI.escape(Store.syncError || 'Bu hesabın verileri ayrı tutulur.')}</p><button class="btn btn-secondary" onclick="SettingsPage.syncWorkspace()">Bulut kaydını yeniden dene</button></div>
         <!-- Program & Öğrenci Yönetimi -->
         <div class="section">
           <div class="section-header">
@@ -123,7 +124,7 @@ const SettingsPage = {
         </div>
 
         <!-- Tüm Ayarları Kaydet Butonu -->
-        <div class="section" style="margin-top: var(--space-md);">
+        <div class="section" data-accordion-title="💾 Tüm Ayarları Kaydet" style="margin-top: var(--space-md);">
           <button class="btn btn-primary btn-block btn-lg" onclick="SettingsPage.saveAllSettings()" style="box-shadow: 0 6px 20px rgba(108, 92, 231, 0.45); font-weight: 700;">
             💾 Tüm Ayarları Kaydet
           </button>
@@ -164,7 +165,7 @@ const SettingsPage = {
         </div>
 
         <!-- Tehlikeli Bölge -->
-        <div class="section">
+        <div class="section" data-accordion-title="🗑️ Veri Sıfırlama">
           <div class="card" style="border: 1px solid rgba(255,107,107,0.25); background: rgba(255,107,107,0.05); padding: var(--space-lg); border-radius: var(--radius-lg);">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
               <span style="font-size: 1.4rem;">⚠️</span>
@@ -178,7 +179,7 @@ const SettingsPage = {
         </div>
 
         <!-- Uygulama Hakkında -->
-        <div class="section" style="text-align: center; padding-bottom: var(--space-xl);">
+        <div class="section" data-accordion-title="ℹ️ Uygulama Hakkında" style="text-align: center; padding-bottom: var(--space-xl);">
           <div style="font-size: 2.2rem; margin-bottom: 8px;">🏫</div>
           <div style="font-weight: 700; font-size: var(--font-md); color: var(--text-secondary);">Fatsa BİLSEM</div>
           <div style="font-size: var(--font-xs); color: var(--text-tertiary);">Ders Programı & Öğrenci Takip v1.2</div>
@@ -189,6 +190,11 @@ const SettingsPage = {
   },
 
   // ========== KİŞİSEL BİLGİLER ==========
+  async syncWorkspace() {
+    const ok = await Store.syncNow();
+    document.getElementById('sync-status').textContent = ok ? 'Hesabınızla eşitlendi.' : Store.syncError;
+  },
+
   savePersonalInfo() {
     const teacher = document.getElementById('set-teacher')?.value?.trim() || '';
     const name = document.getElementById('set-school')?.value?.trim() || '';
@@ -257,7 +263,7 @@ const SettingsPage = {
           <div class="settings-menu-item" style="cursor: pointer; margin-bottom: 8px;" onclick="SettingsPage.editSingleGroup('${group.id}')">
             <div style="width: 10px; height: 40px; border-radius: var(--radius-full); background: ${group.color}; flex-shrink: 0;"></div>
             <div class="settings-menu-info" style="margin-left: 12px;">
-              <div class="settings-menu-title">${group.name}</div>
+              <div class="settings-menu-title">${UI.escape(group.name)}</div>
               <div class="settings-menu-desc">${group.day} • ${group.startTime}-${group.endTime} • ${group.students.length} öğrenci</div>
             </div>
             <span style="color: var(--text-tertiary); font-size: 1.1rem;">✏️</span>
@@ -275,10 +281,10 @@ const SettingsPage = {
     const group = DataHelpers.getGroupById(groupId);
     if (!group) return;
 
-    App.showModal(`✏️ ${group.name} Düzenle`, `
+    App.showModal(`✏️ ${UI.escape(group.name)} Düzenle`, `
       <div class="form-group">
         <label class="form-label">Grup Adı</label>
-        <input type="text" class="form-input" id="eg-name" value="${group.name}">
+        <input type="text" class="form-input" id="eg-name" value="${UI.escape(group.name)}">
       </div>
       <div class="form-group">
         <label class="form-label">Ders Günü</label>
@@ -300,7 +306,7 @@ const SettingsPage = {
       </div>
       <div class="form-group">
         <label class="form-label">Ders / Branş</label>
-        <input type="text" class="form-input" id="eg-subject" value="${group.subject}">
+        <input type="text" class="form-input" id="eg-subject" value="${UI.escape(group.subject)}">
       </div>
       <div class="form-group">
         <label class="form-label">Zaman Dilimi</label>
@@ -485,7 +491,7 @@ const SettingsPage = {
           <div class="settings-menu-item" style="cursor: pointer; margin-bottom: 8px;" onclick="SettingsPage.editGroupStudents('${group.id}')">
             <div style="width: 10px; height: 40px; border-radius: var(--radius-full); background: ${group.color}; flex-shrink: 0;"></div>
             <div class="settings-menu-info" style="margin-left: 12px;">
-              <div class="settings-menu-title">${group.name}</div>
+              <div class="settings-menu-title">${UI.escape(group.name)}</div>
               <div class="settings-menu-desc">${group.day} • ${group.students.length} öğrenci</div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -502,7 +508,7 @@ const SettingsPage = {
     const group = DataHelpers.getGroupById(groupId);
     if (!group) return;
 
-    App.showModal(`👥 ${group.name} — Öğrenci Listesi`, `
+    App.showModal(`👥 ${UI.escape(group.name)} — Öğrenci Listesi`, `
       <p style="color: var(--text-tertiary); font-size: var(--font-xs); margin-bottom: var(--space-md);">
         Öğrenci isimlerini doğrudan kutulardan değiştirebilir veya alttan yeni öğrenci ekleyebilirsiniz. Bitirdiğinizde aşağıdaki <b>Kaydet</b> butonuna basınız.
       </p>
@@ -516,9 +522,9 @@ const SettingsPage = {
               ${student.name ? student.name.charAt(0) : '?'}
             </div>
             <div style="flex: 1;">
-              <input type="text" class="form-input student-name-input" 
+              <input type="text" class="form-input student-name-input"
                      data-student-id="${student.id}"
-                     value="${student.name}" 
+                     value="${UI.escape(student.name)}"
                      placeholder="Öğrenci Adı Soyadı"
                      style="padding: 8px 12px; font-size: var(--font-sm);">
             </div>
@@ -578,7 +584,7 @@ const SettingsPage = {
     // Kalıcı kayıt
     Store.setSetting('customGroups', BILSEM_DATA.groups);
     App.closeModal();
-    Toast.show(`${group.name} öğrenci listesi kaydedildi! ✅`, 'success');
+    Toast.show(`${UI.escape(group.name)} öğrenci listesi kaydedildi! ✅`, 'success');
 
     if (Router.currentPage === 'settings') {
       this.render(document.getElementById('page-content'));
@@ -672,19 +678,19 @@ const SettingsPage = {
           <div class="parent-group-section" style="margin-bottom: var(--space-lg);">
             <div style="font-weight: 700; font-size: var(--font-sm); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; position: sticky; top: 0; background: var(--bg-secondary); padding: 4px 0; z-index: 2;">
               <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${group.color};"></span>
-              ${group.name} <span style="color: var(--text-tertiary); font-weight: 400; font-size: var(--font-xs);">(${group.day})</span>
+              ${UI.escape(group.name)} <span style="color: var(--text-tertiary); font-weight: 400; font-size: var(--font-xs);">(${group.day})</span>
             </div>
             ${group.students.map(student => {
               const pInfo = parents[student.id];
               return `
-                <div class="parent-student-row" data-name="${student.name.toLowerCase()}" style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 6px; align-items: center;">
-                  <div style="font-size: var(--font-xs); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${student.name}">${student.name}</div>
-                  <input type="text" class="form-input" placeholder="Veli adı" 
-                         value="${pInfo?.parentName || ''}" 
+                <div class="parent-student-row" data-name="${UI.escape(student.name.toLowerCase())}" style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 6px; align-items: center;">
+                  <div style="font-size: var(--font-xs); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UI.escape(student.name)}">${UI.escape(student.name)}</div>
+                  <input type="text" class="form-input" placeholder="Veli adı"
+                         value="${pInfo?.parentName || ''}"
                          data-student="${student.id}" data-field="name"
                          style="padding: 6px 8px; font-size: var(--font-xs);">
-                  <input type="tel" class="form-input" placeholder="05XX XXX XX XX" 
-                         value="${pInfo?.parentPhone || ''}" 
+                  <input type="tel" class="form-input" placeholder="05XX XXX XX XX"
+                         value="${pInfo?.parentPhone || ''}"
                          data-student="${student.id}" data-field="phone"
                          style="padding: 6px 8px; font-size: var(--font-xs);">
                 </div>

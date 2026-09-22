@@ -39,6 +39,7 @@ const Auth = {
         ++this._authRevision;
         // Sadece gerçek çıkış olayında null yap
         this.currentUser = null;
+        if (typeof Store !== 'undefined' && Store.resetUser) Store.resetUser();
         if (typeof App !== 'undefined' && typeof App.updateNavigationVisibility === 'function') {
           App.updateNavigationVisibility();
         }
@@ -57,6 +58,8 @@ const Auth = {
           if (revision !== this._authRevision) return;
           try {
             await this.fetchUserProfile(user);
+            if (revision !== this._authRevision) return;
+            if (typeof Store !== 'undefined' && Store.loadAllFromSupabase) await Store.loadAllFromSupabase();
             if (revision !== this._authRevision) return;
             if (typeof App !== 'undefined' && typeof App.updateNavigationVisibility === 'function') {
               App.updateNavigationVisibility();
@@ -86,7 +89,7 @@ const Auth = {
       this.currentUser = {
         id: user.id,
         email: user.email || '',
-        role: user.user_metadata?.role || 'parent',
+        role: 'teacher',
         studentId: user.user_metadata?.student_id || null
       };
     }
@@ -120,13 +123,13 @@ const Auth = {
           this.currentUser = {
             id: user.id,
             email: user.email || this.currentUser.email,
-            role: data.role || this.currentUser.role || 'parent',
+            role: data.role === 'admin' ? 'admin' : 'teacher',
             studentId: data.student_id !== undefined ? data.student_id : this.currentUser.studentId
           };
         } else if (!error) {
           // Profil tablosunda henüz kayıt yoksa arka planda oluşturmayı dene (RLS engellerse sessizce geç)
           window.supabaseClient.from('profiles').insert([
-            { id: user.id, email: user.email, role: this.currentUser?.role || 'parent' }
+            { id: user.id, email: user.email, role: this.currentUser?.role || 'teacher' }
           ]).then(({ error: insertError }) => {
             if (insertError) {
               console.warn('[Auth] Profil insert atlandı (RLS aktif olabilir):', insertError.message);
@@ -184,7 +187,7 @@ const Auth = {
       this.currentUser = {
         id: data.user.id,
         email: data.user.email || email,
-        role: data.user.user_metadata?.role || 'parent',
+        role: 'teacher',
         studentId: null
       };
       await this.fetchUserProfile(data.user);
@@ -192,7 +195,7 @@ const Auth = {
     return { success: true };
   },
 
-  async registerWithEmail(email, password, studentId = null) {
+  async registerWithEmail(email, password) {
     if (!window.supabaseClient) return { success: false, message: 'Bağlantı hatası: Sunucuya ulaşılamıyor.' };
 
     const { data, error } = await window.supabaseClient.auth.signUp({
@@ -205,11 +208,6 @@ const Auth = {
     }
 
     if (data.user) {
-      // Profil oluştur
-      await window.supabaseClient.from('profiles').insert([
-        { id: data.user.id, email: data.user.email, role: 'parent', student_id: studentId }
-      ]);
-      
       // Eğer email onayı gerekiyorsa session null döner
       if (!data.session) {
         return { success: true, needsEmailConfirmation: true };
@@ -248,7 +246,10 @@ const Auth = {
   },
 
   async logout() {
-    await window.supabaseClient.auth.signOut();
+    if (typeof Store !== 'undefined' && Store.syncNow) await Store.syncNow();
+    const { error } = await window.supabaseClient.auth.signOut();
+    if (error) { Toast.show('Çıkış yapılamadı. Tekrar deneyin.', 'error'); return; }
+    if (typeof Store !== 'undefined' && Store.resetUser) Store.resetUser();
     this.currentUser = null;
     if (typeof App !== 'undefined' && App.updateNavigationVisibility) {
       App.updateNavigationVisibility();

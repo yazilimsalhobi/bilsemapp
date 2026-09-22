@@ -65,10 +65,10 @@ const AttendancePage = {
         <div class="group-card-header">
           <div class="group-card-info">
             <div class="group-card-name" style="display: flex; align-items: center; gap: 8px;">
-              ${group.name}
+              ${UI.escape(group.name)}
               ${attendance ? '<span class="chip chip-sm" style="background: rgba(0,184,148,0.15); color: var(--success); border-color: var(--success);">✅ Alındı</span>' : ''}
             </div>
-            <div class="group-card-subject">${group.day} • ${group.subject} • ${group.students.length} öğrenci</div>
+            <div class="group-card-subject">${group.day} • ${UI.escape(group.subject)} • ${group.students.length} öğrenci</div>
           </div>
           <div class="group-card-time">🕐 ${group.startTime}</div>
         </div>
@@ -104,8 +104,8 @@ const AttendancePage = {
       <div style="display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-lg);">
         <button class="btn btn-ghost btn-icon" onclick="Router.go('attendance')">←</button>
         <div style="flex: 1;">
-          <div style="font-weight: 700; font-size: var(--font-md);">${group.name}</div>
-          <div style="font-size: var(--font-sm); color: var(--text-tertiary);">${group.day} • ${group.subject} • ${this.currentDate}</div>
+          <div style="font-weight: 700; font-size: var(--font-md);">${UI.escape(group.name)}</div>
+          <div style="font-size: var(--font-sm); color: var(--text-tertiary);">${group.day} • ${UI.escape(group.subject)} • ${this.currentDate}</div>
         </div>
         <div class="chip" style="background: ${group.color}20; color: ${group.color}; border-color: ${group.color}40;">
           ${displayStudents.length} kişi
@@ -132,10 +132,10 @@ const AttendancePage = {
           return `
             <div class="attendance-item" id="att-${student.id}" data-student="${student.id}">
               <div class="student-card-avatar" style="background: ${this.getAvatarColor(index)}; width: 38px; height: 38px; font-size: 0.85rem;">
-                ${student.name.charAt(0)}
+                ${UI.escape(student.name.charAt(0))}
               </div>
               <div class="student-info" style="flex: 1; min-width: 0;">
-                <div class="student-name truncate">${student.name}</div>
+                <div class="student-name truncate">${UI.escape(student.name)}</div>
                 ${student.note && !isParent ? `<div class="student-note">${student.note}</div>` : ''}
               </div>
               <div class="attendance-actions">
@@ -277,11 +277,11 @@ const AttendancePage = {
           return `
             <div class="attendance-item" style="margin-bottom: 8px;">
               <div style="flex: 1;">
-                <div class="student-name">${student.name}</div>
+                <div class="student-name">${UI.escape(student.name)}</div>
                 <div class="student-note">${parentInfo?.parentPhone || 'Telefon kayıtlı değil'}</div>
               </div>
               ${parentInfo?.parentPhone ? `
-                <button class="btn btn-sm btn-success" onclick="Notifications.sendWhatsApp('${parentInfo.parentPhone}', Notifications.createAbsenceMessage('${student.name}', '${group.name}', '${this.currentDate}'))">
+                <button class="btn btn-sm btn-success" onclick="Notifications.messageParent('${student.id}', '${group.id}', '${this.currentDate}')">
                   💬 Gönder
                 </button>
               ` : `
@@ -313,7 +313,7 @@ const AttendancePage = {
       return;
     }
 
-    App.showModal(`📜 ${group.name} — Geçmiş`, `
+    App.showModal(`📜 ${UI.escape(group.name)} — Geçmiş`, `
       <div class="stagger-children">
         ${history.slice(0, 20).map(entry => {
           let records = entry.records;
