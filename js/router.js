@@ -107,6 +107,11 @@ const Router = {
    * Programatik yönlendirme
    */
   go(page, params = '') {
-    window.location.hash = params ? `${page}/${params}` : page;
+    const newHash = params ? `${page}/${params}` : page;
+    if (window.location.hash.slice(1) === newHash) {
+      this.handleRoute();
+    } else {
+      window.location.hash = newHash;
+    }
   }
 };
