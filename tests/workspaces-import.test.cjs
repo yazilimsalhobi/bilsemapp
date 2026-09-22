@@ -64,3 +64,44 @@ test('invalid dates and times are rejected; imported HTML is escaped',()=>{
 test('Turkish month ranges cross months and academic years correctly',()=>{
  const h=env();assert.equal(h.ImportParsers.dateRange('28 Eylül - 2 Ekim',2026).end,'2026-10-02');assert.equal(h.ImportParsers.dateRange('4-8 Ocak',2026).start,'2027-01-04');assert.equal(h.ImportParsers.dateRange('28.12 - 03.01',2026).end,'2027-01-03');
 });
+test('ders_programi.txt full parse finds all groups with students and timeSlots',()=>{
+ const h=env();const text=fs.readFileSync(path.join(__dirname,'..','ders_programi.txt'),'utf8');
+ const groups=h.ImportParsers.schedule(text);
+ // Should find at least 9 groups across SALI, ÇARŞAMBA, PERŞEMBE, CUMA, CUMARTESİ
+ assert.ok(groups.length>=9,`Expected >=9 groups, got ${groups.length}`);
+ // Check days are detected
+ const days=new Set(groups.map(g=>g.day));
+ assert.ok(days.has('Salı'),'should find Salı');
+ assert.ok(days.has('Çarşamba'),'should find Çarşamba');
+ assert.ok(days.has('Perşembe'),'should find Perşembe');
+ assert.ok(days.has('Cuma'),'should find Cuma');
+ assert.ok(days.has('Cumartesi'),'should find Cumartesi');
+ // All groups should have at least 1 student
+ for(const g of groups) assert.ok(g.students.length>=1,`${g.name} should have students, got ${g.students.length}`);
+ // Total students across all groups should be reasonable (>30)
+ const totalStudents=groups.reduce((s,g)=>s+g.students.length,0);
+ assert.ok(totalStudents>=30,`Expected >=30 total students, got ${totalStudents}`);
+ // BYF-2 D group should exist on Salı with specific students
+ const byf2d=groups.find(g=>g.name.includes('BYF-2 D')&&g.day==='Salı');
+ assert.ok(byf2d,'BYF-2 D on Salı should exist');
+ assert.ok(byf2d.students.length>=4,`BYF-2 D should have >=4 students, got ${byf2d.students.length}`);
+ // Subjects should be detected
+ const subjects=new Set(groups.map(g=>g.subject).filter(Boolean));
+ assert.ok(subjects.size>=1,`should detect at least 1 subject, got ${subjects.size}`);
+ // TimeSlot should be captured for at least some groups
+ const withSlot=groups.filter(g=>g.timeSlot);
+ assert.ok(withSlot.length>=1,`should have timeSlot on some groups, got ${withSlot.length}`);
+});
+test('branch filtering keeps only selected subjects',()=>{
+ const h=env();const groups=h.ImportParsers.schedule('PAZARTESİ\n09:00 - 10:00\nBYF 1-A\nMatematik\n■A Öğrenci\nSALI\n10:00 - 11:00\nBYF 1-B\nCoğrafya\n■B Öğrenci\nÇARŞAMBA\n11:00 - 12:00\nBYF 1-C\nMatematik\n■C Öğrenci');
+ assert.equal(groups.length,3);
+ const coğrafya=groups.filter(g=>g.subject.toLowerCase().includes('coğrafya'));
+ assert.equal(coğrafya.length,1);
+ assert.equal(coğrafya[0].name,'BYF 1-B');
+ const matematik=groups.filter(g=>g.subject.toLowerCase().includes('matematik'));
+ assert.equal(matematik.length,2);
+});
+test('annual plan recognizes etkinlik and icerik column headers',()=>{
+ const h=env();const plans=h.ImportParsers.annual([['Hafta','Süre','Etkinlik'],['1','1 hafta','Harita çizimi'],['2','1 hafta','Yön bulma']],{year:2026,firstWeek:'2026-09-21'});
+ assert.equal(plans.length,2);assert.equal(plans[0].topic,'Harita çizimi');assert.equal(plans[1].topic,'Yön bulma');
+});

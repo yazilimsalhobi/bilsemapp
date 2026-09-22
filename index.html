@@ -159,19 +159,25 @@
       <span class="nav-icon">📅</span>
       <span class="nav-label">Program</span>
     </a>
-    <a class="nav-item" data-page="attendance" href="#attendance">
-      <span class="nav-icon">✅</span>
-      <span class="nav-label">Yoklama</span>
+    <div class="nav-item nav-group-trigger" id="nav-group-trigger">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Dersler</span>
+      <div class="nav-popup" id="nav-popup">
+        <a class="nav-popup-item" data-page="attendance" href="#attendance">
+          <span>✅</span> Yoklama
+        </a>
+        <a class="nav-popup-item" data-page="homework" href="#homework">
+          <span>📝</span> Ödev
+        </a>
+        <a class="nav-popup-item" data-page="students" href="#students">
+          <span>👥</span> Öğrenci
+        </a>
+      </div>
+    </div>
+    <a class="nav-item" data-page="annual_plan" href="#annual_plan">
+      <span class="nav-icon">🗓️</span>
+      <span class="nav-label">Plan</span>
     </a>
-    <a class="nav-item" data-page="homework" href="#homework">
-      <span class="nav-icon">📝</span>
-      <span class="nav-label">Ödev</span>
-    </a>
-    <a class="nav-item" data-page="students" href="#students">
-      <span class="nav-icon">👥</span>
-      <span class="nav-label">Öğrenci</span>
-    </a>
-    <a class="nav-item" data-page="annual_plan" href="#annual_plan"><span class="nav-icon">📅</span><span class="nav-label">Yıllık Plan</span></a>
     <a class="nav-item" data-page="settings" href="#settings">
       <span class="nav-icon">⚙️</span>
       <span class="nav-label">Ayarlar</span>
@@ -194,39 +200,39 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Core Scripts -->
-  <script src="js/ui.js?v=7"></script>
-  <script src="js/data.js?v=7"></script>
-  <script src="js/store.js?v=7"></script>
+  <script src="js/ui.js?v=8"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/store.js?v=8"></script>
   
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase.js?v=7"></script>
+  <script src="js/supabase.js?v=8"></script>
   
   <!-- Auth & Router -->
-  <script src="js/auth.js?v=7"></script>
-  <script src="js/router.js?v=7"></script>
+  <script src="js/auth.js?v=8"></script>
+  <script src="js/router.js?v=8"></script>
   
-  <script src="js/importers.js?v=7"></script>
-  <script src="js/dashboard.js?v=7"></script>
+  <script src="js/importers.js?v=8"></script>
+  <script src="js/dashboard.js?v=8"></script>
   <!-- Pages -->
-  <script src="js/pages/setup.js?v=7"></script>
-  <script src="js/pages/import.js?v=7"></script>
-  <script src="js/pages/login.js?v=7"></script>
-  <script src="js/pages/home.js?v=7"></script>
-  <script src="js/pages/schedule.js?v=7"></script>
-  <script src="js/pages/attendance.js?v=7"></script>
-  <script src="js/pages/homework.js?v=7"></script>
-  <script src="js/pages/students.js?v=7"></script>
-  <script src="js/pages/stats.js?v=7"></script>
-  <script src="js/pages/settings.js?v=7"></script>
-  <script src="js/pages/annual_plan.js?v=7"></script>
-  <script src="js/pages/competitions.js?v=7"></script>
+  <script src="js/pages/setup.js?v=8"></script>
+  <script src="js/pages/import.js?v=8"></script>
+  <script src="js/pages/login.js?v=8"></script>
+  <script src="js/pages/home.js?v=8"></script>
+  <script src="js/pages/schedule.js?v=8"></script>
+  <script src="js/pages/attendance.js?v=8"></script>
+  <script src="js/pages/homework.js?v=8"></script>
+  <script src="js/pages/students.js?v=8"></script>
+  <script src="js/pages/stats.js?v=8"></script>
+  <script src="js/pages/settings.js?v=8"></script>
+  <script src="js/pages/annual_plan.js?v=8"></script>
+  <script src="js/pages/competitions.js?v=8"></script>
   
   <!-- UI Components -->
-  <script src="js/notifications.js?v=7"></script>
+  <script src="js/notifications.js?v=8"></script>
   
   <!-- App Entry -->
-  <script src="js/app.js?v=7"></script>
+  <script src="js/app.js?v=8"></script>
 
   <!-- Service Worker -->
   <script>

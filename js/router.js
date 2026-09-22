@@ -129,7 +129,16 @@ const Router = {
    * Bottom nav aktif durumu güncelle
    */
   updateNav(page) {
+    const groupedPages = ['attendance', 'homework', 'students'];
     document.querySelectorAll('.nav-item').forEach(item => {
+      if (item.classList.contains('nav-group-trigger')) {
+        item.classList.toggle('active', groupedPages.includes(page));
+      } else {
+        item.classList.toggle('active', item.dataset.page === page);
+      }
+    });
+    // Also highlight the active popup item
+    document.querySelectorAll('.nav-popup-item').forEach(item => {
       item.classList.toggle('active', item.dataset.page === page);
     });
   },

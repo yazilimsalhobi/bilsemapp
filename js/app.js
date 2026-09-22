@@ -76,16 +76,17 @@ const App = {
   },
 
   setupNavigation() {
-    document.querySelectorAll('.nav-item').forEach(item => {
+    const trigger = document.getElementById('nav-group-trigger');
+    const popup = document.getElementById('nav-popup');
+
+    // Regular nav items (not inside popup)
+    document.querySelectorAll('.nav-item:not(.nav-group-trigger)').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
-
-        // Açık olan modal veya ekranları hemen kapat
+        this.closeNavPopup();
         this.closeModal();
-
         const page = item.dataset.page;
         if (Router.currentPage === page) {
-          // Zaten aynı sayfadaysak en üste yumuşak kaydır
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           Router.go(page);
@@ -93,12 +94,50 @@ const App = {
       });
     });
 
-    // ESC tuşuna basıldığında da açık olan ekranı kapat
+    // Popup trigger toggle
+    if (trigger && popup) {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (popup.classList.contains('open')) {
+          this.closeNavPopup();
+        } else {
+          popup.classList.add('open');
+        }
+      });
+
+      // Popup items navigate + close
+      popup.querySelectorAll('.nav-popup-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.closeNavPopup();
+          this.closeModal();
+          const page = item.dataset.page;
+          Router.go(page);
+        });
+      });
+    }
+
+    // Click outside closes popup
+    document.addEventListener('click', (e) => {
+      if (popup && popup.classList.contains('open') && !trigger.contains(e.target)) {
+        this.closeNavPopup();
+      }
+    });
+
+    // ESC closes popup and modal
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        this.closeNavPopup();
         this.closeModal();
       }
     });
+  },
+
+  closeNavPopup() {
+    const popup = document.getElementById('nav-popup');
+    if (popup) popup.classList.remove('open');
   },
 
   updateNavigationVisibility() {
@@ -124,14 +163,13 @@ const App = {
     if (brand) brand.textContent = BILSEM_DATA.school.name || 'BİLSEM';
     if (subtitle) subtitle.textContent = BILSEM_DATA.school.department || 'Kişisel ders takibi';
     
-    document.querySelectorAll('.nav-item').forEach(item => {
+    document.querySelectorAll('.bottom-nav > .nav-item').forEach(item => {
       const page = item.dataset.page;
       if (isParent) {
-        if (['home', 'schedule', 'attendance'].includes(page)) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = 'none';
-        }
+        // Parents see Home, Schedule, and Dersler (which has attendance inside)
+        const parentPages = ['home', 'schedule'];
+        const isTrigger = item.classList.contains('nav-group-trigger');
+        item.style.display = (parentPages.includes(page) || isTrigger) ? 'flex' : 'none';
       } else {
         item.style.display = 'flex';
       }

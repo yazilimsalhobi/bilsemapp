@@ -32,7 +32,7 @@ const FileReaders = {
           const page = await pdf.getPage(n);
           const content = await page.getTextContent();
           const items = content.items.filter(item => item.str?.trim());
-          if (items.map(item => item.str).join('').length < 25) {
+          if (items.map(item => item.str).join('').length < 15) {
             const viewport = page.getViewport({ scale: 2 });
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width; canvas.height = viewport.height;
@@ -55,7 +55,7 @@ const FileReaders = {
                 const previous = ordered[i - 1];
                 const gap = item.transform[4] - previous.transform[4] - previous.width;
                 // PDF fonts often split Turkish letters into separate text items.
-                return (gap < 2 ? '' : gap < 14 ? ' ' : '\t') + item.str;
+                return (gap < 2 ? '' : gap < 10 ? ' ' : '\t') + item.str;
               }).join('');
             }).join('\n'));
           }
@@ -99,8 +99,8 @@ const ImportParsers = {
   },
   schedule(text) {
     const groups = [];
-    let day = '', current = null, times = [], subject = '', columns = null;
-    const subjects = /^(co[gğ]rafya|sosyal bilgiler|matematik|t[uü]rk[cç]e|fen bilimleri|ingilizce|m[uü]zik|g[oö]rsel sanatlar|bilim|robotik|yaz[iı]l[iı]m)/i;
+    let day = '', current = null, times = [], subject = '', columns = null, timeSlot = '';
+    const subjects = /^(co[gğ]rafya|sosyal bilgiler|matematik|t[uü]rk[cç]e|fen bilimleri|ingilizce|m[uü]zik|g[oö]rsel sanatlar|bilim|robotik|yaz[iı]l[iı]m|beden e[gğ]itimi|resim|teknoloji|bili[sş]im)/i;
     for (const raw of text.split(/\r?\n/)) {
       const line = raw.trim();
       if (!line) continue;
@@ -126,9 +126,12 @@ const ImportParsers = {
         }
       }
       const foundDay = UI.days.find(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(normalized));
-      if (foundDay) { if (day !== foundDay) { times = []; current = null; } day = foundDay; }
+      if (foundDay) { if (day !== foundDay) { times = []; current = null; timeSlot = ''; } day = foundDay; }
+      // Capture time slot labels like "Akşam Grubu", "Sabah ve Öğle Grubu"
+      const slotMatch = line.match(/^((?:Ak[sş]am|Sabah|[OÖ][gğ]le)(?:\s+ve\s+(?:Ak[sş]am|Sabah|[OÖ][gğ]le))?\s+Grubu)/i);
+      if (slotMatch) { timeSlot = slotMatch[1]; continue; }
       const ranges = [...line.matchAll(/(\d{1,2}[:.]\d{2})\s*[-–—]\s*(\d{1,2}[:.]\d{2})/g)].map(m => ({ start: this.time(m[1]), end: this.time(m[2]) })).filter(t => t.start && t.end);
-      const groupMatch = line.match(/(?<!\p{L})(?:BYF|[OÖ]YG|UYUM|DESTEK|PROJE)\s*[-:]?\s*[\p{L}\p{N}() _-]+/iu) || line.match(/(?:Grup|Sınıf)\s*[:=]\s*([^\t;|]+)/iu);
+      const groupMatch = line.match(/(?<!\p{L})(?:BYF[-\s]?\d?|[OÖ]YG|UYUM|DESTEK|PROJE)\s*[-:]?\s*[\p{L}\p{N}() _-]+/iu) || line.match(/(?:Grup|Sınıf)\s*[:=]\s*([^\t;|]+)/iu);
       const detailedLesson = /\d+\.?\s*ders/i.test(line);
       if (ranges.length) {
         if (current && !groupMatch && detailedLesson) {
@@ -144,7 +147,7 @@ const ImportParsers = {
       }
       if (groupMatch && day) {
         const name = (groupMatch[1] || groupMatch[0]).split(/\t|;|\|/)[0].replace(/\d{1,2}[:.]\d{2}.*/, '').trim();
-        current = { id: UI.id('grp'), name, day, dayIndex: UI.days.indexOf(day), subject: '', timeSlot: '', startTime: times[0]?.start || '', endTime: times[0]?.end || '',
+        current = { id: UI.id('grp'), name, day, dayIndex: UI.days.indexOf(day), subject: '', timeSlot: timeSlot, startTime: times[0]?.start || '', endTime: times[0]?.end || '',
           lessons: times.slice(1).map((t, i) => ({ order: i + 1, ...t })), color: BILSEM_DATA.dayColors[day].bg, students: [] };
         if (!current.lessons.length && times.length) current.lessons = [{ order: 1, ...times[0] }];
         groups.push(current); times = []; subject = '';
@@ -219,9 +222,9 @@ const ImportParsers = {
     for (const raw of rows) {
       const row = raw.map(v => String(v ?? '').trim());
       const normalized = row.map(UI.normalize);
-      if (normalized.some(v => /kazanim|ogrenme cikti|hedef|konu/.test(v)) && normalized.some(v => /tarih|hafta/.test(v))) {
+      if (normalized.some(v => /kazanim|ogrenme cikti|hedef|konu|etkinlik|icerik|aciklama/.test(v)) && normalized.some(v => /tarih|hafta|sure/.test(v))) {
         columns = { topic: normalized.findIndex(v => /kazanim|ogrenme cikti|hedef/.test(v)), date: normalized.findIndex(v => /tarih/.test(v)), week: normalized.findIndex(v => /hafta/.test(v)) };
-        if (columns.topic < 0) columns.topic = normalized.findIndex(v => /konu/.test(v));
+        if (columns.topic < 0) columns.topic = normalized.findIndex(v => /konu|etkinlik|icerik|aciklama/.test(v));
         continue;
       }
       const range = this.dateRange(columns?.date >= 0 ? row[columns.date] : row.join(' '), year);
