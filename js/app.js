@@ -105,15 +105,18 @@ const App = {
   updateNavigationVisibility() {
     const bottomNav = document.querySelector('.bottom-nav');
     const logoutBtn = document.getElementById('logout-btn');
+    const header = document.querySelector('.app-header');
     
     if (!window.Auth || !Auth.isAuthenticated()) {
       if (bottomNav) bottomNav.style.display = 'none';
       if (logoutBtn) logoutBtn.style.display = 'none';
+      if (header) header.style.display = 'none';
       return;
     }
 
     if (bottomNav) bottomNav.style.display = 'flex';
-    if (logoutBtn) logoutBtn.style.display = 'flex';
+    if (logoutBtn) logoutBtn.style.display = 'block';
+    if (header) header.style.display = 'block';
 
     const user = Auth.getCurrentUser();
     const isParent = user.role === 'parent';
