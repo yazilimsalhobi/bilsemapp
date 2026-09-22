@@ -7,7 +7,13 @@ const Auth = {
 
   async init() {
     // Mevcut oturumu al
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const { data, error } = await window.supabaseClient.auth.getSession();
+    
+    if (error) {
+      console.warn('Oturum bilgisi alınamadı:', error.message);
+    }
+    
+    const session = data?.session;
     if (session) {
       await this.fetchUserProfile(session.user);
     }
