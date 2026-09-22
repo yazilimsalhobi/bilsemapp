@@ -16,13 +16,15 @@ const HomePage = {
     const nextLesson = DataHelpers.getNextLesson();
     const stats = Store.getOverallStats();
     const dayColor = BILSEM_DATA.dayColors[dayName];
+    const teacherFirst = BILSEM_DATA.school?.teacher ? BILSEM_DATA.school.teacher.split(' ')[0] : '';
+    const welcomeGreeting = teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim';
 
     container.innerHTML = `
       <div class="page-container fade-in">
         <!-- Karşılama -->
         <div class="welcome-section">
           <div class="welcome-date">${dayColor?.emoji || '📅'} ${dayName}, ${DataHelpers.formatDate(now)}</div>
-          <h1 class="welcome-title">Merhaba, <span class="text-gradient">Öğretmenim</span> 👋</h1>
+          <h1 class="welcome-title">Merhaba, <span class="text-gradient">${welcomeGreeting}</span> 👋</h1>
         </div>
 
         <!-- Aktif / Sonraki Ders -->

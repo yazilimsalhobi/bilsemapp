@@ -4,6 +4,9 @@
 
 const App = {
   init() {
+    // Kayıtlı verileri yükle (okul bilgisi, gruplar vb.)
+    this.loadSavedData();
+
     // Toast sistemini başlat
     Toast.init();
 
@@ -53,14 +56,26 @@ const App = {
   },
 
   // ====== MODAL ======
-  showModal(title, content) {
+  showModal(title, content, footerContent = null) {
     const backdrop = document.getElementById('modal-backdrop');
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
+    const modalFooter = document.getElementById('modal-footer');
 
     if (modalTitle) modalTitle.textContent = title;
     if (modalBody) modalBody.innerHTML = content;
+
+    if (modalFooter) {
+      if (footerContent) {
+        modalFooter.innerHTML = footerContent;
+        modalFooter.style.display = 'block';
+      } else {
+        modalFooter.innerHTML = '';
+        modalFooter.style.display = 'none';
+      }
+    }
+
     if (backdrop) backdrop.classList.add('active');
     if (modal) modal.classList.add('active');
 
@@ -73,10 +88,33 @@ const App = {
   closeModal() {
     const backdrop = document.getElementById('modal-backdrop');
     const modal = document.getElementById('modal');
+    const modalFooter = document.getElementById('modal-footer');
+
     if (modal) modal.classList.remove('active');
     setTimeout(() => {
       if (backdrop) backdrop.classList.remove('active');
+      if (modalFooter) {
+        modalFooter.innerHTML = '';
+        modalFooter.style.display = 'none';
+      }
     }, 300);
+  },
+
+  // ====== VERİ YÜKLEME ======
+  loadSavedData() {
+    try {
+      const savedSchool = Store.getSetting('schoolInfo');
+      if (savedSchool && typeof savedSchool === 'object') {
+        Object.assign(BILSEM_DATA.school, savedSchool);
+      }
+
+      const savedGroups = Store.getSetting('customGroups');
+      if (savedGroups && Array.isArray(savedGroups) && savedGroups.length > 0) {
+        BILSEM_DATA.groups = savedGroups;
+      }
+    } catch (e) {
+      console.error('Kayıtlı veriler yüklenirken hata:', e);
+    }
   },
 
   // ====== TEMA ======
