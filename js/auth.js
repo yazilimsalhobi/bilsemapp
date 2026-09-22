@@ -4,6 +4,8 @@
 
 const Auth = {
   currentUser: null,
+  _profilePromise: null,
+  _fetchingUserId: null,
 
   async init() {
     if (!window.supabaseClient) {
@@ -24,62 +26,110 @@ const Auth = {
     }
     
     const session = data?.session;
-    if (session) {
+    if (session?.user) {
       await this.fetchUserProfile(session.user);
     }
     
     // Oturum değişikliklerini dinle
     window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        // Profili güncelle
-        await this.fetchUserProfile(session.user);
-        
-        // Nav görünürlüğünü güncelle
-        if (window.App && typeof App.updateNavigationVisibility === 'function') {
-          App.updateNavigationVisibility();
-        }
-
-        // SADECE OAuth geri dönüşü için yönlendir (access_token hash'de vardır)
-        // Email girişi için navigasyon handleLogin tarafından yönetilir
-        if (window.location.hash.includes('access_token=') && window.Router && Router._initialized) {
-          Router.go('home');
-        }
-      } else {
+      console.log('[Auth] onAuthStateChange:', event, !!session);
+      
+      if (event === 'SIGNED_OUT') {
+        // Sadece gerçek çıkış olayında null yap
         this.currentUser = null;
         if (window.App && typeof App.updateNavigationVisibility === 'function') {
           App.updateNavigationVisibility();
         }
+        if (window.Router && Router._initialized) {
+          Router.go('login');
+        }
+        return;
       }
+
+      if (session?.user) {
+        await this.fetchUserProfile(session.user);
+        if (window.App && typeof App.updateNavigationVisibility === 'function') {
+          App.updateNavigationVisibility();
+        }
+        // OAuth geri dönüşünde veya kullanıcı login sayfasındayken home'a yönlendir
+        if (window.location.hash.includes('access_token=') && window.Router && Router._initialized) {
+          Router.go('home');
+        }
+      }
+      // ÖNEMLİ: session null veya boş geldiğinde (SIGNED_OUT haricinde) currentUser ASLA null yapılmaz!
     });
   },
 
   async fetchUserProfile(user) {
-    // profiles tablosundan rolü ve öğrenci ID'sini getir
-    const { data, error } = await window.supabaseClient
-      .from('profiles')
-      .select('role, student_id')
-      .eq('id', user.id)
-      .single();
+    if (!user || !user.id) {
+      console.warn('[Auth] fetchUserProfile: Geçersiz user nesnesi', user);
+      return;
+    }
 
-    if (data) {
+    // 1. SAVUNMACI ANINDA ATAMA:
+    // Ağ sorgusu, RLS kısıtlaması veya gecikmeler sırasında Auth.isAuthenticated()
+    // ASLA false dönmesin diye currentUser'ı HEMEN senkron olarak set ediyoruz.
+    if (!this.currentUser || this.currentUser.id !== user.id) {
       this.currentUser = {
         id: user.id,
-        email: user.email,
-        role: data.role || 'parent',
-        studentId: data.student_id
-      };
-    } else {
-      // Eğer profil yoksa (ilk defa Google ile giriş yapıldıysa vs.) varsayılan parent oluştur
-      await window.supabaseClient.from('profiles').insert([
-        { id: user.id, email: user.email, role: 'parent' }
-      ]);
-      this.currentUser = {
-        id: user.id,
-        email: user.email,
-        role: 'parent',
-        studentId: null
+        email: user.email || '',
+        role: user.user_metadata?.role || 'parent',
+        studentId: user.user_metadata?.student_id || null
       };
     }
+
+    // 2. RACE CONDITION KİLİDİ:
+    // Eğer aynı kullanıcı için zaten profil sorgusu devam ediyorsa, mükerrer istek atmak yerine mevcut Promise'i bekle
+    if (this._profilePromise && this._fetchingUserId === user.id) {
+      return this._profilePromise;
+    }
+
+    this._fetchingUserId = user.id;
+    this._profilePromise = (async () => {
+      try {
+        if (!window.supabaseClient) return;
+
+        // profiles tablosundan rolü ve öğrenci ID'sini getir
+        // maybeSingle() 0 satır döndüğünde hata (PGRST116) fırlatmaz, data=null döner
+        const { data, error } = await window.supabaseClient
+          .from('profiles')
+          .select('role, student_id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.warn('[Auth] Profil getirme uyarısı:', error.message);
+        }
+
+        if (data) {
+          this.currentUser = {
+            id: user.id,
+            email: user.email || this.currentUser.email,
+            role: data.role || this.currentUser.role || 'parent',
+            studentId: data.student_id !== undefined ? data.student_id : this.currentUser.studentId
+          };
+        } else {
+          // Profil tablosunda henüz kayıt yoksa arka planda oluşturmayı dene (RLS engellerse sessizce geç)
+          window.supabaseClient.from('profiles').insert([
+            { id: user.id, email: user.email, role: this.currentUser?.role || 'parent' }
+          ]).then(({ error: insertError }) => {
+            if (insertError) {
+              console.warn('[Auth] Profil insert atlandı (RLS aktif olabilir):', insertError.message);
+            }
+          }).catch(err => {
+            console.warn('[Auth] Profil insert istisnası:', err);
+          });
+        }
+        console.log('[Auth] currentUser set:', this.currentUser?.email, 'role:', this.currentUser?.role);
+      } catch (e) {
+        console.warn('[Auth] fetchUserProfile istisnası (varsayılan profil korundu):', e);
+      }
+    })().finally(() => {
+      this._profilePromise = null;
+      this._fetchingUserId = null;
+    });
+
+    return this._profilePromise;
   },
 
   getCurrentUser() {
@@ -109,7 +159,17 @@ const Auth = {
     if (error) {
       return { success: false, message: error.message };
     }
-    await this.fetchUserProfile(data.user);
+
+    if (data?.user) {
+      // Önce anında currentUser'ı garantile (asla null kalmasın)
+      this.currentUser = {
+        id: data.user.id,
+        email: data.user.email || email,
+        role: data.user.user_metadata?.role || 'parent',
+        studentId: null
+      };
+      await this.fetchUserProfile(data.user);
+    }
     return { success: true };
   },
 

@@ -132,9 +132,10 @@ const LoginPage = {
       Router.currentPage = null;
       Router._lastParams = null;
       App.updateNavigationVisibility();
-      // Hash'i güncelleyip handleRoute'ı doğrudan çağır
-      window.location.hash = 'home';
-      Router.handleRoute();
+      if (window.Store && typeof Store.loadAllFromSupabase === 'function') {
+        Store.loadAllFromSupabase().catch(err => console.warn('Store yükleme hatası:', err));
+      }
+      Router.go('home');
     } else {
       Toast.show(result.message, 'error');
     }

@@ -19,7 +19,7 @@ const HomePage = {
     const teacherFirst = BILSEM_DATA.school?.teacher ? BILSEM_DATA.school.teacher.split(' ')[0] : '';
     const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
     const isParent = user && user.role === 'parent';
-    const welcomeGreeting = isParent ? `${user.studentName} Velisi` : (teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim');
+    const welcomeGreeting = isParent ? `${user.studentName || 'Öğrenci'} Velisi` : (teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim');
 
     if (isParent) {
       // Veli ise, sadece öğrencisinin olduğu dersleri filtrele

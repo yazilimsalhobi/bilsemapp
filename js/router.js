@@ -40,13 +40,17 @@ const Router = {
 
     // Auth Guard
     if (page !== 'login' && (!window.Auth || !Auth.isAuthenticated())) {
-      this.navigate('login', []);
+      if (window.location.hash !== '#login' && window.location.hash !== 'login') {
+        window.location.hash = 'login';
+      } else {
+        this.navigate('login', []);
+      }
       return;
     }
 
     // Zaten giriş yapmışsa login sayfasını atla
     if (page === 'login' && window.Auth && Auth.isAuthenticated()) {
-      this.navigate('home', []);
+      this.go('home');
       return;
     }
 
