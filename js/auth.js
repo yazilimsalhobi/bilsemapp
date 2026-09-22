@@ -11,6 +11,11 @@ const Auth = {
       return;
     }
 
+    // Google girişinden dönüldüğünde URL'de access_token olur, parse edilmesini bekle
+    if (window.location.hash && window.location.hash.includes('access_token=')) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
     // Mevcut oturumu al
     const { data, error } = await window.supabaseClient.auth.getSession();
     
