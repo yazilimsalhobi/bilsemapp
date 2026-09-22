@@ -110,10 +110,16 @@ const Auth = {
       await window.supabaseClient.from('profiles').insert([
         { id: data.user.id, email: data.user.email, role: 'parent', student_id: studentId }
       ]);
+      
+      // Eğer email onayı gerekiyorsa session null döner
+      if (!data.session) {
+        return { success: true, needsEmailConfirmation: true };
+      }
+
       await this.fetchUserProfile(data.user);
-      return { success: true };
+      return { success: true, needsEmailConfirmation: false };
     }
-    return { success: false, message: 'Kayıt başarısız.' };
+    return { success: false, message: 'Bilinmeyen bir hata oluştu.' };
   },
 
   async loginWithGoogle() {

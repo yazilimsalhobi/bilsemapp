@@ -140,9 +140,17 @@ const LoginPage = {
     const result = await Auth.registerWithEmail(email, pass, studentId);
 
     if (result.success) {
-      Toast.show('Kayıt başarılı! Hoş geldiniz.', 'success');
-      App.updateNavigationVisibility();
-      Router.go('home');
+      if (result.needsEmailConfirmation) {
+        Toast.show('Kayıt başarılı! Lütfen e-posta adresinize gönderilen onay linkine tıklayarak hesabınızı doğrulayın.', 'success', 6000);
+        document.getElementById('reg-email').value = '';
+        document.getElementById('reg-password').value = '';
+        document.getElementById('reg-student-id').value = '';
+        LoginPage.switchTab('login');
+      } else {
+        Toast.show('Kayıt başarılı! Hoş geldiniz.', 'success');
+        App.updateNavigationVisibility();
+        Router.go('home');
+      }
     } else {
       Toast.show(result.message, 'error');
     }
