@@ -3,8 +3,14 @@
  */
 
 const App = {
-  init() {
-    // Kayıtlı verileri yükle (okul bilgisi, gruplar vb.)
+  async init() {
+    // Auth sistemini (Supabase) başlat ve oturumu bekle
+    await Auth.init();
+
+    // Tüm bulut verilerini (Gruplar, Öğrenciler, Yoklamalar) yükle
+    await Store.loadAllFromSupabase();
+
+    // Kayıtlı verileri yükle (okul bilgisi vb.)
     this.loadSavedData();
 
     // Toast sistemini başlat

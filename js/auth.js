@@ -1,73 +1,123 @@
 /**
- * Fatsa BİLSEM — Kimlik Doğrulama (Auth) Modülü
+ * Fatsa BİLSEM — Supabase Kimlik Doğrulama (Auth) Modülü
  */
 
 const Auth = {
-  KEYS: {
-    SESSION: 'bilsem_session'
+  currentUser: null,
+
+  async init() {
+    // Mevcut oturumu al
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    if (session) {
+      await this.fetchUserProfile(session.user);
+    }
+    
+    // Oturum değişikliklerini dinle
+    window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        await this.fetchUserProfile(session.user);
+      } else {
+        this.currentUser = null;
+      }
+    });
+  },
+
+  async fetchUserProfile(user) {
+    // profiles tablosundan rolü ve öğrenci ID'sini getir
+    const { data, error } = await window.supabaseClient
+      .from('profiles')
+      .select('role, student_id')
+      .eq('id', user.id)
+      .single();
+
+    if (data) {
+      this.currentUser = {
+        id: user.id,
+        email: user.email,
+        role: data.role || 'parent',
+        studentId: data.student_id
+      };
+    } else {
+      // Eğer profil yoksa (ilk defa Google ile giriş yapıldıysa vs.) varsayılan parent oluştur
+      await window.supabaseClient.from('profiles').insert([
+        { id: user.id, email: user.email, role: 'parent' }
+      ]);
+      this.currentUser = {
+        id: user.id,
+        email: user.email,
+        role: 'parent',
+        studentId: null
+      };
+    }
   },
 
   getCurrentUser() {
-    try {
-      const session = localStorage.getItem(this.KEYS.SESSION);
-      return session ? JSON.parse(session) : null;
-    } catch (e) {
-      return null;
+    return this.currentUser;
+  },
+
+  isAuthenticated() {
+    return this.currentUser !== null;
+  },
+
+  hasRole(roles) {
+    if (!this.currentUser) return false;
+    if (Array.isArray(roles)) {
+      return roles.includes(this.currentUser.role);
+    }
+    return this.currentUser.role === roles;
+  },
+
+  async loginWithEmail(email, password) {
+    const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      return { success: false, message: error.message };
+    }
+    await this.fetchUserProfile(data.user);
+    return { success: true };
+  },
+
+  async registerWithEmail(email, password, studentId = null) {
+    const { data, error } = await window.supabaseClient.auth.signUp({
+      email,
+      password,
+    });
+    
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    if (data.user) {
+      // Profil oluştur
+      await window.supabaseClient.from('profiles').insert([
+        { id: data.user.id, email: data.user.email, role: 'parent', student_id: studentId }
+      ]);
+      await this.fetchUserProfile(data.user);
+      return { success: true };
+    }
+    return { success: false, message: 'Kayıt başarısız.' };
+  },
+
+  async loginWithGoogle() {
+    const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    // OAuth işlemi sayfayı yönlendirir, bu yüzden hata dışında bir şey dönmesine gerek yok.
+    if (error) {
+      console.error(error);
+      Toast.show('Google girişi başlatılamadı.', 'error');
     }
   },
 
-  loginAdmin(username, password) {
-    if (username === 'admin' && password === 'admin123') {
-      const user = { role: 'admin', name: 'İdareci' };
-      localStorage.setItem(this.KEYS.SESSION, JSON.stringify(user));
-      return { success: true, user };
-    }
-    return { success: false, message: 'Geçersiz kullanıcı adı veya şifre.' };
-  },
-
-  loginTeacher(username, password) {
-    if (username === 'ogretmen' && password === 'ogretmen123') {
-      const user = { role: 'teacher', name: 'Öğretmen' };
-      localStorage.setItem(this.KEYS.SESSION, JSON.stringify(user));
-      return { success: true, user };
-    }
-    return { success: false, message: 'Geçersiz kullanıcı adı veya şifre.' };
-  },
-
-  loginParent(studentId, parentPhone) {
-    const student = DataHelpers.getStudentById(studentId);
-    if (!student) {
-      return { success: false, message: 'Bu numaraya ait öğrenci bulunamadı. (İpucu: s001 - s052 arası deneyin)' };
-    }
-
-    const parentInfo = Store.getParentInfo(studentId);
-    if (parentInfo && parentInfo.parentPhone && parentPhone && parentPhone !== parentInfo.parentPhone) {
-      return { success: false, message: 'Telefon numarası sistemdeki ile eşleşmiyor.' };
-    }
-
-    const user = { role: 'parent', name: 'Veli', studentId: student.id, studentName: student.name };
-    localStorage.setItem(this.KEYS.SESSION, JSON.stringify(user));
-    return { success: true, user };
-  },
-
-  logout() {
-    localStorage.removeItem(this.KEYS.SESSION);
+  async logout() {
+    await window.supabaseClient.auth.signOut();
+    this.currentUser = null;
     if (typeof App !== 'undefined' && App.updateNavigationVisibility) {
       App.updateNavigationVisibility();
     }
     Router.go('login');
-  },
-
-  isAuthenticated() {
-    return this.getCurrentUser() !== null;
-  },
-
-  hasRole(roles) {
-    const user = this.getCurrentUser();
-    if (!user) return false;
-    if (Array.isArray(roles)) {
-      return roles.includes(user.role);
-    }
-    return user.role === roles;
   }
 };

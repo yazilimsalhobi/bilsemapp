@@ -15,6 +15,79 @@ const Store = {
     STUDENT_NOTES: 'bilsem_student_notes'
   },
 
+  // ==================== SUPABASE SENKRONİZASYONU ====================
+
+  async loadAllFromSupabase() {
+    console.log("Supabase verileri yükleniyor...");
+    const { data: groups, error: gError } = await window.supabaseClient.from('groups').select('*');
+    
+    if (!gError && groups && groups.length === 0) {
+      // Veritabanı boş, başlangıç verilerini aktar (Seed)
+      console.log("Veritabanı boş, ilk veriler gönderiliyor...");
+      for (const group of BILSEM_DATA.groups) {
+        await window.supabaseClient.from('groups').insert({
+          id: group.id,
+          name: group.name,
+          day: group.day,
+          day_index: group.dayIndex,
+          start_time: group.startTime,
+          end_time: group.endTime,
+          time_slot: group.timeSlot,
+          subject: group.subject,
+          color: group.color
+        });
+        
+        const studentsToInsert = group.students.map(s => ({
+          id: s.id,
+          group_id: group.id,
+          name: s.name,
+          parent_name: s.parentName,
+          parent_phone: s.parentPhone
+        }));
+        
+        if (studentsToInsert.length > 0) {
+          await window.supabaseClient.from('students').insert(studentsToInsert);
+        }
+      }
+      return; // İlk yüklemede mevcut BILSEM_DATA'yı kullan
+    }
+
+    if (groups && groups.length > 0) {
+      const { data: students } = await window.supabaseClient.from('students').select('*');
+      
+      // BILSEM_DATA'yı buluttaki verilerle güncelle
+      BILSEM_DATA.groups = groups.map(g => ({
+        id: g.id,
+        name: g.name,
+        day: g.day,
+        dayIndex: g.day_index,
+        startTime: g.start_time,
+        endTime: g.end_time,
+        timeSlot: g.time_slot,
+        subject: g.subject,
+        color: g.color,
+        students: students ? students.filter(s => s.group_id === g.id).map(s => ({
+          id: s.id,
+          name: s.name,
+          parentName: s.parent_name || '',
+          parentPhone: s.parent_phone || ''
+        })) : []
+      }));
+    }
+
+    // Yoklamaları buluttan çek ve localStorage'ı güncelle (Senkron UI için)
+    const { data: attendanceData } = await window.supabaseClient.from('attendance').select('*');
+    if (attendanceData) {
+      const allAtt = {};
+      attendanceData.forEach(a => {
+        const key = `${a.group_id}_${a.date}`;
+        if (!allAtt[key]) allAtt[key] = { groupId: a.group_id, date: a.date, records: [] };
+        allAtt[key].records.push({ studentId: a.student_id, status: a.status });
+      });
+      this._set(this.KEYS.ATTENDANCE, allAtt);
+    }
+  },
+
   // ==================== GENEL CRUD ====================
 
   _get(key) {
@@ -45,7 +118,7 @@ const Store = {
    * @param {string} date - Tarih (YYYY-MM-DD)
    * @param {Array} records - [{studentId, status}]
    */
-  saveAttendance(groupId, date, records) {
+  async saveAttendance(groupId, date, records) {
     const all = this._get(this.KEYS.ATTENDANCE) || {};
     const key = `${groupId}_${date}`;
     all[key] = {
@@ -54,7 +127,30 @@ const Store = {
       records,
       savedAt: new Date().toISOString()
     };
-    return this._set(this.KEYS.ATTENDANCE, all);
+    
+    // UI için hızlıca LocalStorage'a kaydet
+    this._set(this.KEYS.ATTENDANCE, all);
+
+    // Arka planda Supabase'e gönder
+    try {
+      // Önce bu günün kayıtlarını sil
+      await window.supabaseClient.from('attendance').delete().match({ group_id: groupId, date: date });
+      
+      // Yeni kayıtları ekle
+      const inserts = records.map(r => ({
+        group_id: groupId,
+        student_id: r.studentId,
+        date: date,
+        status: r.status
+      }));
+      if (inserts.length > 0) {
+        await window.supabaseClient.from('attendance').insert(inserts);
+      }
+    } catch (e) {
+      console.error("Supabase yoklama kayıt hatası", e);
+    }
+    
+    return true;
   },
 
   /**
