@@ -128,8 +128,13 @@ const LoginPage = {
 
     if (result.success) {
       Toast.show('Hoş geldiniz!', 'success');
+      // Router state'i sıfırla ki sayfa geçişi kesinlikle çalışsın
+      Router.currentPage = null;
+      Router._lastParams = null;
       App.updateNavigationVisibility();
-      Router.go('home');
+      // Hash'i güncelleyip handleRoute'ı doğrudan çağır
+      window.location.hash = 'home';
+      Router.handleRoute();
     } else {
       Toast.show(result.message, 'error');
     }
@@ -157,8 +162,12 @@ const LoginPage = {
         LoginPage.switchTab('login');
       } else {
         Toast.show('Kayıt başarılı! Hoş geldiniz.', 'success');
+        // Router state sıfırla ve doğrudan yönlendir
+        Router.currentPage = null;
+        Router._lastParams = null;
         App.updateNavigationVisibility();
-        Router.go('home');
+        window.location.hash = 'home';
+        Router.handleRoute();
       }
     } else {
       Toast.show(result.message, 'error');

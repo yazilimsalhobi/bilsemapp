@@ -31,21 +31,24 @@ const Auth = {
     // Oturum değişikliklerini dinle
     window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (session) {
+        // Profili güncelle
         await this.fetchUserProfile(session.user);
         
+        // Nav görünürlüğünü güncelle
         if (window.App && typeof App.updateNavigationVisibility === 'function') {
           App.updateNavigationVisibility();
         }
 
-        // Giriş sayfasındaysak veya OAuth yönlendirmesinden gelindiyse ana sayfaya git
-        if (window.Router && Router._initialized) {
-          const currentHash = window.location.hash.slice(1);
-          if (!currentHash || currentHash === 'login' || currentHash.includes('access_token=')) {
-            Router.go('home');
-          }
+        // SADECE OAuth geri dönüşü için yönlendir (access_token hash'de vardır)
+        // Email girişi için navigasyon handleLogin tarafından yönetilir
+        if (window.location.hash.includes('access_token=') && window.Router && Router._initialized) {
+          Router.go('home');
         }
       } else {
         this.currentUser = null;
+        if (window.App && typeof App.updateNavigationVisibility === 'function') {
+          App.updateNavigationVisibility();
+        }
       }
     });
   },
