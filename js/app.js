@@ -104,7 +104,7 @@ const App = {
     const logoutBtn = document.getElementById('logout-btn');
     const header = document.querySelector('.app-header');
     
-    if (!window.Auth || !Auth.isAuthenticated()) {
+    if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) {
       if (bottomNav) bottomNav.style.display = 'none';
       if (logoutBtn) logoutBtn.style.display = 'none';
       if (header) header.style.display = 'none';

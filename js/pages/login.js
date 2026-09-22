@@ -116,7 +116,7 @@ const LoginPage = {
 
   async handleLogin() {
     const email = document.getElementById('login-email').value.trim();
-    const pass = document.getElementById('login-password').value.trim();
+    const pass = document.getElementById('login-password').value;
 
     if (!email || !pass) {
       Toast.show('Lütfen e-posta ve şifrenizi girin.', 'error');
@@ -124,7 +124,14 @@ const LoginPage = {
     }
 
     Toast.show('Giriş yapılıyor...', 'info');
-    const result = await Auth.loginWithEmail(email, pass);
+    let result;
+    try {
+      result = await Auth.loginWithEmail(email, pass);
+    } catch (error) {
+      console.warn('[Login] Giriş isteği tamamlanamadı:', error);
+      Toast.show('Giriş yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.', 'error');
+      return;
+    }
 
     if (result.success) {
       Toast.show('Hoş geldiniz!', 'success');
@@ -132,7 +139,7 @@ const LoginPage = {
       Router.currentPage = null;
       Router._lastParams = null;
       App.updateNavigationVisibility();
-      if (window.Store && typeof Store.loadAllFromSupabase === 'function') {
+      if (typeof Store !== 'undefined' && typeof Store.loadAllFromSupabase === 'function') {
         Store.loadAllFromSupabase().catch(err => console.warn('Store yükleme hatası:', err));
       }
       Router.go('home');

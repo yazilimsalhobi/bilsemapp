@@ -6,6 +6,7 @@ const Auth = {
   currentUser: null,
   _profilePromise: null,
   _fetchingUserId: null,
+  _authRevision: 0,
 
   async init() {
     if (!window.supabaseClient) {
@@ -31,30 +32,42 @@ const Auth = {
     }
     
     // Oturum değişikliklerini dinle
-    window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    window.supabaseClient.auth.onAuthStateChange((event, session) => {
       console.log('[Auth] onAuthStateChange:', event, !!session);
       
       if (event === 'SIGNED_OUT') {
+        ++this._authRevision;
         // Sadece gerçek çıkış olayında null yap
         this.currentUser = null;
-        if (window.App && typeof App.updateNavigationVisibility === 'function') {
+        if (typeof App !== 'undefined' && typeof App.updateNavigationVisibility === 'function') {
           App.updateNavigationVisibility();
         }
-        if (window.Router && Router._initialized) {
+        if (typeof Router !== 'undefined' && Router._initialized) {
           Router.go('login');
         }
         return;
       }
 
       if (session?.user) {
-        await this.fetchUserProfile(session.user);
-        if (window.App && typeof App.updateNavigationVisibility === 'function') {
-          App.updateNavigationVisibility();
-        }
-        // OAuth geri dönüşünde veya kullanıcı login sayfasındayken home'a yönlendir
-        if (window.location.hash.includes('access_token=') && window.Router && Router._initialized) {
-          Router.go('home');
-        }
+        // Profil sorgusunu oturum kilidi serbest bırakıldıktan sonra çalıştır.
+        // Dinleyici içinde Supabase çağrısını await etmek girişi kilitler.
+        const user = session.user;
+        const revision = ++this._authRevision;
+        setTimeout(async () => {
+          if (revision !== this._authRevision) return;
+          try {
+            await this.fetchUserProfile(user);
+            if (revision !== this._authRevision) return;
+            if (typeof App !== 'undefined' && typeof App.updateNavigationVisibility === 'function') {
+              App.updateNavigationVisibility();
+            }
+            if (window.location.hash.includes('access_token=') && typeof Router !== 'undefined' && Router._initialized) {
+              Router.go('home');
+            }
+          } catch (error) {
+            console.warn('[Auth] Oturum profili yüklenemedi:', error);
+          }
+        }, 0);
       }
       // ÖNEMLİ: session null veya boş geldiğinde (SIGNED_OUT haricinde) currentUser ASLA null yapılmaz!
     });
@@ -97,6 +110,8 @@ const Auth = {
           .eq('id', user.id)
           .maybeSingle();
 
+        if (this.currentUser?.id !== user.id) return;
+
         if (error) {
           console.warn('[Auth] Profil getirme uyarısı:', error.message);
         }
@@ -108,7 +123,7 @@ const Auth = {
             role: data.role || this.currentUser.role || 'parent',
             studentId: data.student_id !== undefined ? data.student_id : this.currentUser.studentId
           };
-        } else {
+        } else if (!error) {
           // Profil tablosunda henüz kayıt yoksa arka planda oluşturmayı dene (RLS engellerse sessizce geç)
           window.supabaseClient.from('profiles').insert([
             { id: user.id, email: user.email, role: this.currentUser?.role || 'parent' }
@@ -158,6 +173,10 @@ const Auth = {
     
     if (error) {
       return { success: false, message: error.message };
+    }
+
+    if (!data?.user || !data?.session) {
+      return { success: false, message: 'Oturum açılamadı. Lütfen tekrar deneyin.' };
     }
 
     if (data?.user) {

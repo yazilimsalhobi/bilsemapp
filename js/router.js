@@ -39,7 +39,7 @@ const Router = {
     }
 
     // Auth Guard
-    if (page !== 'login' && (!window.Auth || !Auth.isAuthenticated())) {
+    if (page !== 'login' && (typeof Auth === 'undefined' || !Auth.isAuthenticated())) {
       if (window.location.hash !== '#login' && window.location.hash !== 'login') {
         window.location.hash = 'login';
       } else {
@@ -49,7 +49,7 @@ const Router = {
     }
 
     // Zaten giriş yapmışsa login sayfasını atla
-    if (page === 'login' && window.Auth && Auth.isAuthenticated()) {
+    if (page === 'login' && typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
       this.go('home');
       return;
     }
@@ -66,7 +66,7 @@ const Router = {
    */
   navigate(page, params = []) {
     // Açık olan modal ekranı varsa kapat
-    if (window.App && typeof App.closeModal === 'function') {
+    if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
       App.closeModal();
     }
 
@@ -100,7 +100,7 @@ const Router = {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (err) {
           console.error("Sayfa yüklenirken hata oluştu:", err);
-          if (window.Toast) {
+          if (typeof Toast !== 'undefined') {
             Toast.show("Sayfa yüklenirken hata: " + err.message, "error", 10000);
           }
         }
