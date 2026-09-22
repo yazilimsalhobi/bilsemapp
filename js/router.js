@@ -29,6 +29,11 @@ const Router = {
     const hash = window.location.hash.slice(1) || 'home';
     const [page, ...params] = hash.split('/');
 
+    // OAuth redirect'ini kesintiye uğratma
+    if (page.startsWith('access_token=') || page.startsWith('error_description=')) {
+      return;
+    }
+
     // Auth Guard
     if (page !== 'login' && (!window.Auth || !Auth.isAuthenticated())) {
       this.navigate('login', []);

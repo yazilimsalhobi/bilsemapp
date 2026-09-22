@@ -32,6 +32,16 @@ const Auth = {
     window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         await this.fetchUserProfile(session.user);
+        
+        // Eğer OAuth yönlendirmesinden gelindiyse anasayfaya git
+        if (window.location.hash.includes('access_token=')) {
+          if (window.App && typeof App.updateNavigationVisibility === 'function') {
+            App.updateNavigationVisibility();
+          }
+          if (window.Router) {
+            Router.go('home');
+          }
+        }
       } else {
         this.currentUser = null;
       }
