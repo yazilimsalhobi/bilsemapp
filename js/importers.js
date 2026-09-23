@@ -123,7 +123,7 @@ const ImportParsers = {
     // We can have multiple tables side-by-side. 
     // We track "active" groups per column index.
     let activeHeaders = []; // { colIndex: number, name: string }
-    let currentGroups = []; // Array of actual group objects being built
+    let templateGroups = []; // Array of template objects for this row
     
     const subjects = /^(co[gğ]rafya|sosyal bilgiler|matematik|t[uü]rk[cç]e|fen bilimleri|ingilizce|m[uü]zik|g[oö]rsel sanatlar|bilim|robotik|yaz[iı]l[iı]m|beden e[gğ]itimi|resim|teknoloji|bili[sş]im)/i;
     
@@ -138,15 +138,12 @@ const ImportParsers = {
       if (groupMatch.length > 0 && !line.includes('Saat') && !/(\d{1,2}[:.]\d{2})/.test(line)) {
         // New table headers found
         activeHeaders = [];
-        currentGroups = [];
+        templateGroups = [];
         for (const m of groupMatch) {
           const colIndex = cols.findIndex(c => c.includes(m[0]));
           if (colIndex >= 0) {
-            const name = m[0].trim();
-            activeHeaders.push({ colIndex, name });
-            const g = { id: UI.id('grp'), name, day: '', dayIndex: 0, subject: '', timeSlot: '', startTime: '', endTime: '', lessons: [], color: '', students: [] };
-            currentGroups.push(g);
-            groups.push(g);
+            activeHeaders.push({ colIndex, name: m[0].trim() });
+            templateGroups.push({ name: m[0].trim(), days: [] });
           }
         }
         continue;
@@ -170,10 +167,7 @@ const ImportParsers = {
           for (const dc of dayCols) {
             const foundDay = UI.days.find(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(dc.text)));
             if (foundDay) {
-              currentGroups[idx].day = foundDay;
-              currentGroups[idx].dayIndex = UI.days.indexOf(foundDay);
-              currentGroups[idx].color = BILSEM_DATA.dayColors[foundDay].bg;
-              break;
+              templateGroups[idx].days.push(foundDay);
             }
           }
         }
@@ -191,31 +185,50 @@ const ImportParsers = {
           const endCol = timeIndexes[idx + 1] !== undefined ? timeIndexes[idx + 1] : cols.length;
           
           const slice = cols.slice(startCol, endCol);
-          const sliceText = slice.join('\t');
+          const timeMatch = slice[0].match(timeRegex);
           
-          const timeMatch = sliceText.match(timeRegex);
           if (timeMatch) {
             const start = this.time(timeMatch[1]);
             const end = this.time(timeMatch[2]);
-            const g = currentGroups[idx];
+            const tGroup = templateGroups[idx];
             
-            if (!g.startTime) g.startTime = start;
-            g.endTime = end;
-            g.lessons.push({ order: g.lessons.length + 1, start, end });
-            
-            // Try to find subject in the time cell or next cell
-            const subjMatch = sliceText.match(subjects);
-            if (subjMatch && !g.subject) {
-              g.subject = subjMatch[0];
-            }
-            
-            // Look for student name. Usually at the end of the slice.
-            const studentCells = slice.filter(c => c.trim().length > 4 && !/\d{1,2}[:.]\d{2}/.test(c) && !/^(co[gğ]rafya|sosyal|matematik|t[uü]rk|fen|ingilizce|m[uü]zik|g[oö]rsel|bilim|robotik|yaz[iı]l[iı]m|beden|resim|teknoloji|bili[sş]im)/i.test(c));
-            
-            if (studentCells.length > 0) {
-              const studentName = studentCells[studentCells.length - 1].trim().replace(/\s*[Zz]-[Rr]$/, '').trim();
-              if (studentName && !g.students.some(s => s.name === studentName)) {
-                g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
+            if (tGroup && tGroup.days) {
+              // For each day this group has, extract the subject and assign the student
+              for (let d = 0; d < tGroup.days.length; d++) {
+                const dayName = tGroup.days[d];
+                // The subject is at slice[1 + d] (dynamically found directly underneath the day column)
+                let subject = (slice[1 + d] || '').trim();
+                // Normalize case properly for Turkish
+                subject = subject.toLocaleLowerCase('tr-TR');
+                subject = subject.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+                
+                // Find or create actual group for this specific Day + Subject
+                let g = groups.find(x => x.name === tGroup.name && x.day === dayName && x.subject === subject);
+                if (!g) {
+                    g = {
+                        id: UI.id('grp'), name: tGroup.name, day: dayName, dayIndex: UI.days.indexOf(dayName),
+                        subject: subject, timeSlot: '', startTime: start, endTime: end, lessons: [],
+                        color: BILSEM_DATA.dayColors[dayName] ? BILSEM_DATA.dayColors[dayName].bg : 'gray', students: []
+                    };
+                    groups.push(g);
+                }
+                
+                // Update time bounds
+                if (start < g.startTime || !g.startTime) g.startTime = start;
+                if (end > g.endTime || !g.endTime) g.endTime = end;
+                if (!g.lessons.some(l => l.start === start)) {
+                    g.lessons.push({ order: g.lessons.length + 1, start, end });
+                }
+                
+                // Find student at the end of slice
+                const studentCells = slice.filter(c => c.trim().length > 4 && !/\d{1,2}[:.]\d{2}/.test(c));
+                if (studentCells.length > 0) {
+                  const studentName = studentCells[studentCells.length - 1].trim().replace(/\s*[Zz]-[Rr]$/, '').trim();
+                  // Prevent assigning the subject name itself as a student if columns are misaligned
+                  if (studentName && studentName.toLocaleLowerCase('tr-TR') !== subject.toLocaleLowerCase('tr-TR') && !g.students.some(s => s.name === studentName)) {
+                    g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
+                  }
+                }
               }
             }
           }

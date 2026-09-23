@@ -114,14 +114,20 @@ Saat\tCUMARTESİ\tSınıf\tÖğrenci Listesi\tSaat\tÇARŞAMBA\tCUMA\tSınıf\t�
  const parsed = h.ImportParsers.schedule(matrixText);
  assert.equal(parsed.type, 'groups');
  const groups = parsed.groups;
- assert.equal(groups.length, 2, 'Should find 2 groups');
- assert.equal(groups[0].name, 'DESTEK 1-B (H-S)');
- assert.equal(groups[0].day, 'Cumartesi');
- assert.equal(groups[0].students.length, 2);
- assert.equal(groups[0].students[0].name, 'BEYZA BEBEK');
- assert.equal(groups[0].lessons.length, 2);
- assert.equal(groups[1].name, 'DESTEK 1-A (H_İ)');
- assert.equal(groups[1].day, 'Çarşamba');
+ assert.strictEqual(groups.length, 3, 'Should find 3 groups');
+ assert.strictEqual(groups[0].name, 'DESTEK 1-B (H-S)');
+ assert.strictEqual(groups[0].day, 'Cumartesi');
+ assert.strictEqual(groups[0].students.length, 2);
+ 
+ assert.strictEqual(groups[1].name, 'DESTEK 1-A (H_İ)');
+ assert.strictEqual(groups[1].day, 'Çarşamba');
+ assert.strictEqual(groups[1].subject, 'Bilişim Tekn.');
+ assert.strictEqual(groups[1].students.length, 2);
+
+ assert.strictEqual(groups[2].name, 'DESTEK 1-A (H_İ)');
+ assert.strictEqual(groups[2].day, 'Cuma');
+ assert.strictEqual(groups[2].subject, 'Destek Eğitimi');
+ assert.strictEqual(groups[2].students.length, 2);
 });
 test('timesheet parser extracts time blocks from Zaman Çizelgesi',()=>{
  const h=env();
