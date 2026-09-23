@@ -236,3 +236,58 @@ test('ImportParsers parses standardized JSON schedule schema flawlessly', () => 
   assert.strictEqual(result.rawJson[1].ogr[0], 'BEYZA BEBEK');
 });
 
+test('numbers like 2, 4, 6, 7 are never recognized as subjects, groups and students are matched cleanly', () => {
+  const h = env();
+  // 1. isValidSubject checks
+  ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '4.', '2)'].forEach(n => {
+    assert.strictEqual(h.ImportParsers.isValidSubject(n), false, `Number "${n}" must not be a valid subject`);
+  });
+  assert.strictEqual(h.ImportParsers.isValidSubject('Bilişim Tekn.'), true);
+  assert.strictEqual(h.ImportParsers.isValidSubject('İngilizce'), true);
+  assert.strictEqual(h.ImportParsers.isValidSubject('Destek Eğitimi'), true);
+
+  // 2. Matrix schedule with grade numbers
+  const text = [
+    'DESTEK 1-B (H-S)\tDESTEK 1-A (H_İ)',
+    'Saat\tCUMARTESİ\tSınıf\tÖğrenci Listesi\tSaat\tÇARŞAMBA\tCUMA\tSınıf\tÖğrenci Listesi',
+    '09:00-09:40 İNGİLİZCE\t4\t1\tBEYZA BEBEK Z-R\t16:15-16:55 BİLİŞİM TEKN.\tDESTEK EĞİTİMİ\t2\t1\tALİ YAHYA İNAN',
+    '09:50-10:30 İNGİLİZCE\t4\t2\tZEYNEP ÇAKIR\t17:05-17:45 BİLİŞİM TEKN.\tDESTEK EĞİTİMİ\t2\t2\tGÖKÇE DURU KEÇECİ'
+  ].join('\n');
+
+  const parsed = h.ImportParsers.schedule(text);
+  assert.strictEqual(parsed.type, 'groups');
+  assert.strictEqual(parsed.groups.length, 3);
+
+  // No group should have a number as a subject
+  for (const g of parsed.groups) {
+    assert.strictEqual(/^\d+$/.test(g.subject), false, `Subject "${g.subject}" should not be a number`);
+  }
+
+  // Group 0: DESTEK 1-B (H-S)
+  const g0 = parsed.groups[0];
+  assert.strictEqual(g0.name, 'DESTEK 1-B (H-S)');
+  assert.strictEqual(g0.subject, 'İngilizce');
+  assert.strictEqual(g0.students.length, 2);
+  assert.strictEqual(g0.students[0].name, 'BEYZA BEBEK');
+  assert.strictEqual(g0.students[1].name, 'ZEYNEP ÇAKIR');
+
+  // Group 1: DESTEK 1-A (H_İ) Çarşamba Bilişim
+  const g1 = parsed.groups[1];
+  assert.strictEqual(g1.name, 'DESTEK 1-A (H_İ)');
+  assert.strictEqual(g1.subject, 'Bilişim Tekn.');
+  assert.strictEqual(g1.day, 'Çarşamba');
+  assert.strictEqual(g1.students.length, 2);
+  assert.strictEqual(g1.students[0].name, 'ALİ YAHYA İNAN');
+  assert.strictEqual(g1.students[1].name, 'GÖKÇE DURU KEÇECİ');
+
+  // Group 2: DESTEK 1-A (H_İ) Cuma Destek Eğitimi
+  const g2 = parsed.groups[2];
+  assert.strictEqual(g2.name, 'DESTEK 1-A (H_İ)');
+  assert.strictEqual(g2.subject, 'Destek Eğitimi');
+  assert.strictEqual(g2.day, 'Cuma');
+  assert.strictEqual(g2.students.length, 2);
+  assert.strictEqual(g2.students[0].name, 'ALİ YAHYA İNAN');
+  assert.strictEqual(g2.students[1].name, 'GÖKÇE DURU KEÇECİ');
+});
+
+

@@ -155,11 +155,14 @@ const ImportPage = {
   getSubjectStats() {
     const map = new Map();
     for (const g of this.allParsedGroups) {
-      const key = g.subject || 'Branşı Belirsiz';
+      let key = (ImportParsers.normalizeSubject && ImportParsers.normalizeSubject(g.subject)) || g.subject || 'Branşı Belirsiz';
+      if (ImportParsers.isValidSubject && !ImportParsers.isValidSubject(key) && key !== 'Branşı Belirsiz') {
+        continue;
+      }
       if (!map.has(key)) map.set(key, { groupCount: 0, studentCount: 0 });
       const info = map.get(key);
       info.groupCount++;
-      info.studentCount += g.students.length;
+      info.studentCount += (g.students || []).length;
     }
     return map;
   },
@@ -173,7 +176,7 @@ const ImportPage = {
     this.selectedSubjects = new Set(checked);
     // Seçilen branşlara göre draft'ı filtrele
     this.draft = this.allParsedGroups.filter(g => {
-      const subj = g.subject || 'Branşı Belirsiz';
+      const subj = (ImportParsers.normalizeSubject && ImportParsers.normalizeSubject(g.subject)) || g.subject || 'Branşı Belirsiz';
       return this.selectedSubjects.has(subj);
     });
     this.step = 3;

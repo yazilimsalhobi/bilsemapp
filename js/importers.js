@@ -126,6 +126,49 @@ const ImportParsers = {
     return s;
   },
 
+  isValidSubject(raw) {
+    if (!raw) return false;
+    const s = String(raw).trim();
+    if (s.length < 2) return false;
+    // Reject pure numbers or numbers with dot/hyphen (e.g. 2, 4, 6, 7, 4., 2-)
+    if (/^\d+[.)\-–]?$/.test(s)) return false;
+    const norm = UI.normalize(s);
+    if (['sinif', 'saat', 'ogrenci', 'ogrenci listesi', 'sira no', 'sira', 'gun', 'z-r', 'z-m', 'h_s', 'h_i'].includes(norm)) return false;
+    if (UI.days.some(d => UI.normalize(d) === norm)) return false;
+    return true;
+  },
+
+  normalizeSubject(raw) {
+    if (!this.isValidSubject(raw)) return '';
+    let s = String(raw).trim();
+    s = s.replace(/^[■•*—–\-\s]+/, '').replace(/\s+/g, ' ').trim();
+    const u = s.toLocaleUpperCase('tr-TR');
+
+    if (u.includes('BİLİŞİM') || u.includes('BILISIM')) return 'Bilişim Teknolojileri';
+    if (u.includes('DESTEK EĞİT') || u.includes('DESTEK EGIT')) return 'Destek Eğitimi';
+    if (u.includes('İNGİLİZCE') || u.includes('INGILIZCE')) return 'İngilizce';
+    if (u.includes('İLK. MAT') || u.includes('İLKÖĞRETİM MAT') || u.includes('ILK. MAT') || u.includes('ILKOGRETIM MAT')) return 'İlköğretim Matematik';
+    if (u.includes('LİSE MAT') || u.includes('LISE MAT') || u.includes('MATEMATİK UYG') || u === 'MATEMATİK' || u === 'MATEMATIK') return 'Matematik';
+    if (u.includes('FEN BİL') || u.includes('FEN BIL')) return 'Fen Bilimleri';
+    if (u.includes('SOSYAL BİL') || u.includes('SOSYAL BIL')) return 'Sosyal Bilgiler';
+    if (u.includes('TÜRKÇE') || u.includes('TURKCE')) return 'Türkçe';
+    if (u.includes('FİZİK') || u.includes('FIZIK')) return 'Fizik';
+    if (u.includes('KİMYA') || u.includes('KIMYA')) return 'Kimya';
+    if (u.includes('BİYOLOJİ') || u.includes('BIYOLOJI')) return 'Biyoloji';
+    if (u.includes('COĞRAFYA') || u.includes('COGRAFYA')) return 'Coğrafya';
+    if (u.includes('TARİH') || u.includes('TARIH')) return 'Tarih';
+    if (u.includes('EDEBİYAT') || u.includes('EDEBIYAT')) return 'Türk Dili ve Edebiyatı';
+    if (u.includes('TEKNOLOJİ TASARIM') || u.includes('TASARIM') || u.includes('TEKNOLOJI TASARIM')) return 'Teknoloji ve Tasarım';
+    if (u.includes('ATÖLYE') || u.includes('ATOLYE')) return 'Atölye (BYF)';
+    if (u.includes('MÜZİK') || u.includes('MUZIK')) return 'Müzik';
+    if (u.includes('GÖRSEL') || u.includes('GORSEL')) return 'Görsel Sanatlar';
+    if (u.includes('FELSEFE')) return 'Felsefe';
+    if (u.includes('ROBOTİK') || u.includes('ROBOTIK')) return 'Robotik';
+    if (u.includes('YAPAY ZEKA') || u.includes('YAPAY ZEKÂ')) return 'Yapay Zeka';
+
+    return s.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1).toLocaleLowerCase('tr-TR')).join(' ');
+  },
+
   parseJSONSchedule(textOrData) {
     try {
       let data = textOrData;
@@ -172,8 +215,8 @@ const ImportParsers = {
           const end = this.time(timeMatch[2]);
           if (!start || !end) continue;
 
-          let normSubj = ders.toLocaleLowerCase('tr-TR');
-          normSubj = normSubj.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+          let normSubj = this.normalizeSubject(ders) || ders.trim();
+          if (!this.isValidSubject(normSubj)) normSubj = 'Genel';
 
           if (!bySubject.has(normSubj)) bySubject.set(normSubj, []);
           bySubject.get(normSubj).push({ start, end });
@@ -254,24 +297,33 @@ const ImportParsers = {
     return times.filter(t => t.start && t.end);
   },
 
+  formatSubject(str) {
+    if (!str || !this.isValidSubject(str)) return '';
+    let s = str.trim();
+    s = s.toLocaleLowerCase('tr-TR');
+    return s.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+  },
+
   parseMatrix(text) {
     const groups = [];
     const lines = text.split(/\r?\n/);
     
     let activeHeaders = []; 
     let templateGroups = [];
+    const groupStudentsMap = new Map(); // groupName -> Set of clean student names
+    const timeRegex = /(\d{1,2}[:.]\d{2})\s*-\s*(\d{1,2}[:.]\d{2})/;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
       
-      const cols = line.split('\t');
+      const rawCols = line.split('\t');
       
       // Look for group names column by column
       const groupMatches = [];
-      if (!line.includes('Saat') && !/(\d{1,2}[:.]\d{2})/.test(line)) {
-        for (let cIdx = 0; cIdx < cols.length; cIdx++) {
-          const colText = cols[cIdx].trim();
+      if (!line.includes('Saat') && !timeRegex.test(line)) {
+        for (let cIdx = 0; cIdx < rawCols.length; cIdx++) {
+          const colText = rawCols[cIdx].trim();
           const m = colText.match(/(?:BYF|DESTEK|UYUM|ÖYG|PROJE)[-\s\d\p{L}\/_]+(?:\s*\([^)]+\))?/iu);
           if (m) {
             groupMatches.push({ colIndex: cIdx, name: m[0].trim().replace(/[_]+$/, '').trim() });
@@ -285,6 +337,7 @@ const ImportParsers = {
         for (const gm of groupMatches) {
           activeHeaders.push({ colIndex: gm.colIndex, name: gm.name });
           templateGroups.push({ name: gm.name, days: [] });
+          if (!groupStudentsMap.has(gm.name)) groupStudentsMap.set(gm.name, new Set());
         }
         continue;
       }
@@ -292,16 +345,16 @@ const ImportParsers = {
       // Look for day names in header row
       const daysFound = UI.days.filter(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(line)));
       if (daysFound.length > 0 && line.includes('Saat')) {
-        const saatIndexes = cols.map((c, i) => c.includes('Saat') ? i : -1).filter(i => i !== -1);
+        const saatIndexes = rawCols.map((c, idx) => c.includes('Saat') ? idx : -1).filter(idx => idx !== -1);
         
         for (let idx = 0; idx < activeHeaders.length; idx++) {
           if (saatIndexes[idx] !== undefined) {
              activeHeaders[idx].colIndex = saatIndexes[idx];
           }
           const h = activeHeaders[idx];
-          const nextColIndex = saatIndexes[idx + 1] !== undefined ? saatIndexes[idx + 1] : cols.length;
+          const nextColIndex = saatIndexes[idx + 1] !== undefined ? saatIndexes[idx + 1] : rawCols.length;
           
-          const dayCols = cols.map((c, i) => ({ text: c, i })).filter(c => c.i >= h.colIndex && c.i < nextColIndex);
+          const dayCols = rawCols.map((c, idx) => ({ text: c, i: idx })).filter(c => c.i >= h.colIndex && c.i < nextColIndex);
           for (const dc of dayCols) {
             const foundDay = UI.days.find(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(dc.text)));
             if (foundDay) {
@@ -312,9 +365,22 @@ const ImportParsers = {
         continue;
       }
       
+      // Expand any cells where timeRegex is merged with text (e.g. '09:00-09:40 İNGİLİZCE')
+      const cols = [];
+      for (const c of rawCols) {
+        const m = c.match(timeRegex);
+        if (m && c.trim() !== m[0]) {
+          const timePart = m[0];
+          const rest = (c.slice(0, m.index) + ' ' + c.slice(m.index + m[0].length)).trim();
+          cols.push(timePart);
+          if (rest) cols.push(rest);
+        } else {
+          cols.push(c);
+        }
+      }
+
       // Look for time range and students (Data row)
-      const timeRegex = /(\d{1,2}[:.]\d{2})\s*-\s*(\d{1,2}[:.]\d{2})/;
-      const timeIndexes = cols.map((c, i) => timeRegex.test(c.trim()) ? i : -1).filter(i => i !== -1);
+      const timeIndexes = cols.map((c, idx) => timeRegex.test(c.trim()) ? idx : -1).filter(idx => idx !== -1);
       
       if (timeIndexes.length > 0) {
         for (let idx = 0; idx < Math.min(timeIndexes.length, activeHeaders.length); idx++) {
@@ -328,13 +394,29 @@ const ImportParsers = {
             const start = this.time(timeMatch[1]);
             const end = this.time(timeMatch[2]);
             const tGroup = templateGroups[idx];
-            
-            if (tGroup && tGroup.days) {
+            if (!tGroup) continue;
+
+            // Extract students from slice (excluding time and pure numbers)
+            const studentCells = slice.filter(c => c.trim().length > 3 && !timeRegex.test(c) && !/^\d+[.)\-–]?$/.test(c.trim()));
+            if (studentCells.length > 0) {
+              const rawName = studentCells[studentCells.length - 1];
+              const studentName = this.cleanStudentName(rawName);
+              if (studentName && studentName.length > 2) {
+                if (groupStudentsMap.has(tGroup.name)) {
+                  groupStudentsMap.get(tGroup.name).add(studentName);
+                }
+              }
+            }
+
+            if (tGroup.days && tGroup.days.length > 0) {
               for (let d = 0; d < tGroup.days.length; d++) {
                 const dayName = tGroup.days[d];
-                let subject = (slice[1 + d] || '').trim();
-                subject = subject.toLocaleLowerCase('tr-TR');
-                subject = subject.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+                const rawSub = (slice[1 + d] || '').trim();
+                let subject = this.formatSubject(rawSub);
+                if (!subject || !this.isValidSubject(subject)) {
+                  const cand = slice.slice(1).find(c => this.isValidSubject(c) && !/^\d+[.)\-–]?$/.test(c.trim()) && !studentCells.includes(c));
+                  subject = cand ? this.formatSubject(cand) : 'Genel';
+                }
                 
                 let g = groups.find(x => x.name === tGroup.name && x.day === dayName && x.subject === subject);
                 if (!g) {
@@ -351,40 +433,37 @@ const ImportParsers = {
                 if (!g.lessons.some(l => l.start === start)) {
                     g.lessons.push({ order: g.lessons.length + 1, start, end });
                 }
-                
-                const studentCells = slice.filter(c => c.trim().length > 3 && !timeRegex.test(c));
-                if (studentCells.length > 0) {
-                  const rawName = studentCells[studentCells.length - 1];
-                  const studentName = this.cleanStudentName(rawName);
-                  if (studentName && studentName.toLocaleLowerCase('tr-TR') !== subject.toLocaleLowerCase('tr-TR') && !g.students.some(s => s.name === studentName)) {
-                    g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
-                  }
-                }
               }
             }
           }
         }
       } else if (templateGroups.length > 0) {
+        // Rows without time (e.g. students 9, 10, etc.)
         for (let idx = 0; idx < activeHeaders.length; idx++) {
           const tGroup = templateGroups[idx];
-          if (!tGroup || !tGroup.days) continue;
+          if (!tGroup) continue;
           const h = activeHeaders[idx];
-          const nextCol = activeHeaders[idx + 1] ? activeHeaders[idx + 1].colIndex : cols.length;
-          const slice = cols.slice(h.colIndex, nextCol);
-          const studentCells = slice.filter(c => c.trim().length > 3 && !timeRegex.test(c));
-          if (studentCells.length > 0) {
-            const rawName = studentCells[studentCells.length - 1];
-            const studentName = this.cleanStudentName(rawName);
-            if (studentName) {
-              groups.filter(g => g.name === tGroup.name).forEach(g => {
-                if (!g.students.some(s => s.name === studentName)) {
-                  g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
+          const nextCol = activeHeaders[idx + 1] ? activeHeaders[idx + 1].colIndex : rawCols.length;
+          const slice = rawCols.slice(h.colIndex, nextCol);
+          for (const cell of slice) {
+            if (!timeRegex.test(cell) && !/^\d+[.)\-–]?$/.test(cell.trim())) {
+              const studentName = this.cleanStudentName(cell);
+              if (studentName && studentName.length > 2 && !this.isValidSubject(studentName)) {
+                if (groupStudentsMap.has(tGroup.name)) {
+                  groupStudentsMap.get(tGroup.name).add(studentName);
                 }
-              });
+              }
             }
           }
         }
       }
+    }
+    
+    // Adım 1 Sonucu: Tüm gruplara kenara ayrılan eksiksiz öğrenci listesini bağla
+    for (const g of groups) {
+      const studentNames = Array.from(groupStudentsMap.get(g.name) || []);
+      g.students = studentNames.map(name => ({ id: UI.id('s'), name, parentName: '', parentPhone: '' }));
+      g.timeSlot = `${g.startTime} - ${g.endTime}`;
     }
     
     return groups.filter(g => g.students.length > 0 && g.startTime);
