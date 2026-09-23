@@ -240,19 +240,30 @@ const ImportPage = {
     if (!this.draft.length) { Toast.show('Önce en az bir grup ekleyin.', 'warning'); return; }
     const invalid = this.draft.find(g => !g.name || !ImportParsers.time(g.startTime) || !ImportParsers.time(g.endTime) || g.startTime >= g.endTime);
     if (invalid) { Toast.show('Her grup için ad ve geçerli başlangıç/bitiş saatleri gerekiyor.', 'error'); return; }
-    const groups = structuredClone(BILSEM_DATA.groups);
-    for (const draft of this.draft) {
-      const g = { ...draft, dayIndex: UI.days.indexOf(draft.day), color: BILSEM_DATA.dayColors[draft.day].bg, timeSlot: draft.timeSlot || '' };
-      const lessons = g.lessons.filter(l => l.start >= g.startTime && l.end <= g.endTime && l.start < l.end);
-      g.lessons = lessons.length ? lessons : [{ order: 1, start: g.startTime, end: g.endTime }];
-      const existing = groups.find(old => UI.normalize(old.name) === UI.normalize(g.name) && old.day === g.day && old.startTime === g.startTime);
-      if (existing) {
-        g.id = existing.id;
-        g.students = [...existing.students, ...g.students.filter(s => !existing.students.some(old => UI.normalize(old.name) === UI.normalize(s.name)))];
-        Object.assign(existing, g);
-      } else groups.push(g);
+    const selectedDept = [...this.selectedSubjects].join(', ');
+    if (selectedDept) {
+      const schoolInfo = Store.getSetting('schoolInfo', {});
+      schoolInfo.department = selectedDept;
+      Store.setSetting('schoolInfo', schoolInfo);
+      BILSEM_DATA.school.department = selectedDept;
     }
-    if (!Store.setSetting('customGroups', groups)) { Toast.show('Kayıt başarısız. Cihaz depolamasını kontrol edin.', 'error'); return; }
+
+    const finalGroups = this.draft.map(draft => {
+      const g = {
+        ...draft,
+        dayIndex: UI.days.indexOf(draft.day),
+        color: BILSEM_DATA.dayColors[draft.day]?.bg || '#00B894',
+        timeSlot: draft.timeSlot || `${draft.startTime} - ${draft.endTime}`
+      };
+      const lessons = (g.lessons || []).filter(l => l.start >= g.startTime && l.end <= g.endTime && l.start < l.end);
+      g.lessons = lessons.length ? lessons : [{ order: 1, start: g.startTime, end: g.endTime }];
+      return g;
+    });
+
+    if (!Store.setSetting('customGroups', finalGroups)) { Toast.show('Kayıt başarısız. Cihaz depolamasını kontrol edin.', 'error'); return; }
+    BILSEM_DATA.groups = finalGroups;
+    BILSEM_DATA.activeDays = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].filter(day => finalGroups.some(g => g.day === day));
+
     Store.setSetting('onboardingComplete', true);
     const synced = await Store.syncNow();
     if (Store.userId !== this.owner) return;

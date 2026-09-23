@@ -30,6 +30,23 @@ const AttendancePage = {
     if (isParent) {
       todayGroups = todayGroups.filter(g => g.students.some(s => s.id === user.studentId));
       allGroups = allGroups.filter(g => g.students.some(s => s.id === user.studentId));
+    } else {
+      // Öğretmen branşı filtresi: Sadece öğretmenin seçtiği branşın gruplarını göster
+      const teacherDept = (BILSEM_DATA.school?.department || Store.getSetting('schoolInfo', {}).department || '').trim();
+      if (teacherDept) {
+        const depts = teacherDept.split(',').map(d => UI.normalize(d.trim())).filter(Boolean);
+        const matchesDept = (g) => {
+          if (!g.subject) return false;
+          const normSubj = UI.normalize(g.subject);
+          return depts.some(d => normSubj.includes(d) || d.includes(normSubj));
+        };
+        const filteredToday = todayGroups.filter(matchesDept);
+        const filteredAll = allGroups.filter(matchesDept);
+        if (filteredAll.length > 0) {
+          todayGroups = filteredToday;
+          allGroups = filteredAll;
+        }
+      }
     }
 
     return `

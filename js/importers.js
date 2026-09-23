@@ -96,6 +96,15 @@ const FileReaders = {
   }
 };
 
+const SUBJECT_KEYWORDS = [
+  'BİLİŞİM TEKN.(SERHAT K.)', 'BİLİŞİM TEKN. (ERDOĞAN K.)', 'BİLİŞİM TEKN.', 'BİLİŞİM',
+  'DESTEK EĞİTİMİ', 'FEN BİLİMLERİ', 'İLK. MATEMATİK', 'İLKÖĞRETİM MATEMATİK',
+  'LİSE MATEMATİK', 'MATEMATİK UYG.', 'MATEMATİK UYG', 'MATEMATİK',
+  'SOSYAL BİLGİLER', 'TÜRKÇE', 'FİZİK', 'KİMYA', 'BİYOLOJİ', 'COĞRAFYA', 'TARİH',
+  'EDEBİYAT', 'FELSEFE', 'MÜZİK', 'GÖRSEL SANATLAR', 'TEKNOLOJİ TASARIM', 'TASARIM',
+  'ATÖLYE_BYF', 'ATÖLYE', 'ROBOTİK', 'YAPAY ZEKA', 'YAPAY ZEKÂ', 'BİLİM', 'İNGİLİZCE', 'INGILIZCE'
+];
+
 const ImportParsers = {
   time(value) {
     const s = String(value || '').trim().replace(/[lI|]/g, '1').replace(/[oO]/g, '0');
@@ -103,9 +112,43 @@ const ImportParsers = {
     return m && +m[1] < 24 && +m[2] < 60 ? `${m[1].padStart(2, '0')}:${m[2]}` : '';
   },
 
+  isSubject(text) {
+    if (!text) return false;
+    const u = String(text).trim().toLocaleUpperCase('tr-TR');
+    return SUBJECT_KEYWORDS.some(s => u.includes(s));
+  },
+
+  splitCellSubjects(cell) {
+    if (!cell) return [''];
+    const cStr = String(cell).trim();
+    const cUpper = cStr.toLocaleUpperCase('tr-TR');
+    const sorted = [...SUBJECT_KEYWORDS].sort((a, b) => b.length - a.length);
+    const found = [];
+    let rem = cUpper;
+    while (rem) {
+      rem = rem.trim();
+      let matched = false;
+      for (const s of sorted) {
+        if (rem.startsWith(s)) {
+          found.push(s);
+          rem = rem.slice(s.length).trim();
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) break;
+    }
+    if (found.length >= 2 && !rem) {
+      return found;
+    }
+    return [cStr];
+  },
+
   cleanStudentName(raw) {
     if (!raw) return '';
     let s = String(raw).trim();
+    if (/^[Zz][\-_]?[RrMm]$/i.test(s)) return '';
+    if (/^[Hh][\-_]?[Ssİi]$/i.test(s)) return '';
     // Strip leading bullets
     s = s.replace(/^[■•*—–\-\s]+/, '');
     // Strip leading grade and/or row numbers (e.g. '4 1 ', '10 2 ', '1 ', '4.', '2)', '3-')
@@ -115,14 +158,20 @@ const ImportParsers = {
     // Strip unclosed parenthesis at end: (AYBASTI
     s = s.replace(/\([A-Za-zÇĞİÖŞÜçğıöşü\s]*$/, '');
     // Strip known trailing town / branch / classification tags
-    s = s.replace(/\s+(KORGAN|AYBASTI|KUMRU|FATSA)(\s+[Hh][\s_]*[Ssİi])?/gi, '');
-    s = s.replace(/\s+[Zz][\-_]?[RrMm]\b/g, '');
+    s = s.replace(/\s+(KORGAN|KORG|AYBASTI|AYBAS|AYBA|KUMRU|FATSA)(\s+[Hh][\s_]*[Ssİi])?\b/gi, '');
+    s = s.replace(/\s+[Zz][\-_]?[RrMm]\b/gi, '');
+    s = s.replace(/\s+[Hh][\-_]?[Ssİi]\b/gi, '');
     s = s.replace(/\s+NAK[İI]L.*$/gi, '');
     s = s.replace(/\s+NAK$/gi, '');
     // Strip trailing numbers
     s = s.replace(/\s+\d+$/, '');
     // Clean whitespace
     s = s.replace(/\s+/g, ' ').trim();
+    if (this.isSubject(s)) return '';
+    if (/^[Zz][\-_]?[RrMm]$/i.test(s)) return '';
+    if (/^[Hh][\-_]?[Ssİi]$/i.test(s)) return '';
+    // Must contain letters and be at least 3 chars, not pure number
+    if (s.length < 3 || /^\d+$/.test(s) || !/[a-zA-ZçğıöşüÇĞİÖŞÜ]/.test(s)) return '';
     return s;
   },
 
@@ -318,12 +367,31 @@ const ImportParsers = {
       if (!line.trim()) continue;
       
       const rawCols = line.split('\t');
+      const cols = [];
+      for (const c of rawCols) {
+        const cStr = c.trim();
+        const m = cStr.match(timeRegex);
+        if (m) {
+          const prefix = cStr.slice(0, m.index).trim();
+          const timePart = m[0].trim();
+          const suffix = cStr.slice(m.index + m[0].length).trim();
+          if (prefix) {
+            for (const sub of this.splitCellSubjects(prefix)) cols.push(sub);
+          }
+          cols.push(timePart);
+          if (suffix) {
+            for (const sub of this.splitCellSubjects(suffix)) cols.push(sub);
+          }
+        } else {
+          for (const sub of this.splitCellSubjects(cStr)) cols.push(sub);
+        }
+      }
       
       // Look for group names column by column
       const groupMatches = [];
-      if (!line.includes('Saat') && !timeRegex.test(line)) {
-        for (let cIdx = 0; cIdx < rawCols.length; cIdx++) {
-          const colText = rawCols[cIdx].trim();
+      if (!line.includes('Saat') && !cols.some(c => timeRegex.test(c))) {
+        for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+          const colText = cols[cIdx].trim();
           const m = colText.match(/(?:BYF|DESTEK|UYUM|ÖYG|PROJE)[-\s\d\p{L}\/_]+(?:\s*\([^)]+\))?/iu);
           if (m) {
             groupMatches.push({ colIndex: cIdx, name: m[0].trim().replace(/[_]+$/, '').trim() });
@@ -345,16 +413,16 @@ const ImportParsers = {
       // Look for day names in header row
       const daysFound = UI.days.filter(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(line)));
       if (daysFound.length > 0 && line.includes('Saat')) {
-        const saatIndexes = rawCols.map((c, idx) => c.includes('Saat') ? idx : -1).filter(idx => idx !== -1);
+        const saatIndexes = cols.map((c, idx) => c.includes('Saat') ? idx : -1).filter(idx => idx !== -1);
         
         for (let idx = 0; idx < activeHeaders.length; idx++) {
           if (saatIndexes[idx] !== undefined) {
              activeHeaders[idx].colIndex = saatIndexes[idx];
           }
           const h = activeHeaders[idx];
-          const nextColIndex = saatIndexes[idx + 1] !== undefined ? saatIndexes[idx + 1] : rawCols.length;
+          const nextColIndex = saatIndexes[idx + 1] !== undefined ? saatIndexes[idx + 1] : cols.length;
           
-          const dayCols = rawCols.map((c, idx) => ({ text: c, i: idx })).filter(c => c.i >= h.colIndex && c.i < nextColIndex);
+          const dayCols = cols.map((c, idx) => ({ text: c, i: idx })).filter(c => c.i >= h.colIndex && c.i < nextColIndex);
           for (const dc of dayCols) {
             const foundDay = UI.days.find(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(dc.text)));
             if (foundDay) {
@@ -363,20 +431,6 @@ const ImportParsers = {
           }
         }
         continue;
-      }
-      
-      // Expand any cells where timeRegex is merged with text (e.g. '09:00-09:40 İNGİLİZCE')
-      const cols = [];
-      for (const c of rawCols) {
-        const m = c.match(timeRegex);
-        if (m && c.trim() !== m[0]) {
-          const timePart = m[0];
-          const rest = (c.slice(0, m.index) + ' ' + c.slice(m.index + m[0].length)).trim();
-          cols.push(timePart);
-          if (rest) cols.push(rest);
-        } else {
-          cols.push(c);
-        }
       }
 
       // Look for time range and students (Data row)
@@ -396,13 +450,22 @@ const ImportParsers = {
             const tGroup = templateGroups[idx];
             if (!tGroup) continue;
 
-            // Extract students from slice (excluding time and pure numbers)
-            const studentCells = slice.filter(c => c.trim().length > 3 && !timeRegex.test(c) && !/^\d+[.)\-–]?$/.test(c.trim()));
-            if (studentCells.length > 0) {
-              const rawName = studentCells[studentCells.length - 1];
-              const studentName = this.cleanStudentName(rawName);
-              if (studentName && studentName.length > 2) {
-                if (groupStudentsMap.has(tGroup.name)) {
+            // Extract candidate subjects from slice
+            const candSubjects = [];
+            for (const c of slice.slice(1)) {
+              if (this.isSubject(c) && !this.cleanStudentName(c)) {
+                const norm = this.formatSubject(c);
+                if (norm && !candSubjects.includes(norm)) {
+                  candSubjects.push(norm);
+                }
+              }
+            }
+
+            // Extract students from slice
+            for (const c of slice) {
+              if (!timeRegex.test(c)) {
+                const studentName = this.cleanStudentName(c);
+                if (studentName) {
                   groupStudentsMap.get(tGroup.name).add(studentName);
                 }
               }
@@ -414,8 +477,7 @@ const ImportParsers = {
                 const rawSub = (slice[1 + d] || '').trim();
                 let subject = this.formatSubject(rawSub);
                 if (!subject || !this.isValidSubject(subject)) {
-                  const cand = slice.slice(1).find(c => this.isValidSubject(c) && !/^\d+[.)\-–]?$/.test(c.trim()) && !studentCells.includes(c));
-                  subject = cand ? this.formatSubject(cand) : 'Genel';
+                  subject = candSubjects[d] || candSubjects[0] || 'Genel';
                 }
                 
                 let g = groups.find(x => x.name === tGroup.name && x.day === dayName && x.subject === subject);
@@ -439,16 +501,16 @@ const ImportParsers = {
         }
       } else if (templateGroups.length > 0) {
         // Rows without time (e.g. students 9, 10, etc.)
-        for (let idx = 0; idx < activeHeaders.length; idx++) {
+        for (let idx = 0; idx < Math.min(activeHeaders.length, templateGroups.length); idx++) {
           const tGroup = templateGroups[idx];
           if (!tGroup) continue;
           const h = activeHeaders[idx];
-          const nextCol = activeHeaders[idx + 1] ? activeHeaders[idx + 1].colIndex : rawCols.length;
-          const slice = rawCols.slice(h.colIndex, nextCol);
+          const nextCol = activeHeaders[idx + 1] ? activeHeaders[idx + 1].colIndex : cols.length;
+          const slice = cols.slice(h.colIndex, nextCol);
           for (const cell of slice) {
-            if (!timeRegex.test(cell) && !/^\d+[.)\-–]?$/.test(cell.trim())) {
+            if (!timeRegex.test(cell)) {
               const studentName = this.cleanStudentName(cell);
-              if (studentName && studentName.length > 2 && !this.isValidSubject(studentName)) {
+              if (studentName) {
                 if (groupStudentsMap.has(tGroup.name)) {
                   groupStudentsMap.get(tGroup.name).add(studentName);
                 }

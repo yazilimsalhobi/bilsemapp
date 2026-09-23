@@ -9,9 +9,9 @@ function env(shared=new Map(), cloud={}) {
   localStorage:{getItem:k=>shared.get(k)||null,setItem:(k,v)=>shared.set(k,v),removeItem:k=>shared.delete(k)},
   window:{supabaseClient:{from(table){assert.equal(table,'user_workspaces');return {select(){return this;},eq(_,id){this.id=id;return this;},async maybeSingle(){return {data:cloud[this.id]?{payload:cloud[this.id]}:null};},async upsert(row){cloud[row.user_id]=structuredClone(row.payload);return {};}};}}}
  });
- for(const file of ['js/ui.js','js/data.js','js/store.js','js/importers.js','js/pages/annual_plan.js','js/dashboard.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),c);
+ for(const file of ['js/ui.js','js/data.js','js/store.js','js/importers.js','js/pages/annual_plan.js','js/dashboard.js','js/pages/attendance.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),c);
  vm.runInContext('const Auth={currentUser:null,getCurrentUser(){return this.currentUser;}};',c);
- return {...vm.runInContext('({Store,Auth,UI,ImportParsers,AnnualPlans,Dashboard,BILSEM_DATA})',c), shared,cloud,c};
+ return {...vm.runInContext('({Store,Auth,UI,ImportParsers,AnnualPlans,Dashboard,BILSEM_DATA,DataHelpers,AttendancePage})',c), shared,cloud,c};
 }
 test('new users have no bundled school, student or schedule data',()=>{
  const h=env();assert.equal(h.BILSEM_DATA.groups.length,0);assert.equal(h.BILSEM_DATA.school.teacher,'');
@@ -288,6 +288,63 @@ test('numbers like 2, 4, 6, 7 are never recognized as subjects, groups and stude
   assert.strictEqual(g2.students.length, 2);
   assert.strictEqual(g2.students[0].name, 'ALİ YAHYA İNAN');
   assert.strictEqual(g2.students[1].name, 'GÖKÇE DURU KEÇECİ');
+});
+
+test('full PDF schedule parsing has zero lesson names in students and rescues all merged/truncated student names', () => {
+  const h = env();
+  const pdfTextPath = path.join(__dirname, 'fixtures', 'matrix-schedule-pdf.txt');
+  if (!fs.existsSync(pdfTextPath)) return;
+  const pdfText = fs.readFileSync(pdfTextPath, 'utf8');
+  const result = h.ImportParsers.parseMatrix(pdfText);
+
+  assert.ok(result.length > 50, `Expected > 50 groups, got ${result.length}`);
+  
+  const allStudents = new Set();
+  for (const g of result) {
+    for (const s of g.students) {
+      allStudents.add(s.name);
+      assert.strictEqual(h.ImportParsers.isSubject(s.name), false, `Subject "${s.name}" must not be in student list of group ${g.name}`);
+      assert.strictEqual(/^[Zz][\-_]?[RrMm]$/i.test(s.name), false, `Z-R code must not be in student name: "${s.name}"`);
+    }
+  }
+
+  // Key students that were previously merged with time or cut off by OCR
+  const expectedKeyStudents = [
+    'MUSTAFA EYMEN ÇELİK',
+    'AHMET HASAN BOYRAZ',
+    'Samet Anıl POLAT',
+    'ABDUSSAMET AKKİRAZ',
+    'HASAN ATA BEY',
+    'BUĞRA İZZET ERDEM',
+    'BEYZA BEBEK',
+    'ALİ YAHYA İNAN'
+  ];
+
+  for (const name of expectedKeyStudents) {
+    const found = [...allStudents].find(s => s.toLowerCase().includes(name.toLowerCase()));
+    assert.ok(found, `Expected student "${name}" to be recovered in parsed student lists`);
+  }
+});
+
+test('attendance page only displays groups belonging to the teacher’s selected branch', () => {
+  const h = env();
+  h.Auth.currentUser = { id: 'teacher1', role: 'teacher' };
+  
+  // Set teacher's department to Bilişim Teknolojileri
+  h.Store.setSetting('schoolInfo', { teacher: 'Ahmet Öğretmen', department: 'Bilişim Teknolojileri' });
+  h.BILSEM_DATA.school = { teacher: 'Ahmet Öğretmen', department: 'Bilişim Teknolojileri' };
+
+  // Set 3 groups across different branches
+  h.BILSEM_DATA.groups = [
+    { id: 'g1', name: 'BYF 1-A', day: 'Salı', subject: 'Bilişim Teknolojileri', startTime: '09:00', endTime: '10:30', color: '#00B894', students: [{ id: 's1', name: 'Ali' }] },
+    { id: 'g2', name: 'BYF 1-B', day: 'Salı', subject: 'Coğrafya', startTime: '10:40', endTime: '12:10', color: '#0984E3', students: [{ id: 's2', name: 'Veli' }] },
+    { id: 'g3', name: 'BYF 1-C', day: 'Çarşamba', subject: 'Fen Bilimleri', startTime: '13:00', endTime: '14:30', color: '#FD79A8', students: [{ id: 's3', name: 'Ayşe' }] }
+  ];
+
+  const html = h.AttendancePage.renderGroupSelection();
+  assert.ok(html.includes('BYF 1-A'), 'Teacher branch group BYF 1-A must be visible');
+  assert.ok(!html.includes('BYF 1-B'), 'Coğrafya group BYF 1-B must NOT be visible');
+  assert.ok(!html.includes('BYF 1-C'), 'Fen Bilimleri group BYF 1-C must NOT be visible');
 });
 
 

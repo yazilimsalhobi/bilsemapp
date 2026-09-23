@@ -13,6 +13,7 @@ Desktop.ini
 
 # Private administrator source documents and local tools
 private-backup/
+scratch/
 *.pdf
 ders_programi.txt
 node_modules/
