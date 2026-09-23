@@ -8,8 +8,8 @@ const LoginPage = {
       <div class="page-container fade-in" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: var(--space-xl) var(--space-md);">
         
         <div style="text-align: center; margin-bottom: var(--space-xl);">
-          <div style="width: 90px; height: 90px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto var(--space-md); box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);">🏫</div>
-          <h1 style="font-size: 2.2rem; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, #fff, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Fatsa BİLSEM</h1>
+          <div style="width: 90px; height: 90px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto var(--space-md); box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);">🏫</div>
+          <h1 style="font-size: 2.2rem; font-weight: 900; margin-bottom: 8px; color: var(--text-primary); letter-spacing: -0.5px;">Fatsa BİLSEM</h1>
           <p style="color: var(--text-secondary); font-size: 1.1rem;">Uygulamaya giriş yapın</p>
         </div>
 
@@ -40,7 +40,7 @@ const LoginPage = {
               <a href="#" onclick="LoginPage.handleForgotPassword(event)" style="color: var(--primary); text-decoration: none; font-weight: 500;">Şifremi Unuttum</a>
             </div>
 
-            <button class="btn btn-primary btn-block" onclick="LoginPage.handleLogin()" style="padding: 14px; font-size: 1.1rem; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3);">Giriş Yap</button>
+            <button class="btn btn-primary btn-block" onclick="LoginPage.handleLogin()" style="padding: 14px; font-size: 1.1rem; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);">Giriş Yap</button>
           </div>
 
           <!-- Kayıt Formu -->

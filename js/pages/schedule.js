@@ -130,7 +130,7 @@ const SchedulePage = {
               <div class="group-card-students">
                 <div class="student-avatars">
                   ${group.students.slice(0, 5).map((s, i) => {
-                    const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E', '#A29BFE'];
+                    const colors = ['#2563EB', '#0D9488', '#F59E0B', '#10B981', '#0284C7', '#EC4899'];
                     return `<div class="student-avatar" style="background: ${colors[i % colors.length]};" title="${UI.escape(s.name)}">${UI.escape(s.name.charAt(0))}</div>`;
                   }).join('')}
                   ${group.students.length > 5 ? `<div class="student-avatar" style="background: var(--bg-glass-strong); color: var(--text-secondary);">+${group.students.length - 5}</div>` : ''}
@@ -167,7 +167,7 @@ const SchedulePage = {
       <div class="stagger-children">
         ${group.students.map((student, i) => {
           const parentInfo = Store.getParentInfo(student.id);
-          const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E', '#A29BFE'];
+          const colors = ['#2563EB', '#0D9488', '#F59E0B', '#10B981', '#0284C7', '#EC4899'];
           return `
             <div class="student-card" onclick="Router.go('students', '${student.id}'); App.closeModal();">
               <div class="student-card-avatar" style="background: ${colors[i % colors.length]};">

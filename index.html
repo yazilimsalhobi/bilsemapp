@@ -38,7 +38,7 @@
     .splash-logo {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #6C5CE7, #00CEC9);
+      background: linear-gradient(135deg, #2563EB, #0D9488);
       border-radius: 20px;
       display: flex;
       align-items: center;
@@ -46,28 +46,26 @@
       font-size: 2.5rem;
       margin-bottom: 20px;
       animation: pulseScale 1.5s ease-in-out infinite;
-      box-shadow: 0 0 40px rgba(108, 92, 231, 0.4);
+      box-shadow: 0 0 40px rgba(37, 99, 235, 0.45);
     }
     .splash-title {
       font-family: 'Inter', sans-serif;
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #A29BFE, #00CEC9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #2563EB;
       margin-bottom: 6px;
+      letter-spacing: -0.5px;
     }
     .splash-subtitle {
       font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      color: #6B6B80;
+      font-size: 0.82rem;
+      color: #94A3B8;
       font-weight: 500;
     }
     .splash-loader {
-      width: 40px;
-      height: 3px;
-      background: rgba(255,255,255,0.1);
+      width: 44px;
+      height: 4px;
+      background: rgba(148, 163, 184, 0.2);
       border-radius: 10px;
       overflow: hidden;
       margin-top: 24px;
@@ -77,7 +75,7 @@
       display: block;
       width: 50%;
       height: 100%;
-      background: linear-gradient(90deg, #6C5CE7, #00CEC9);
+      background: #2563EB;
       border-radius: 10px;
       animation: splashLoad 1s ease-in-out infinite;
     }
@@ -123,21 +121,44 @@
     <header class="app-header">
       <div class="header-top">
         <div class="header-brand">
-          <div class="header-logo">🏫</div>
+          <div class="header-logo">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <path d="M12 6v6m-3-3h6"/>
+            </svg>
+          </div>
           <div>
             <div class="header-title">Fatsa BİLSEM</div>
-            <div class="header-subtitle">Coğrafya & Sosyal Bilgiler</div>
+            <div class="header-subtitle">Ders & Öğrenci Takip</div>
           </div>
         </div>
         <div class="header-actions">
           <button class="header-btn" id="logout-btn" onclick="Auth.logout()" title="Çıkış Yap" style="display: none;">
-            🚪
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
           </button>
           <button class="header-btn" onclick="App.enableNotifications()" title="Bildirimleri Aç" id="notif-btn">
-            🔔
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
           </button>
           <button class="header-btn" onclick="App.toggleTheme()" title="Tema Değiştir">
-            🌓
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -149,37 +170,116 @@
     </main>
   </div>
 
+  <!-- Dersler Menüsü Pop-up (Bottom Sheet / Floating Modal) -->
+  <div class="nav-popup-backdrop" id="nav-popup-backdrop"></div>
+  <div class="nav-popup" id="nav-popup" role="dialog" aria-modal="true" aria-label="Ders İşlemleri">
+    <div class="nav-popup-header">
+      <div class="nav-popup-title-group">
+        <span class="nav-popup-badge">HIZLI İŞLEMLER</span>
+        <h3 class="nav-popup-title">Ders Menüsü</h3>
+      </div>
+      <button type="button" class="nav-popup-close-btn" onclick="App.closeNavPopup()" aria-label="Kapat">✕</button>
+    </div>
+    <div class="nav-popup-items">
+      <a class="nav-popup-card yoklama" data-page="attendance" href="#attendance">
+        <div class="nav-popup-card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <polyline points="17 11 19 13 23 9"/>
+          </svg>
+        </div>
+        <div class="nav-popup-card-content">
+          <div class="nav-popup-card-title">Yoklama Al</div>
+          <div class="nav-popup-card-desc">Bugünkü grupları kontrol et ve yoklama kaydet</div>
+        </div>
+        <span class="nav-popup-card-arrow">›</span>
+      </a>
+
+      <a class="nav-popup-card odev" data-page="homework" href="#homework">
+        <div class="nav-popup-card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+        <div class="nav-popup-card-content">
+          <div class="nav-popup-card-title">Ödev Takibi</div>
+          <div class="nav-popup-card-desc">Ödev ver, teslim ve öğrenci durumunu yönet</div>
+        </div>
+        <span class="nav-popup-card-arrow">›</span>
+      </a>
+
+      <a class="nav-popup-card ogrenci" data-page="students" href="#students">
+        <div class="nav-popup-card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="nav-popup-card-content">
+          <div class="nav-popup-card-title">Öğrenci Listesi</div>
+          <div class="nav-popup-card-desc">Tüm kayıtlı öğrenciler, iletişim ve veli bilgileri</div>
+        </div>
+        <span class="nav-popup-card-arrow">›</span>
+      </a>
+    </div>
+  </div>
+
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Ana gezinme">
     <a class="nav-item active" data-page="home" href="#home">
-      <span class="nav-icon">🏠</span>
+      <div class="nav-icon-wrapper">
+        <svg class="nav-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v6H4a1 1 0 0 1-1-1V9.5z"/>
+        </svg>
+      </div>
       <span class="nav-label">Ana Sayfa</span>
     </a>
+
     <a class="nav-item" data-page="schedule" href="#schedule">
-      <span class="nav-icon">📅</span>
+      <div class="nav-icon-wrapper">
+        <svg class="nav-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="3" ry="3"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
       <span class="nav-label">Program</span>
     </a>
-    <div class="nav-item nav-group-trigger" id="nav-group-trigger">
-      <span class="nav-icon">📋</span>
-      <span class="nav-label">Dersler</span>
-      <div class="nav-popup" id="nav-popup">
-        <a class="nav-popup-item" data-page="attendance" href="#attendance">
-          <span>✅</span> Yoklama
-        </a>
-        <a class="nav-popup-item" data-page="homework" href="#homework">
-          <span>📝</span> Ödev
-        </a>
-        <a class="nav-popup-item" data-page="students" href="#students">
-          <span>👥</span> Öğrenci
-        </a>
+
+    <div class="nav-item nav-group-trigger" id="nav-group-trigger" role="button" tabindex="0" aria-label="Dersler ve İşlemler">
+      <div class="nav-icon-wrapper">
+        <svg class="nav-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <line x1="9" y1="7" x2="15" y2="7"/>
+          <line x1="9" y1="11" x2="13" y2="11"/>
+        </svg>
       </div>
+      <span class="nav-label">Dersler</span>
     </div>
+
     <a class="nav-item" data-page="annual_plan" href="#annual_plan">
-      <span class="nav-icon">🗓️</span>
+      <div class="nav-icon-wrapper">
+        <svg class="nav-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
       <span class="nav-label">Plan</span>
     </a>
+
     <a class="nav-item" data-page="settings" href="#settings">
-      <span class="nav-icon">⚙️</span>
+      <div class="nav-icon-wrapper">
+        <svg class="nav-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
       <span class="nav-label">Ayarlar</span>
     </a>
   </nav>

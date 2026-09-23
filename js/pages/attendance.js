@@ -363,7 +363,7 @@ const AttendancePage = {
   },
 
   getAvatarColor(index) {
-    const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E', '#A29BFE', '#FD79A8', '#74B9FF', '#55EFC4', '#E17055'];
+    const colors = ['#2563EB', '#0D9488', '#F59E0B', '#10B981', '#0284C7', '#EC4899', '#3B82F6', '#14B8A6'];
     return colors[index % colors.length];
   }
 };

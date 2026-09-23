@@ -78,9 +78,10 @@ const App = {
   setupNavigation() {
     const trigger = document.getElementById('nav-group-trigger');
     const popup = document.getElementById('nav-popup');
+    const backdrop = document.getElementById('nav-popup-backdrop');
 
     // Regular nav items (not inside popup)
-    document.querySelectorAll('.nav-item:not(.nav-group-trigger)').forEach(item => {
+    document.querySelectorAll('.bottom-nav .nav-item:not(.nav-group-trigger)').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
         this.closeNavPopup();
@@ -99,29 +100,36 @@ const App = {
       trigger.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (popup.classList.contains('open')) {
-          this.closeNavPopup();
-        } else {
-          popup.classList.add('open');
+        this.toggleNavPopup();
+      });
+
+      trigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.toggleNavPopup();
         }
       });
 
       // Popup items navigate + close
-      popup.querySelectorAll('.nav-popup-item').forEach(item => {
+      popup.querySelectorAll('.nav-popup-card, .nav-popup-item').forEach(item => {
         item.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          const page = item.dataset.page;
           this.closeNavPopup();
           this.closeModal();
-          const page = item.dataset.page;
-          Router.go(page);
+          if (page) Router.go(page);
         });
       });
     }
 
+    if (backdrop) {
+      backdrop.addEventListener('click', () => this.closeNavPopup());
+    }
+
     // Click outside closes popup
     document.addEventListener('click', (e) => {
-      if (popup && popup.classList.contains('open') && !trigger.contains(e.target)) {
+      if (popup && popup.classList.contains('open') && !popup.contains(e.target) && !trigger?.contains(e.target)) {
         this.closeNavPopup();
       }
     });
@@ -135,9 +143,35 @@ const App = {
     });
   },
 
+  toggleNavPopup() {
+    const popup = document.getElementById('nav-popup');
+    const backdrop = document.getElementById('nav-popup-backdrop');
+    const trigger = document.getElementById('nav-group-trigger');
+    if (!popup) return;
+    const isOpen = popup.classList.contains('open');
+    if (isOpen) {
+      this.closeNavPopup();
+    } else {
+      popup.classList.add('open');
+      if (backdrop) backdrop.classList.add('open');
+      if (trigger) {
+        trigger.classList.add('active');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    }
+  },
+
   closeNavPopup() {
     const popup = document.getElementById('nav-popup');
+    const backdrop = document.getElementById('nav-popup-backdrop');
+    const trigger = document.getElementById('nav-group-trigger');
     if (popup) popup.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+      const groupedPages = ['attendance', 'homework', 'students'];
+      trigger.classList.toggle('active', groupedPages.includes(Router.currentPage));
+    }
   },
 
   updateNavigationVisibility() {

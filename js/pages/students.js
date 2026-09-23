@@ -80,7 +80,7 @@ const StudentsPage = {
 
   renderStudentCard(student, index) {
     const parentInfo = Store.getParentInfo(student.id);
-    const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E', '#A29BFE', '#FD79A8', '#74B9FF'];
+    const colors = ['#2563EB', '#0D9488', '#F59E0B', '#10B981', '#0284C7', '#EC4899', '#3B82F6', '#14B8A6'];
 
     return `
       <div class="student-card" onclick="Router.go('students', '${student.id}')" data-student-name="${UI.escape(student.name.toLowerCase())}">

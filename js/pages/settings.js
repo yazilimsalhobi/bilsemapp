@@ -125,7 +125,7 @@ const SettingsPage = {
 
         <!-- Tüm Ayarları Kaydet Butonu -->
         <div class="section" data-accordion-title="💾 Tüm Ayarları Kaydet" style="margin-top: var(--space-md);">
-          <button class="btn btn-primary btn-block btn-lg" onclick="SettingsPage.saveAllSettings()" style="box-shadow: 0 6px 20px rgba(108, 92, 231, 0.45); font-weight: 700;">
+          <button class="btn btn-primary btn-block btn-lg" onclick="SettingsPage.saveAllSettings()" style="box-shadow: 0 6px 20px var(--primary-glow); font-weight: 700;">
             💾 Tüm Ayarları Kaydet
           </button>
         </div>
@@ -421,7 +421,7 @@ const SettingsPage = {
       </div>
       <div class="form-group">
         <label class="form-label">Grup Rengi</label>
-        <input type="color" class="form-input" id="ng-color" value="#6C5CE7" style="height: 44px; padding: 4px;">
+        <input type="color" class="form-input" id="ng-color" value="#2563EB" style="height: 44px; padding: 4px;">
       </div>
     `, `
       <button class="btn btn-primary btn-block btn-lg" onclick="SettingsPage.saveNewGroup()">
@@ -447,7 +447,7 @@ const SettingsPage = {
       endTime: document.getElementById('ng-end')?.value || '17:45',
       lessons: [],
       subject: document.getElementById('ng-subject')?.value?.trim() || 'Coğrafya',
-      color: document.getElementById('ng-color')?.value || '#6C5CE7',
+      color: document.getElementById('ng-color')?.value || '#2563EB',
       students: []
     };
 

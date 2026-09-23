@@ -151,7 +151,7 @@ const HomePage = {
               <div class="group-card-students" style="margin-top: 12px;">
                 <div class="student-avatars">
                   ${group.students.slice(0, 4).map((s, i) => {
-                    const colors = ['#6C5CE7', '#00CEC9', '#FF6B6B', '#00B894', '#FDCB6E'];
+                    const colors = ['#2563EB', '#0D9488', '#F59E0B', '#10B981', '#0284C7'];
                     return `<div class="student-avatar" style="background: ${colors[i % colors.length]};">${UI.escape(s.name.charAt(0))}</div>`;
                   }).join('')}
                   ${group.students.length > 4 ? `<div class="student-avatar" style="background: var(--bg-glass-strong); color: var(--text-secondary); font-size: 0.6rem;">+${group.students.length - 4}</div>` : ''}
@@ -171,7 +171,7 @@ const HomePage = {
                  ${!isParent ? `
                  <div style="display: flex; gap: 8px;">
                    <button class="btn btn-sm" style="flex: 1; background: rgba(0, 184, 148, 0.15); color: #00B894; border: 1px solid rgba(0, 184, 148, 0.3);" onclick="Router.go('attendance', '${group.id}')">✅ Yoklama Al</button>
-                   <button class="btn btn-sm" style="flex: 1; background: rgba(108, 92, 231, 0.15); color: #A29BFE; border: 1px solid rgba(108, 92, 231, 0.3);" onclick="Router.go('homework', '${group.id}')">📝 Ödev Ver</button>
+                    <button class="btn btn-sm" style="flex: 1; background: rgba(37, 99, 235, 0.15); color: #60A5FA; border: 1px solid rgba(37, 99, 235, 0.3);" onclick="Router.go('homework', '${group.id}')">📝 Ödev Ver</button>
                  </div>
                  ` : ''}
               </div>

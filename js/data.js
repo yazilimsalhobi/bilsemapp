@@ -11,7 +11,7 @@ const BILSEM_DATA = {
     'Pazartesi': { bg: '#4A90D9', gradient: 'linear-gradient(135deg, #4A90D9, #357ABD)', emoji: '🌤️' },
     'Salı':     { bg: '#FF6B6B', gradient: 'linear-gradient(135deg, #FF6B6B, #EE5A5A)', emoji: '🔴' },
     'Çarşamba': { bg: '#FDCB6E', gradient: 'linear-gradient(135deg, #FDCB6E, #F0B429)', emoji: '🟡' },
-    'Perşembe': { bg: '#6C5CE7', gradient: 'linear-gradient(135deg, #6C5CE7, #5A4BD1)', emoji: '🟣' },
+    'Perşembe': { bg: '#2563EB', gradient: 'linear-gradient(135deg, #2563EB, #1D4ED8)', emoji: '🔷' },
     'Cuma':     { bg: '#00CEC9', gradient: 'linear-gradient(135deg, #00CEC9, #00B5B0)', emoji: '🔵' },
     'Cumartesi':{ bg: '#00B894', gradient: 'linear-gradient(135deg, #00B894, #009B7D)', emoji: '🟢' },
     'Pazar':    { bg: '#636e72', gradient: 'linear-gradient(135deg, #636e72, #4a5568)', emoji: '⚪' }
@@ -45,14 +45,14 @@ const BILSEM_DATA = {
   homeworkStatuses: [
     { id: 'assigned', label: 'Verildi', icon: '📝', color: '#74B9FF' },
     { id: 'submitted', label: 'Teslim Edildi', icon: '📥', color: '#FDCB6E' },
-    { id: 'reviewed', label: 'Kontrol Edildi', icon: '🔍', color: '#A29BFE' },
+    { id: 'reviewed', label: 'Kontrol Edildi', icon: '🔍', color: '#0D9488' },
     { id: 'graded', label: 'Notlandırıldı', icon: '⭐', color: '#00B894' }
   ],
 
   // Proje aşamaları
   projectPhases: [
     { id: 'planning', label: 'Planlama', icon: '📋', color: '#74B9FF' },
-    { id: 'research', label: 'Araştırma', icon: '🔎', color: '#A29BFE' },
+    { id: 'research', label: 'Araştırma', icon: '🔎', color: '#38BDF8' },
     { id: 'development', label: 'Geliştirme', icon: '⚙️', color: '#FDCB6E' },
     { id: 'presentation', label: 'Sunum', icon: '🎤', color: '#00B894' },
     { id: 'completed', label: 'Tamamlandı', icon: '🏆', color: '#00CEC9' }

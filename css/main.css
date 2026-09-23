@@ -8,61 +8,73 @@
 
 /* ============ CSS CUSTOM PROPERTIES ============ */
 :root {
-  /* Primary Colors */
-  --primary: #6C5CE7;
-  --primary-light: #A29BFE;
-  --primary-dark: #5A4BD1;
-  --secondary: #00CEC9;
-  --secondary-light: #81ECEC;
-  --accent: #FDCB6E;
-  --accent-dark: #F0B429;
+  /* Primary Colors - Vibrant Ocean Azure */
+  --primary: #2563EB;
+  --primary-light: #60A5FA;
+  --primary-dark: #1D4ED8;
+  --primary-subtle: rgba(37, 99, 235, 0.12);
+  --primary-glow: rgba(37, 99, 235, 0.28);
+
+  /* Secondary & Accent - Fresh Teal & Sunlit Amber */
+  --secondary: #0D9488;
+  --secondary-light: #2DD4BF;
+  --secondary-dark: #0F766E;
+  --secondary-subtle: rgba(13, 148, 136, 0.12);
+
+  --accent: #F59E0B;
+  --accent-light: #FCD34D;
+  --accent-dark: #D97706;
+  --accent-subtle: rgba(245, 158, 11, 0.12);
 
   /* Semantic Colors */
-  --success: #00B894;
-  --success-light: #55EFC4;
-  --warning: #FDCB6E;
-  --warning-dark: #E17055;
-  --danger: #FF6B6B;
-  --danger-light: #FF8787;
-  --info: #74B9FF;
+  --success: #10B981;
+  --success-light: #6EE7B7;
+  --success-subtle: rgba(16, 185, 129, 0.12);
+  --warning: #F59E0B;
+  --warning-dark: #D97706;
+  --danger: #EF4444;
+  --danger-light: #FCA5A5;
+  --danger-subtle: rgba(239, 68, 68, 0.12);
+  --info: #0284C7;
 
   /* Day Colors */
-  --day-monday: #4A90D9;
-  --day-tuesday: #FF6B6B;
-  --day-wednesday: #FDCB6E;
-  --day-thursday: #6C5CE7;
-  --day-friday: #00CEC9;
-  --day-saturday: #00B894;
+  --day-monday: #4F46E5;
+  --day-tuesday: #059669;
+  --day-wednesday: #0284C7;
+  --day-thursday: #D97706;
+  --day-friday: #E11D48;
+  --day-saturday: #0D9488;
+  --day-sunday: #64748B;
 
-  /* Dark Theme */
-  --bg-primary: #0A0A14;
-  --bg-secondary: #12121F;
-  --bg-tertiary: #1A1A2E;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --bg-card-hover: rgba(255, 255, 255, 0.08);
-  --bg-glass: rgba(255, 255, 255, 0.06);
-  --bg-glass-strong: rgba(255, 255, 255, 0.12);
-  --bg-input: rgba(255, 255, 255, 0.06);
+  /* Dark Theme - Sleek Deep Slate (Zero purple tint) */
+  --bg-primary: #0B1329;
+  --bg-secondary: #131F37;
+  --bg-tertiary: #1E2D4A;
+  --bg-card: rgba(19, 31, 55, 0.9);
+  --bg-card-hover: rgba(30, 45, 74, 0.95);
+  --bg-glass: rgba(19, 31, 55, 0.75);
+  --bg-glass-strong: rgba(19, 31, 55, 0.92);
+  --bg-input: #0B1329;
 
   /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-subtle: rgba(148, 163, 184, 0.12);
+  --border-medium: rgba(148, 163, 184, 0.22);
+  --border-strong: rgba(148, 163, 184, 0.38);
 
   /* Text */
-  --text-primary: #F1F1F5;
-  --text-secondary: #A0A0B8;
-  --text-tertiary: #6B6B80;
-  --text-inverse: #0A0A14;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-inverse: #0B1329;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
-  --shadow-glow-primary: 0 0 20px rgba(108, 92, 231, 0.3);
-  --shadow-glow-success: 0 0 20px rgba(0, 184, 148, 0.3);
-  --shadow-glow-danger: 0 0 20px rgba(255, 107, 107, 0.3);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --shadow-glow-primary: 0 0 20px rgba(37, 99, 235, 0.25);
+  --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.25);
+  --shadow-glow-danger: 0 0 20px rgba(239, 68, 68, 0.25);
 
   /* Spacing */
   --space-xs: 4px;
@@ -114,23 +126,24 @@
 
 /* ============ LIGHT THEME ============ */
 [data-theme="light"] {
-  --bg-primary: #F5F5FA;
+  --bg-primary: #F8FAFC;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #EEEEF5;
-  --bg-card: rgba(255, 255, 255, 0.9);
-  --bg-card-hover: rgba(255, 255, 255, 1);
-  --bg-glass: rgba(255, 255, 255, 0.7);
-  --bg-glass-strong: rgba(255, 255, 255, 0.85);
-  --bg-input: rgba(0, 0, 0, 0.04);
-  --border-subtle: rgba(0, 0, 0, 0.06);
-  --border-medium: rgba(0, 0, 0, 0.1);
-  --border-strong: rgba(0, 0, 0, 0.2);
-  --text-primary: #1A1A2E;
-  --text-secondary: #5A5A72;
-  --text-tertiary: #9090A8;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --bg-tertiary: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-glass-strong: rgba(255, 255, 255, 0.96);
+  --bg-input: #F1F5F9;
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-medium: rgba(15, 23, 42, 0.14);
+  --border-strong: rgba(15, 23, 42, 0.25);
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #FFFFFF;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* ============ RESET & BASE ============ */
@@ -159,7 +172,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Background gradient */
+/* Background subtle ambient light */
 body::before {
   content: '';
   position: fixed;
@@ -168,9 +181,9 @@ body::before {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(ellipse at 20% 0%, rgba(108, 92, 231, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(0, 206, 201, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(253, 203, 110, 0.05) 0%, transparent 70%);
+    radial-gradient(ellipse at 20% 0%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(13, 148, 136, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -211,24 +224,21 @@ body::before {
 }
 
 .header-logo {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  width: 38px;
+  height: 38px;
+  background: var(--primary);
+  color: #FFFFFF;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: var(--shadow-glow-primary);
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
 .header-title {
   font-size: var(--font-md);
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-light), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 800;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
 }
 
@@ -248,26 +258,26 @@ body::before {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-glass);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-card);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-base);
-  font-size: 1.1rem;
+  transition: all var(--transition-fast);
   position: relative;
+}
+
+.header-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .header-btn:active {
   transform: scale(0.92);
-}
-
-.header-btn:hover {
-  background: var(--bg-glass-strong);
-  color: var(--text-primary);
-  border-color: var(--border-medium);
 }
 
 .header-btn .badge {
@@ -301,10 +311,7 @@ body::before {
 }
 
 .page-title span {
-  background: linear-gradient(135deg, var(--primary-light), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
 }
 
 /* ============ BOTTOM NAVIGATION ============ */
@@ -317,7 +324,7 @@ body::before {
   max-width: var(--max-width);
   height: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
   padding-bottom: var(--safe-area-bottom);
-  background: rgba(10, 10, 20, 0.85);
+  background: rgba(11, 19, 41, 0.92);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-top: 1px solid var(--border-subtle);
@@ -330,16 +337,19 @@ body::before {
 }
 
 [data-theme="light"] .bottom-nav {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 3px;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md);
+  padding: 5px 6px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-base);
   color: var(--text-tertiary);
@@ -350,23 +360,55 @@ body::before {
 }
 
 .nav-item:active {
-  transform: scale(0.9);
+  transform: scale(0.92);
 }
 
+.nav-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-spring);
+  color: var(--text-tertiary);
+}
+
+.nav-svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+  transition: all var(--transition-spring);
+}
+
+.nav-item:hover .nav-icon-wrapper {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .nav-item:hover .nav-icon-wrapper {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Modern pill indicator for active navigation item (no blue line) */
 .nav-item.active {
   color: var(--primary);
 }
 
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 3px;
-  background: var(--primary);
-  border-radius: 0 0 var(--radius-full) var(--radius-full);
+.nav-item.active .nav-icon-wrapper {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  box-shadow: 0 2px 14px var(--primary-glow);
+}
+
+.nav-item.active .nav-svg {
+  stroke-width: 2.3;
+  transform: scale(1.08);
+}
+
+.nav-item.active .nav-label {
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .nav-icon {
@@ -375,14 +417,11 @@ body::before {
   transition: transform var(--transition-spring);
 }
 
-.nav-item.active .nav-icon {
-  transform: translateY(-2px) scale(1.1);
-}
-
 .nav-label {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.2px;
+  transition: color var(--transition-base);
 }
 
 /* ============ SCROLLBAR ============ */
@@ -399,8 +438,8 @@ body::before {
 
 /* ============ SELECTION ============ */
 ::selection {
-  background: rgba(108, 92, 231, 0.3);
-  color: var(--text-primary);
+  background: rgba(37, 99, 235, 0.28);
+  color: #FFFFFF;
 }
 
 /* ============ UTILITIES ============ */
