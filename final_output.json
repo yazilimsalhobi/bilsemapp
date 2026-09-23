@@ -1,0 +1,1508 @@
+[
+  {
+    "grp": "DESTEK 1-B (H-S)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "DESTEK EĞİTİMİ"
+      }
+    ],
+    "ogr": [
+      "BEYZA BEBEK",
+      "ZEYNEP ÇAKIR",
+      "YİĞİT TİMUÇİN PARLAK",
+      "ZEYNEP SENA AYHAN",
+      "MEHMET EMİN ERDİK",
+      "MELİH FURKAN AKTÜRK",
+      "ÖMER YUSUF KOBAL",
+      "YAVUZ SELİM ABU",
+      "KAYRA TİNCİ"
+    ]
+  },
+  {
+    "grp": "DESTEK 1-A (H_İ)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "DESTEK EĞİTİMİ"
+      }
+    ],
+    "ogr": [
+      "ALİ YAHYA İNAN",
+      "GÖKÇE DURU KEÇECİ",
+      "HİRA ŞAHİN",
+      "KAĞAN ASLAN",
+      "ÖYKÜ UMAY DEMİRCİ",
+      "EGEMEN DİNÇ",
+      "KUZEY ÇANAKÇI",
+      "ELA GÜLER"
+    ]
+  },
+  {
+    "grp": "DESTEK 1-A (H_İ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "İNGİLİZCE"
+      }
+    ],
+    "ogr": [
+      "ALİ YAHYA İNAN",
+      "GÖKÇE DURU KEÇECİ",
+      "HİRA ŞAHİN",
+      "KAĞAN ASLAN",
+      "ÖYKÜ UMAY DEMİRCİ",
+      "EGEMEN DİNÇ",
+      "KUZEY ÇANAKÇI",
+      "ELA GÜLER"
+    ]
+  },
+  {
+    "grp": "DESTEK 2-B (H_S)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "İLK. MATEMATİK"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "İLK. MATEMATİK"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "FEN BİLİMLERİ"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "FEN BİLİMLERİ"
+      }
+    ],
+    "ogr": [
+      "BULUT ANAÇ",
+      "RÜZGAR ANAÇ",
+      "ZEYNEP ASYA KARACA",
+      "EGE KORKMAZ",
+      "LİNA GÜRNAL",
+      "ERDEM MERT CEYLAN",
+      "Zeynep Sena TÜRKMEN",
+      "ENES DEMİRKALE"
+    ]
+  },
+  {
+    "grp": "DESTEK 2-A (H_İ)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "İLK. MATEMATİK"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "İLK. MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "BEREN DURU ARI",
+      "KEREM HALİS ÜREM",
+      "OZAN TURHAN",
+      "AHMET YUSUF USLU",
+      "İPEK AY",
+      "MEHMET ALP ASLAN"
+    ]
+  },
+  {
+    "grp": "DESTEK 2-A (H_İ)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "DESTEK EĞİTİMİ"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "FEN BİLİMLERİ"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "FEN BİLİMLERİ"
+      }
+    ],
+    "ogr": [
+      "BEREN DURU ARI",
+      "KEREM HALİS ÜREM",
+      "OZAN TURHAN",
+      "AHMET YUSUF USLU",
+      "İPEK AY",
+      "MEHMET ALP ASLAN"
+    ]
+  },
+  {
+    "grp": "BYF 1-C (H_S)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "SOSYAL BİLGİLER"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "SOSYAL BİLGİLER"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "FEN BİLİMLERİ"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "FEN BİLİMLERİ"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "YAPAY ZEKA"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "YAPAY ZEKA"
+      }
+    ],
+    "ogr": [
+      "YAĞMUR ŞEN",
+      "DORUK GÜNGÖR",
+      "MUSTAFA EYMEN ÇELİK",
+      "AHMET HASAN BOYRAZ"
+    ]
+  },
+  {
+    "grp": "BYF 1-D (H_S)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "TÜRKÇE"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "TÜRKÇE"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "İLK. MATEMATİK"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "İLK. MATEMATİK"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "ATÖLYE_BYF"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "ATÖLYE_BYF"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "BİLİŞİM TEKN."
+      }
+    ],
+    "ogr": [
+      "Yusuf ARKAN",
+      "BİLAL ARKAN",
+      "HAMZA SARIYAR",
+      "Muhammed Fatih TÜRKMEN"
+    ]
+  },
+  {
+    "grp": "BYF 1-A (H_İ)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "SOSYAL BİLGİLER"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "SOSYAL BİLGİLER"
+      }
+    ],
+    "ogr": [
+      "AYŞE SARE ERGÜN",
+      "AYŞEGÜL TİREKİ",
+      "ELVİN YÜSRA KARANFİL",
+      "İSMAİL DOĞU NUHOĞLU",
+      "ELİF DEFNE KAYIN",
+      "Bedirhan KÖSTEK",
+      "AZRA GÜNDÜZOĞLU"
+    ]
+  },
+  {
+    "grp": "BYF 1-A (H_İ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "FEN BİLİMLERİ"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "FEN BİLİMLERİ"
+      }
+    ],
+    "ogr": [
+      "AYŞE SARE ERGÜN",
+      "AYŞEGÜL TİREKİ",
+      "ELVİN YÜSRA KARANFİL",
+      "İSMAİL DOĞU NUHOĞLU",
+      "ELİF DEFNE KAYIN",
+      "Bedirhan KÖSTEK",
+      "AZRA GÜNDÜZOĞLU"
+    ]
+  },
+  {
+    "grp": "BYF 1-B (H_İ)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "TÜRKÇE"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "TÜRKÇE"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "İLK. MATEMATİK"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "İLK. MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "Poyraz Ali KISA",
+      "Sare SARIKOCA",
+      "Poyraz YEŞİLTAŞ",
+      "Talha EBREM",
+      "Yusuf Emin BAHADIR",
+      "Ahmet Deniz SOUKSU"
+    ]
+  },
+  {
+    "grp": "BYF 1-B (H_İ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "ATÖLYE_BYF"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "ATÖLYE_BYF"
+      }
+    ],
+    "ogr": [
+      "Poyraz Ali KISA",
+      "Sare SARIKOCA",
+      "Poyraz YEŞİLTAŞ",
+      "Talha EBREM",
+      "Yusuf Emin BAHADIR",
+      "Ahmet Deniz SOUKSU"
+    ]
+  },
+  {
+    "grp": "BYF-2 E (H_S)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "YAPAY ZEKA"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "YAPAY ZEKA"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "MATEMATİK UYG."
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "MATEMATİK UYG."
+      }
+    ],
+    "ogr": [
+      "Çınar SOLMAZ",
+      "Feyza GÖKBULUT",
+      "Sümeyye ŞAHİN",
+      "Mert Deniz AYDIN",
+      "Ahmet Sıraç GÜNAYDIN",
+      "Samet Anıl POLAT",
+      "Muhammed Nebi BAŞA",
+      "Talha HAYDURA",
+      "Yusuf Ege YALÇIN",
+      "Öykü Beren Yılmaz"
+    ]
+  },
+  {
+    "grp": "BYF-2 F (H_S)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "COĞRAFYA"
+      }
+    ],
+    "ogr": [
+      "Salih Efe BOZKURT",
+      "Asiye Nisa AKÇAY",
+      "Alya KALAYCI",
+      "Muhammed Yavuz ANAYOL",
+      "Yusuf Yiğit Bozkurt ÖLMEZ",
+      "Caner DALAR",
+      "Ali Sadi ÖNAL",
+      "Seda TOPRAKÇI",
+      "Zeynep Gökçe KÜÇÜK"
+    ]
+  },
+  {
+    "grp": "BYF-2 C (H_İ)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "TEKNOLOJİ TASARIM"
+      }
+    ],
+    "ogr": [
+      "Esma Naz KIRIKÇI",
+      "Siraç Kağan DEREBAŞI",
+      "Zeren Bilge KUNT",
+      "LEVENT METE ÇAKIR",
+      "Muhammed Akif DURDU"
+    ]
+  },
+  {
+    "grp": "BYF-2 C (H_İ)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "MATEMATİK UYG."
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "MATEMATİK UYG."
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİYOLOJİ"
+      }
+    ],
+    "ogr": [
+      "Esma Naz KIRIKÇI",
+      "Siraç Kağan DEREBAŞI",
+      "Zeren Bilge KUNT",
+      "LEVENT METE ÇAKIR",
+      "Muhammed Akif DURDU"
+    ]
+  },
+  {
+    "grp": "BYF-2 D (H_İ)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "COĞRAFYA"
+      }
+    ],
+    "ogr": [
+      "İNCİ KAŞTAN",
+      "MUSTAFA VAROL",
+      "Erdem AVCI",
+      "Ömer SAĞLAM",
+      "Karahan KOÇ"
+    ]
+  },
+  {
+    "grp": "BYF-2 D (H_İ)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM"
+      }
+    ],
+    "ogr": [
+      "İNCİ KAŞTAN",
+      "MUSTAFA VAROL",
+      "Erdem AVCI",
+      "Ömer SAĞLAM",
+      "Karahan KOÇ"
+    ]
+  },
+  {
+    "grp": "BYF-2 A (H_İ)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "EDEBİYAT"
+      }
+    ],
+    "ogr": [
+      "Şevval Ece BEYAZ",
+      "AHMET YAVUZ EMEN",
+      "ASYA AKBAŞ",
+      "Ecem Rana DEMİR",
+      "Elzem Neva ERTÜRK",
+      "Hikmet Aral SÜĞÜMLÜ"
+    ]
+  },
+  {
+    "grp": "BYF-2 A (H_İ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "MATEMATİK UYG."
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "MATEMATİK UYG."
+      }
+    ],
+    "ogr": [
+      "Şevval Ece BEYAZ",
+      "AHMET YAVUZ EMEN",
+      "ASYA AKBAŞ",
+      "Ecem Rana DEMİR",
+      "Elzem Neva ERTÜRK",
+      "Hikmet Aral SÜĞÜMLÜ"
+    ]
+  },
+  {
+    "grp": "BYF-2 B (H_İ)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "İNGİLİZCE"
+      }
+    ],
+    "ogr": [
+      "Elif ECE BAŞTÜRK",
+      "Emir Gökalp GÖKBUDAK",
+      "Mirza ERDİK",
+      "Zeynep Hilal BAĞ",
+      "Zeynep ERGÜN",
+      "Elif Nihan EVİN"
+    ]
+  },
+  {
+    "grp": "BYF-2 B (H_İ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM"
+      }
+    ],
+    "ogr": [
+      "Elif ECE BAŞTÜRK",
+      "Emir Gökalp GÖKBUDAK",
+      "Mirza ERDİK",
+      "Zeynep Hilal BAĞ",
+      "Zeynep ERGÜN",
+      "Elif Nihan EVİN"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-E H_S (MATEMATİK)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "LİSE MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "Feyza GÜR",
+      "ABDUSSAMET AKKİRAZ",
+      "HASAN ATA BEY",
+      "NİSA ALDAV",
+      "YİĞİT ALP DEMİR",
+      "BUĞRA İZZET ERDEM"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-F H_S (KİMYA)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "MATEMATİK UYG"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "MATEMATİK UYG"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "12:30-13:10",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "İNGİLİZCE"
+      }
+    ],
+    "ogr": [
+      "MELİH ÇAKIROĞLU",
+      "Zümra KARABIYIK",
+      "Eylül BİLDİK",
+      "Miraç Ulaş DİLDEN",
+      "Nehir Asya KESİM"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-D_H-İ (COĞRAFYA)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "TEKNOLOJİ TASARIM"
+      }
+    ],
+    "ogr": [
+      "Feyza Nur YARAN",
+      "Duru KARABAYRAK",
+      "Elif Ada BAYMAK",
+      "Muhammet Efkan ÜNCE",
+      "Aybike BAHADIR"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-D_H-İ (COĞRAFYA)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "COĞRAFYA"
+      }
+    ],
+    "ogr": [
+      "Feyza Nur YARAN",
+      "Duru KARABAYRAK",
+      "Elif Ada BAYMAK",
+      "Muhammet Efkan ÜNCE",
+      "Aybike BAHADIR"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-B H_İ (EDEBİYAT-İNGİLİZCE)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "EDEBİYAT"
+      }
+    ],
+    "ogr": [
+      "Beyza GÜNGÖR",
+      "Nehir GÖZE",
+      "Alper CÜNİ",
+      "Melis Alya ERGÖZ"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-B H_İ (EDEBİYAT-İNGİLİZCE)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "İNGİLİZCE"
+      }
+    ],
+    "ogr": [
+      "Beyza GÜNGÖR",
+      "Nehir GÖZE",
+      "Alper CÜNİ",
+      "Melis Alya ERGÖZ"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-C H_İ (BİLİŞİM - TASARIM)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "LİSE MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "Miraç Dinlemek",
+      "Adem Efe ÖZTOP",
+      "Zeliha Zümra ASLAN",
+      "Egehan TUNÇER",
+      "Egehan ADA",
+      "Zeynep Erva ŞAHİN"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-C H_İ (BİLİŞİM - TASARIM)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "EDEBİYAT"
+      }
+    ],
+    "ogr": [
+      "Miraç Dinlemek",
+      "Adem Efe ÖZTOP",
+      "Zeliha Zümra ASLAN",
+      "Egehan TUNÇER",
+      "Egehan ADA",
+      "Zeynep Erva ŞAHİN"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-A H_İ (BİYOLOJİ)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "MATEMATİK UYG."
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "MATEMATİK UYG."
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "TEKNOLOJİ TASARIM"
+      }
+    ],
+    "ogr": [
+      "Anıl Buğra TAKIM",
+      "Berat Anıl AKAR",
+      "Yusuf EREYLİ",
+      "Selim Sina LİMON",
+      "Teoman GÖKBAYRAK"
+    ]
+  },
+  {
+    "grp": "ÖYG 1-A H_İ (BİYOLOJİ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİYOLOJİ"
+      }
+    ],
+    "ogr": [
+      "Anıl Buğra TAKIM",
+      "Berat Anıl AKAR",
+      "Yusuf EREYLİ",
+      "Selim Sina LİMON",
+      "Teoman GÖKBAYRAK"
+    ]
+  },
+  {
+    "grp": "ÖYG- 2 A (-Bilişim ) (H_İ)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM"
+      }
+    ],
+    "ogr": [
+      "ECEM ZÜMRA MARANGOZ",
+      "İNCİ SERRA TANRIVERDİ",
+      "ASEL ESRA ÇİÇEK",
+      "Uygar çıtır",
+      "Eymen Şenel",
+      "BERRA YENİKÖY",
+      "Yusuf Mirza KULAK",
+      "Ahmet Bera HATİPOĞLU"
+    ]
+  },
+  {
+    "grp": "ÖYG-2 B (Matematik) (H_İ)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "TEKNOLOJİ TASARIM"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "TEKNOLOJİ TASARIM"
+      }
+    ],
+    "ogr": [
+      "Emir Kağan uyar",
+      "Masal Pala",
+      "Furkan Baydar",
+      "Egemen Kaçar",
+      "Mehmet erdem İşbilir",
+      "ASRIN EGE YILMAZ",
+      "BÜŞRA BOLAT",
+      "DENİZ ONMUŞ",
+      "Zümra YİĞİT"
+    ]
+  },
+  {
+    "grp": "PROJE 1-C (LİSE MATEMATİK)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "LİSE MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "Emir Taha BAHADIR",
+      "ZEYNEP ZÜLAL TEMİZ",
+      "ZEYNEP KILIÇÇEK"
+    ]
+  },
+  {
+    "grp": "PROJE 1-B (COĞRAFYA)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "COĞRAFYA"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "COĞRAFYA"
+      }
+    ],
+    "ogr": [
+      "EYMEN ATA KÖMÜRCÜ",
+      "AZRA BETÜL ÖZGEN",
+      "CEYLİN GUAŞE KAPLAN"
+    ]
+  },
+  {
+    "grp": "PROJE 1-A (BİLİŞİM)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM TEKN."
+      }
+    ],
+    "ogr": [
+      "SEYİT KAAN SEZER",
+      "Poyraz ÖĞME",
+      "Serhan Efe KOÇHİSARLI",
+      "Emir Ahmet YILMAZ"
+    ]
+  },
+  {
+    "grp": "PROJE 1-D (KİMYA)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "KİMYA"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "KİMYA"
+      }
+    ],
+    "ogr": [
+      "Yavuz Selim ÇAKIR",
+      "HAMDİ ENES KURŞUN"
+    ]
+  },
+  {
+    "grp": "PROJE 2-B (BİYOLOJİ)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "12:30-13:10",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "13:20-14:00",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "14:10-14:50",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "15:00-15:40",
+        "ders": "BİYOLOJİ"
+      }
+    ],
+    "ogr": [
+      "SUDENUR YILMAZ",
+      "ESİL YAĞMUR TUNA",
+      "ASEL ZEYNEP BAKAL"
+    ]
+  },
+  {
+    "grp": "PROJE 2-3 (İNGİLİZCE)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "17:55-18:35",
+        "ders": "İNGİLİZCE"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "İNGİLİZCE"
+      }
+    ],
+    "ogr": [
+      "SERRA YANGIN",
+      "Saliha Berra ASLAN"
+    ]
+  },
+  {
+    "grp": "PROJE 2-C (BİLİŞİM)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM TEKN."
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM TEKN."
+      }
+    ],
+    "ogr": [
+      "Batuhan Tepecik",
+      "Koray Alp YENİSU",
+      "Ahmet Emin Sezen",
+      "AHMET EREN ÖZMEN"
+    ]
+  },
+  {
+    "grp": "PROJE 2-A (LİSE MATEMATİK)",
+    "gun": "CUMARTESİ",
+    "prg": [
+      {
+        "saat": "09:00-09:40",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "09:50-10:30",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "10:40-11:20",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "11:30-12:10",
+        "ders": "LİSE MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "AKIN KÖKSAL",
+      "Zeynep Azra GÜVENKAYA",
+      "Eymen Yağız ODABAŞ",
+      "Mehmet Kağan Zengince",
+      "Elif Sena İSTEKLİ"
+    ]
+  },
+  {
+    "grp": "PROJE 3-C (BİLİŞİM)",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM TEKN.(SERHAT K.)"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM TEKN.(SERHAT K.)"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM TEKN.(SERHAT K.)"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM TEKN.(SERHAT K.)"
+      }
+    ],
+    "ogr": [
+      "FAHRETTİN ASAF ÖLÇEK",
+      "FATİH REŞAT ÖZYURT",
+      "HÜSEYİN MERT AKSU",
+      "ÖZER KUZEY GÜÇ"
+    ]
+  },
+  {
+    "grp": "PROJE 3-A (BİYOLOJİ)",
+    "gun": "ÇARŞAMBA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİYOLOJİ"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİYOLOJİ"
+      }
+    ],
+    "ogr": [
+      "ECRİN NUR BUYOLDA",
+      "CEMRE YILMAZ",
+      "NİSA NUR KAZİ",
+      "ALİ HAYDAR KALI",
+      "AZRA HİLAL OĞDU"
+    ]
+  },
+  {
+    "grp": "PROJE 3- B (EDEBİYAT)",
+    "gun": "CUMA",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "EDEBİYAT"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "EDEBİYAT"
+      }
+    ],
+    "ogr": [
+      "ESMA RAVZA DUTULMAZ",
+      "YUNUS EMRE MİKEL",
+      "TENZİLE BETÜL ALDOĞAN",
+      "ASMİN ERVA ÇALIŞKAN",
+      "METEHAN KÖKLÜ"
+    ]
+  },
+  {
+    "grp": "PROJE 3-D (BİLİŞİM)",
+    "gun": "SALI",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "BİLİŞİM TEKN. (ERDOĞAN K.)"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "BİLİŞİM TEKN. (ERDOĞAN K.)"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "BİLİŞİM TEKN. (ERDOĞAN K.)"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "BİLİŞİM TEKN. (ERDOĞAN K.)"
+      }
+    ],
+    "ogr": [
+      "FURKAN ALTAYLI",
+      "EZGİ ÇIRA",
+      "GÖKÇE ANAYOL",
+      "ARAS DEMİR"
+    ]
+  },
+  {
+    "grp": "PROJE 4 / MATEMATİK",
+    "gun": "PERŞEMBE",
+    "prg": [
+      {
+        "saat": "16:15-16:55",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:05-17:45",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "17:55-18:35",
+        "ders": "LİSE MATEMATİK"
+      },
+      {
+        "saat": "18:45-19:25",
+        "ders": "LİSE MATEMATİK"
+      }
+    ],
+    "ogr": [
+      "Esin KAYABOYNU",
+      "Elif Rana ÇERİ",
+      "Ozan Deniz ÇITIR",
+      "Gülseren Evra ŞENOL"
+    ]
+  }
+]

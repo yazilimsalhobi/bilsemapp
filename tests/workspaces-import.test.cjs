@@ -145,3 +145,94 @@ SÜRE\tBAŞLAMA SAATİ\tBİTİŞ SAATİ\tÇALIŞMA ALANI
  assert.equal(parsed.times[2].start, '17:05');
  assert.equal(parsed.times[2].end, '17:45');
 });
+
+test('cleanStudentName handles OCR noise, numbers, towns, and notes flawlessly', () => {
+  const h = env();
+  const cases = [
+    { input: '4 1 BEYZA BEBEK Z-R', expected: 'BEYZA BEBEK' },
+    { input: '1 Feyza GÜR KORGAN H S', expected: 'Feyza GÜR' },
+    { input: '2 ABDUSSAMET AKKİRAZ KORGAN H S', expected: 'ABDUSSAMET AKKİRAZ' },
+    { input: '3 HASAN ATA BEY(KORGAN H S)', expected: 'HASAN ATA BEY' },
+    { input: '5 YİĞİT ALP DEMİR (AYBASTI', expected: 'YİĞİT ALP DEMİR' },
+    { input: '6 Samet Anıl POLAT (KUMRU NAKİL GELDİ)', expected: 'Samet Anıl POLAT' },
+    { input: '5 Eymen Şenel ( BİLİŞİM )', expected: 'Eymen Şenel' },
+    { input: '■ 2 Elif Su', expected: 'Elif Su' },
+    { input: '1 Mehmet Can Z-M', expected: 'Mehmet Can' },
+    { input: '4. Ayşe Gül (KORGAN)', expected: 'Ayşe Gül' }
+  ];
+
+  cases.forEach(({ input, expected }) => {
+    const cleaned = h.ImportParsers.cleanStudentName(input);
+    assert.strictEqual(cleaned, expected, `Failed cleaning "${input}" - got "${cleaned}"`);
+  });
+});
+
+test('ImportParsers.time handles OCR noise like l/I for 1 and O for 0', () => {
+  const h = env();
+  assert.strictEqual(h.ImportParsers.time('l6:l5'), '16:15');
+  assert.strictEqual(h.ImportParsers.time('I7:05'), '17:05');
+  assert.strictEqual(h.ImportParsers.time('O9:3O'), '09:30');
+});
+
+test('ImportParsers parses standardized JSON schedule schema flawlessly', () => {
+  const h = env();
+  const sampleJson = [
+    {
+      grp: "BYF-3 / FİZİK",
+      gun: "Cumartesi",
+      prg: [
+        { saat: "09:00-09:40", ders: "Fizik" },
+        { saat: "09:50-10:30", ders: "Fizik" }
+      ],
+      ogr: [
+        "1 Feyza GÜR KORGAN H S",
+        "2 ABDUSSAMET AKKİRAZ KORGAN H S",
+        "3 HASAN ATA BEY(KORGAN H S)"
+      ]
+    },
+    {
+      grp: "DESTEK-1",
+      gun: "Pazartesi",
+      prg: [
+        { saat: "16:15-16:55", ders: "Bilişim" }
+      ],
+      ogr: [
+        "4 1 BEYZA BEBEK Z-R"
+      ]
+    }
+  ];
+
+  const result = h.ImportParsers.schedule(JSON.stringify(sampleJson));
+  assert.strictEqual(result.type, 'groups');
+  assert.strictEqual(result.groups.length, 2);
+
+  const g1 = result.groups[0];
+  assert.strictEqual(g1.name, 'BYF-3 / FİZİK');
+  assert.strictEqual(g1.day, 'Cumartesi');
+  assert.strictEqual(g1.dayIndex, 6);
+  assert.strictEqual(g1.subject, 'Fizik');
+  assert.strictEqual(g1.startTime, '09:00');
+  assert.strictEqual(g1.endTime, '10:30');
+  assert.strictEqual(g1.lessons.length, 2);
+  assert.strictEqual(g1.students.length, 3);
+  assert.strictEqual(g1.students[0].name, 'Feyza GÜR');
+  assert.strictEqual(g1.students[1].name, 'ABDUSSAMET AKKİRAZ');
+  assert.strictEqual(g1.students[2].name, 'HASAN ATA BEY');
+
+  const g2 = result.groups[1];
+  assert.strictEqual(g2.name, 'DESTEK-1');
+  assert.strictEqual(g2.day, 'Pazartesi');
+  assert.strictEqual(g2.dayIndex, 1);
+  assert.strictEqual(g2.students[0].name, 'BEYZA BEBEK');
+
+  // Verify rawJson schema is standard and students are cleaned
+  assert.strictEqual(result.rawJson.length, 2);
+  assert.strictEqual(result.rawJson[0].grp, 'BYF-3 / FİZİK');
+  assert.strictEqual(result.rawJson[0].gun, 'CUMARTESİ');
+  assert.strictEqual(result.rawJson[0].ogr.length, 3);
+  assert.strictEqual(result.rawJson[0].ogr[0], 'Feyza GÜR');
+  assert.strictEqual(result.rawJson[0].ogr[1], 'ABDUSSAMET AKKİRAZ');
+  assert.strictEqual(result.rawJson[0].ogr[2], 'HASAN ATA BEY');
+  assert.strictEqual(result.rawJson[1].ogr[0], 'BEYZA BEBEK');
+});
+

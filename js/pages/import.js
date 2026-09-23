@@ -45,8 +45,8 @@ const ImportPage = {
         <label class="upload-zone" for="schedule-file">
           <span class="upload-icon">📄</span>
           <strong>Program dosyasını seçin</strong>
-          <span>PDF · JPEG · PNG / en fazla 25 MB</span>
-          <input id="schedule-file" type="file" accept=".pdf,.jpg,.jpeg,.png">
+          <span>PDF · JSON · JPEG · PNG / en fazla 25 MB</span>
+          <input id="schedule-file" type="file" accept=".pdf,.json,.jpg,.jpeg,.png">
         </label>
         <p id="import-progress" role="status" aria-live="polite"></p>
         <details><summary>Metni kontrol et veya yapıştır</summary>

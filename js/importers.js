@@ -16,6 +16,10 @@ const FileReaders = {
     if (!file || file.size > 25 * 1024 * 1024) throw new Error('En fazla 25 MB boyutunda bir dosya seçin.');
     const ext = file.name.split('.').pop().toLowerCase();
     progress('Dosya okunuyor…');
+    if (ext === 'json') {
+      const text = await file.text();
+      return { text, rows: [] };
+    }
     if (['jpg', 'jpeg', 'png'].includes(ext)) {
       const text = await this.ocr(file, progress);
       return { text, rows: text.split('\n').map(line => line.split(/\t|\s{3,}/)) };
@@ -80,7 +84,7 @@ const FileReaders = {
       if (!rows.length) rows.push(...Array.from(doc.querySelectorAll('p')).map(p => [p.textContent.trim()]));
       return { rows, text: rows.map(row => row.join('\t')).join('\n') };
     }
-    throw new Error(ext === 'doc' ? 'Eski .doc dosyasını Word ile .docx olarak kaydedip tekrar yükleyin.' : 'Desteklenen dosyalar: PDF, JPEG, PNG, Excel (.xlsx, .xls), Word (.docx).');
+    throw new Error(ext === 'doc' ? 'Eski .doc dosyasını Word ile .docx olarak kaydedip tekrar yükleyin.' : 'Desteklenen dosyalar: PDF, JSON, JPEG, PNG, Excel (.xlsx, .xls), Word (.docx).');
   },
   async ocr(source, progress) {
     const Tesseract = await this.script('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js', 'Tesseract');
@@ -94,10 +98,142 @@ const FileReaders = {
 
 const ImportParsers = {
   time(value) {
-    const m = String(value).match(/^(\d{1,2})[:.](\d{2})$/);
+    const s = String(value || '').trim().replace(/[lI|]/g, '1').replace(/[oO]/g, '0');
+    const m = s.match(/^(\d{1,2})[:.](\d{2})$/);
     return m && +m[1] < 24 && +m[2] < 60 ? `${m[1].padStart(2, '0')}:${m[2]}` : '';
   },
+
+  cleanStudentName(raw) {
+    if (!raw) return '';
+    let s = String(raw).trim();
+    // Strip leading bullets
+    s = s.replace(/^[■•*—–\-\s]+/, '');
+    // Strip leading grade and/or row numbers (e.g. '4 1 ', '10 2 ', '1 ', '4.', '2)', '3-')
+    s = s.replace(/^(\d{1,2}[.)\-–]?\s*)+/, '');
+    // Strip parenthetical contents: (AYBASTI), (KORGAN H S), ( BİLİŞİM ), etc.
+    s = s.replace(/\([^)]*\)/g, '');
+    // Strip unclosed parenthesis at end: (AYBASTI
+    s = s.replace(/\([A-Za-zÇĞİÖŞÜçğıöşü\s]*$/, '');
+    // Strip known trailing town / branch / classification tags
+    s = s.replace(/\s+(KORGAN|AYBASTI|KUMRU|FATSA)(\s+[Hh][\s_]*[Ssİi])?/gi, '');
+    s = s.replace(/\s+[Zz][\-_]?[RrMm]\b/g, '');
+    s = s.replace(/\s+NAK[İI]L.*$/gi, '');
+    s = s.replace(/\s+NAK$/gi, '');
+    // Strip trailing numbers
+    s = s.replace(/\s+\d+$/, '');
+    // Clean whitespace
+    s = s.replace(/\s+/g, ' ').trim();
+    return s;
+  },
+
+  parseJSONSchedule(textOrData) {
+    try {
+      let data = textOrData;
+      if (typeof textOrData === 'string') {
+        const trimmed = textOrData.trim();
+        if (!trimmed.startsWith('[') && !trimmed.startsWith('{')) return null;
+        data = JSON.parse(trimmed);
+      }
+      const list = Array.isArray(data) ? data : (data.groups || data.schedule || [data]);
+      if (!list.length || !list[0] || (!list[0].grp && !list[0].name)) return null;
+
+      const rawJson = [];
+      const appGroups = [];
+
+      for (const item of list) {
+        const grpName = (item.grp || item.name || '').trim();
+        const rawDay = (item.gun || item.day || '').trim();
+        if (!grpName || !rawDay) continue;
+
+        const matchedDay = UI.days.find(d => UI.normalize(d) === UI.normalize(rawDay)) || rawDay;
+        const dayIndex = UI.days.indexOf(matchedDay);
+
+        const prg = Array.isArray(item.prg) ? item.prg : [];
+        const rawStudents = Array.isArray(item.ogr || item.students) ? (item.ogr || item.students) : [];
+        const cleanStudents = rawStudents.map(s => typeof s === 'string' ? this.cleanStudentName(s) : this.cleanStudentName(s.name)).filter(Boolean);
+
+        rawJson.push({
+          grp: grpName,
+          gun: rawDay.toLocaleUpperCase('tr-TR'),
+          prg: prg.map(p => ({
+            saat: p.saat || (p.start && p.end ? `${p.start}-${p.end}` : ''),
+            ders: (p.ders || p.subject || '').trim()
+          })).filter(p => p.saat && p.ders),
+          ogr: cleanStudents
+        });
+
+        const bySubject = new Map();
+        for (const slot of prg) {
+          const saat = (slot.saat || (slot.start && slot.end ? `${slot.start}-${slot.end}` : '')).replace(/[lI|]/g, '1').replace(/[oO]/g, '0');
+          const ders = (slot.ders || slot.subject || 'Genel').trim();
+          const timeMatch = saat.match(/(\d{1,2}[:.]\d{2})\s*-\s*(\d{1,2}[:.]\d{2})/);
+          if (!timeMatch) continue;
+          const start = this.time(timeMatch[1]);
+          const end = this.time(timeMatch[2]);
+          if (!start || !end) continue;
+
+          let normSubj = ders.toLocaleLowerCase('tr-TR');
+          normSubj = normSubj.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+
+          if (!bySubject.has(normSubj)) bySubject.set(normSubj, []);
+          bySubject.get(normSubj).push({ start, end });
+        }
+
+        if (bySubject.size === 0) {
+          appGroups.push({
+            id: UI.id('grp'),
+            name: grpName,
+            day: matchedDay,
+            dayIndex,
+            subject: 'Genel',
+            timeSlot: '',
+            startTime: '09:00',
+            endTime: '10:30',
+            lessons: [{ order: 1, start: '09:00', end: '10:30' }],
+            color: BILSEM_DATA.dayColors[matchedDay] ? BILSEM_DATA.dayColors[matchedDay].bg : '#00B894',
+            students: cleanStudents.map(name => ({ id: UI.id('s'), name, parentName: '', parentPhone: '' }))
+          });
+        } else {
+          for (const [subj, lessons] of bySubject.entries()) {
+            lessons.sort((a, b) => a.start.localeCompare(b.start));
+            const startTime = lessons[0].start;
+            const endTime = lessons[lessons.length - 1].end;
+            appGroups.push({
+              id: UI.id('grp'),
+              name: grpName,
+              day: matchedDay,
+              dayIndex,
+              subject: subj,
+              timeSlot: `${startTime} - ${endTime}`,
+              startTime,
+              endTime,
+              lessons: lessons.map((l, i) => ({ order: i + 1, start: l.start, end: l.end })),
+              color: BILSEM_DATA.dayColors[matchedDay] ? BILSEM_DATA.dayColors[matchedDay].bg : '#00B894',
+              students: cleanStudents.map(name => ({ id: UI.id('s'), name, parentName: '', parentPhone: '' }))
+            });
+          }
+        }
+      }
+
+      return { type: 'groups', groups: appGroups, rawJson };
+    } catch (e) {
+      return null;
+    }
+  },
+
+  extractSemanticSchedule(text) {
+    return this.schedule(text);
+  },
+
   schedule(text) {
+    if (!text || typeof text !== 'string') return { type: 'groups', groups: [] };
+
+    const trimmed = text.trim();
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      const jsonResult = this.parseJSONSchedule(trimmed);
+      if (jsonResult) return jsonResult;
+    }
+
     if (text.includes('BAŞLAMA SAATİ') && text.includes('BİTİŞ SAATİ')) {
       return { type: 'timesheet', times: this.parseTimesheet(text) };
     }
@@ -106,6 +242,7 @@ const ImportParsers = {
     }
     return { type: 'groups', groups: this.parseList(text) };
   },
+
   parseTimesheet(text) {
     const times = [];
     for (const line of text.split(/\r?\n/)) {
@@ -116,16 +253,13 @@ const ImportParsers = {
     }
     return times.filter(t => t.start && t.end);
   },
+
   parseMatrix(text) {
     const groups = [];
     const lines = text.split(/\r?\n/);
     
-    // We can have multiple tables side-by-side. 
-    // We track "active" groups per column index.
-    let activeHeaders = []; // { colIndex: number, name: string }
-    let templateGroups = []; // Array of template objects for this row
-    
-    const subjects = /^(co[gğ]rafya|sosyal bilgiler|matematik|t[uü]rk[cç]e|fen bilimleri|ingilizce|m[uü]zik|g[oö]rsel sanatlar|bilim|robotik|yaz[iı]l[iı]m|beden e[gğ]itimi|resim|teknoloji|bili[sş]im)/i;
+    let activeHeaders = []; 
+    let templateGroups = [];
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -133,18 +267,24 @@ const ImportParsers = {
       
       const cols = line.split('\t');
       
-      // Look for group names like "DESTEK 1-B (H-S)"
-      const groupMatch = [...line.matchAll(/(?:BYF|DESTEK|UYUM|ÖYG|PROJE)[-\s]?\d?[-\s]?\p{L}?\s*(?:\([^)]+\))?/giu)];
-      if (groupMatch.length > 0 && !line.includes('Saat') && !/(\d{1,2}[:.]\d{2})/.test(line)) {
-        // New table headers found
+      // Look for group names column by column
+      const groupMatches = [];
+      if (!line.includes('Saat') && !/(\d{1,2}[:.]\d{2})/.test(line)) {
+        for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+          const colText = cols[cIdx].trim();
+          const m = colText.match(/(?:BYF|DESTEK|UYUM|ÖYG|PROJE)[-\s\d\p{L}\/_]+(?:\s*\([^)]+\))?/iu);
+          if (m) {
+            groupMatches.push({ colIndex: cIdx, name: m[0].trim().replace(/[_]+$/, '').trim() });
+          }
+        }
+      }
+
+      if (groupMatches.length > 0) {
         activeHeaders = [];
         templateGroups = [];
-        for (const m of groupMatch) {
-          const colIndex = cols.findIndex(c => c.includes(m[0]));
-          if (colIndex >= 0) {
-            activeHeaders.push({ colIndex, name: m[0].trim() });
-            templateGroups.push({ name: m[0].trim(), days: [] });
-          }
+        for (const gm of groupMatches) {
+          activeHeaders.push({ colIndex: gm.colIndex, name: gm.name });
+          templateGroups.push({ name: gm.name, days: [] });
         }
         continue;
       }
@@ -152,10 +292,8 @@ const ImportParsers = {
       // Look for day names in header row
       const daysFound = UI.days.filter(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(line)));
       if (daysFound.length > 0 && line.includes('Saat')) {
-        // Recalculate column boundaries using "Saat"
         const saatIndexes = cols.map((c, i) => c.includes('Saat') ? i : -1).filter(i => i !== -1);
         
-        // Map days to the active groups based on new column proximity
         for (let idx = 0; idx < activeHeaders.length; idx++) {
           if (saatIndexes[idx] !== undefined) {
              activeHeaders[idx].colIndex = saatIndexes[idx];
@@ -179,7 +317,6 @@ const ImportParsers = {
       const timeIndexes = cols.map((c, i) => timeRegex.test(c.trim()) ? i : -1).filter(i => i !== -1);
       
       if (timeIndexes.length > 0) {
-        // Process data for each active group by using time block columns as boundaries
         for (let idx = 0; idx < Math.min(timeIndexes.length, activeHeaders.length); idx++) {
           const startCol = timeIndexes[idx];
           const endCol = timeIndexes[idx + 1] !== undefined ? timeIndexes[idx + 1] : cols.length;
@@ -193,16 +330,12 @@ const ImportParsers = {
             const tGroup = templateGroups[idx];
             
             if (tGroup && tGroup.days) {
-              // For each day this group has, extract the subject and assign the student
               for (let d = 0; d < tGroup.days.length; d++) {
                 const dayName = tGroup.days[d];
-                // The subject is at slice[1 + d] (dynamically found directly underneath the day column)
                 let subject = (slice[1 + d] || '').trim();
-                // Normalize case properly for Turkish
                 subject = subject.toLocaleLowerCase('tr-TR');
                 subject = subject.split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
                 
-                // Find or create actual group for this specific Day + Subject
                 let g = groups.find(x => x.name === tGroup.name && x.day === dayName && x.subject === subject);
                 if (!g) {
                     g = {
@@ -213,18 +346,16 @@ const ImportParsers = {
                     groups.push(g);
                 }
                 
-                // Update time bounds
                 if (start < g.startTime || !g.startTime) g.startTime = start;
                 if (end > g.endTime || !g.endTime) g.endTime = end;
                 if (!g.lessons.some(l => l.start === start)) {
                     g.lessons.push({ order: g.lessons.length + 1, start, end });
                 }
                 
-                // Find student at the end of slice
-                const studentCells = slice.filter(c => c.trim().length > 4 && !/\d{1,2}[:.]\d{2}/.test(c));
+                const studentCells = slice.filter(c => c.trim().length > 3 && !timeRegex.test(c));
                 if (studentCells.length > 0) {
-                  const studentName = studentCells[studentCells.length - 1].trim().replace(/\s*[Zz]-[Rr]$/, '').trim();
-                  // Prevent assigning the subject name itself as a student if columns are misaligned
+                  const rawName = studentCells[studentCells.length - 1];
+                  const studentName = this.cleanStudentName(rawName);
                   if (studentName && studentName.toLocaleLowerCase('tr-TR') !== subject.toLocaleLowerCase('tr-TR') && !g.students.some(s => s.name === studentName)) {
                     g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
                   }
@@ -233,10 +364,29 @@ const ImportParsers = {
             }
           }
         }
+      } else if (templateGroups.length > 0) {
+        for (let idx = 0; idx < activeHeaders.length; idx++) {
+          const tGroup = templateGroups[idx];
+          if (!tGroup || !tGroup.days) continue;
+          const h = activeHeaders[idx];
+          const nextCol = activeHeaders[idx + 1] ? activeHeaders[idx + 1].colIndex : cols.length;
+          const slice = cols.slice(h.colIndex, nextCol);
+          const studentCells = slice.filter(c => c.trim().length > 3 && !timeRegex.test(c));
+          if (studentCells.length > 0) {
+            const rawName = studentCells[studentCells.length - 1];
+            const studentName = this.cleanStudentName(rawName);
+            if (studentName) {
+              groups.filter(g => g.name === tGroup.name).forEach(g => {
+                if (!g.students.some(s => s.name === studentName)) {
+                  g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
+                }
+              });
+            }
+          }
+        }
       }
     }
     
-    // Clean up groups that have no students or times
     return groups.filter(g => g.students.length > 0 && g.startTime);
   },
   parseList(text) {
