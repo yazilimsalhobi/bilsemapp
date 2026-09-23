@@ -284,13 +284,21 @@ const ImportParsers = {
         const columns = line.split(/\t|;|\|/).map(v => v.trim()).filter(Boolean);
         const groupColumn = columns.findIndex(v => v.includes(name));
         for (const col of columns.slice(groupColumn + 1)) {
-          if (subjects.test(col)) { current.subject = col; continue; }
+          const nCol = col.replace(/İ/g, 'i').replace(/I/g, 'ı').toLowerCase();
+          const subjMatch = nCol.match(subjects);
+          if (subjMatch) { current.subject = subjMatch[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '); continue; }
           if (!/\d{1,2}[:.]\d{2}/.test(col) && !UI.days.some(d => UI.normalize(col) === UI.normalize(d))) this.addNames(current, col);
         }
         subject = current.subject;
         continue;
       }
-      if (current && subjects.test(line)) { current.subject = line; subject = line; continue; }
+      const nLine = line.replace(/İ/g, 'i').replace(/I/g, 'ı').toLowerCase();
+      const lineSubjMatch = nLine.match(subjects);
+      if (current && lineSubjMatch) { 
+        current.subject = lineSubjMatch[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '); 
+        subject = current.subject; 
+        continue; 
+      }
       const bullet = line.search(/[■▪•●]/);
       if (current && bullet >= 0) this.addNames(current, line.slice(bullet));
       else if (current && (/^[*\-]/.test(line) || /^\d+[.)]\s*\p{L}/u.test(line))) this.addNames(current, line);
