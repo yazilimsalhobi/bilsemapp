@@ -76,7 +76,17 @@ const ImportPage = {
   parseAndAdvance() {
     const textEl = document.getElementById('schedule-text');
     if (!textEl) return;
-    this.allParsedGroups = ImportParsers.schedule(textEl.value);
+    const parsed = ImportParsers.schedule(textEl.value);
+    
+    // Zaman Çizelgesi PDF'i yüklendiyse
+    if (parsed.type === 'timesheet' && parsed.times.length > 0) {
+      Store.setSetting('timeTemplate', parsed.times);
+      Toast.show(`Zaman çizelgesi (${parsed.times.length} ders saati) şablon olarak kaydedildi.`, 'success');
+      document.getElementById('import-progress').textContent = 'Zaman çizelgesi başarıyla kaydedildi.';
+      return; // Akışı burada kes
+    }
+    
+    this.allParsedGroups = parsed.groups || [];
     if (!this.allParsedGroups.length) {
       Toast.show('Grup yapısı belirlenemedi. Okunan metni düzenleyebilir veya aşağıdan grup ekleyebilirsiniz.', 'warning');
       return;
@@ -105,15 +115,17 @@ const ImportPage = {
         <div class="branch-list" id="branch-list">
           ${subjectKeys.map(subj => {
             const info = subjectMap.get(subj);
-            const isDefault = defaultDept && UI.normalize(subj).includes(UI.normalize(defaultDept));
+            const isDefault = subj && defaultDept && UI.normalize(subj).includes(UI.normalize(defaultDept));
+            const isUnknown = subj === 'Branşı Belirsiz';
             return `
-            <label class="branch-option ${isDefault ? 'branch-recommended' : ''}">
+            <label class="branch-option ${isDefault ? 'branch-recommended' : ''} ${isUnknown ? 'branch-unknown' : ''}">
               <input type="checkbox" name="branch" value="${UI.escape(subj)}" ${isDefault ? 'checked' : ''}>
               <div class="branch-info">
-                <span class="branch-name">${UI.escape(subj || 'Belirtilmemiş')}</span>
+                <span class="branch-name">${UI.escape(subj)}</span>
                 <span class="branch-stats">${info.groupCount} grup · ${info.studentCount} öğrenci</span>
               </div>
               ${isDefault ? '<span class="branch-badge">Varsayılan branşınız</span>' : ''}
+              ${isUnknown ? '<span class="branch-badge" style="color:var(--warning);border-color:var(--warning)">Belirtilmemiş</span>' : ''}
             </label>`;
           }).join('')}
         </div>
@@ -143,7 +155,7 @@ const ImportPage = {
   getSubjectStats() {
     const map = new Map();
     for (const g of this.allParsedGroups) {
-      const key = g.subject || '';
+      const key = g.subject || 'Branşı Belirsiz';
       if (!map.has(key)) map.set(key, { groupCount: 0, studentCount: 0 });
       const info = map.get(key);
       info.groupCount++;
@@ -161,7 +173,7 @@ const ImportPage = {
     this.selectedSubjects = new Set(checked);
     // Seçilen branşlara göre draft'ı filtrele
     this.draft = this.allParsedGroups.filter(g => {
-      const subj = g.subject || '';
+      const subj = g.subject || 'Branşı Belirsiz';
       return this.selectedSubjects.has(subj);
     });
     this.step = 3;

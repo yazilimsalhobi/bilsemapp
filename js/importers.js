@@ -98,6 +98,135 @@ const ImportParsers = {
     return m && +m[1] < 24 && +m[2] < 60 ? `${m[1].padStart(2, '0')}:${m[2]}` : '';
   },
   schedule(text) {
+    if (text.includes('BAŞLAMA SAATİ') && text.includes('BİTİŞ SAATİ')) {
+      return { type: 'timesheet', times: this.parseTimesheet(text) };
+    }
+    if (text.includes('Öğrenci Listesi')) {
+      return { type: 'groups', groups: this.parseMatrix(text) };
+    }
+    return { type: 'groups', groups: this.parseList(text) };
+  },
+  parseTimesheet(text) {
+    const times = [];
+    for (const line of text.split(/\r?\n/)) {
+      const match = line.match(/(\d{1,2}[:.]\d{2})\s+(\d{1,2}[:.]\d{2})/);
+      if (match) {
+        times.push({ start: this.time(match[1]), end: this.time(match[2]) });
+      }
+    }
+    return times.filter(t => t.start && t.end);
+  },
+  parseMatrix(text) {
+    const groups = [];
+    const lines = text.split(/\r?\n/);
+    
+    // We can have multiple tables side-by-side. 
+    // We track "active" groups per column index.
+    let activeHeaders = []; // { colIndex: number, name: string }
+    let currentGroups = []; // Array of actual group objects being built
+    
+    const subjects = /^(co[gğ]rafya|sosyal bilgiler|matematik|t[uü]rk[cç]e|fen bilimleri|ingilizce|m[uü]zik|g[oö]rsel sanatlar|bilim|robotik|yaz[iı]l[iı]m|beden e[gğ]itimi|resim|teknoloji|bili[sş]im)/i;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+      
+      const cols = line.split('\t');
+      
+      // Look for group names like "DESTEK 1-B (H-S)"
+      const groupMatch = [...line.matchAll(/(?:BYF|DESTEK|UYUM|ÖYG|PROJE)[-\s]?\d?[-\s]?\p{L}?\s*(?:\([^)]+\))?/giu)];
+      if (groupMatch.length > 0 && !line.includes('Saat') && !/(\d{1,2}[:.]\d{2})/.test(line)) {
+        // New table headers found
+        activeHeaders = [];
+        currentGroups = [];
+        for (const m of groupMatch) {
+          const colIndex = cols.findIndex(c => c.includes(m[0]));
+          if (colIndex >= 0) {
+            const name = m[0].trim();
+            activeHeaders.push({ colIndex, name });
+            const g = { id: UI.id('grp'), name, day: '', dayIndex: 0, subject: '', timeSlot: '', startTime: '', endTime: '', lessons: [], color: '', students: [] };
+            currentGroups.push(g);
+            groups.push(g);
+          }
+        }
+        continue;
+      }
+      
+      // Look for day names in header row
+      const daysFound = UI.days.filter(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(line)));
+      if (daysFound.length > 0 && line.includes('Saat')) {
+        // Recalculate column boundaries using "Saat"
+        const saatIndexes = cols.map((c, i) => c.includes('Saat') ? i : -1).filter(i => i !== -1);
+        
+        // Map days to the active groups based on new column proximity
+        for (let idx = 0; idx < activeHeaders.length; idx++) {
+          if (saatIndexes[idx] !== undefined) {
+             activeHeaders[idx].colIndex = saatIndexes[idx];
+          }
+          const h = activeHeaders[idx];
+          const nextColIndex = saatIndexes[idx + 1] !== undefined ? saatIndexes[idx + 1] : cols.length;
+          
+          const dayCols = cols.map((c, i) => ({ text: c, i })).filter(c => c.i >= h.colIndex && c.i < nextColIndex);
+          for (const dc of dayCols) {
+            const foundDay = UI.days.find(d => new RegExp(`(^|[^a-z])${UI.normalize(d)}([^a-z]|$)`).test(UI.normalize(dc.text)));
+            if (foundDay) {
+              currentGroups[idx].day = foundDay;
+              currentGroups[idx].dayIndex = UI.days.indexOf(foundDay);
+              currentGroups[idx].color = BILSEM_DATA.dayColors[foundDay].bg;
+              break;
+            }
+          }
+        }
+        continue;
+      }
+      
+      // Look for time range and students (Data row)
+      const timeRegex = /(\d{1,2}[:.]\d{2})\s*-\s*(\d{1,2}[:.]\d{2})/;
+      const timeIndexes = cols.map((c, i) => timeRegex.test(c.trim()) ? i : -1).filter(i => i !== -1);
+      
+      if (timeIndexes.length > 0) {
+        // Process data for each active group by using time block columns as boundaries
+        for (let idx = 0; idx < Math.min(timeIndexes.length, activeHeaders.length); idx++) {
+          const startCol = timeIndexes[idx];
+          const endCol = timeIndexes[idx + 1] !== undefined ? timeIndexes[idx + 1] : cols.length;
+          
+          const slice = cols.slice(startCol, endCol);
+          const sliceText = slice.join('\t');
+          
+          const timeMatch = sliceText.match(timeRegex);
+          if (timeMatch) {
+            const start = this.time(timeMatch[1]);
+            const end = this.time(timeMatch[2]);
+            const g = currentGroups[idx];
+            
+            if (!g.startTime) g.startTime = start;
+            g.endTime = end;
+            g.lessons.push({ order: g.lessons.length + 1, start, end });
+            
+            // Try to find subject in the time cell or next cell
+            const subjMatch = sliceText.match(subjects);
+            if (subjMatch && !g.subject) {
+              g.subject = subjMatch[0];
+            }
+            
+            // Look for student name. Usually at the end of the slice.
+            const studentCells = slice.filter(c => c.trim().length > 4 && !/\d{1,2}[:.]\d{2}/.test(c) && !/^(co[gğ]rafya|sosyal|matematik|t[uü]rk|fen|ingilizce|m[uü]zik|g[oö]rsel|bilim|robotik|yaz[iı]l[iı]m|beden|resim|teknoloji|bili[sş]im)/i.test(c));
+            
+            if (studentCells.length > 0) {
+              const studentName = studentCells[studentCells.length - 1].trim().replace(/\s*[Zz]-[Rr]$/, '').trim();
+              if (studentName && !g.students.some(s => s.name === studentName)) {
+                g.students.push({ id: UI.id('s'), name: studentName, parentName: '', parentPhone: '' });
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Clean up groups that have no students or times
+    return groups.filter(g => g.students.length > 0 && g.startTime);
+  },
+  parseList(text) {
     const groups = [];
     let day = '', current = null, times = [], subject = '', columns = null, timeSlot = '';
     const subjects = /^(co[gğ]rafya|sosyal bilgiler|matematik|t[uü]rk[cç]e|fen bilimleri|ingilizce|m[uü]zik|g[oö]rsel sanatlar|bilim|robotik|yaz[iı]l[iı]m|beden e[gğ]itimi|resim|teknoloji|bili[sş]im)/i;

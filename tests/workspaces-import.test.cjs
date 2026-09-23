@@ -37,11 +37,11 @@ test('offline local edits survive older cloud data',async()=>{
  h.cloud.alice={bilsem_todos:[]};await h.Store.loadAllFromSupabase();assert.equal(h.Store.getTodos()[0].text,'offline');
 });
 test('program parser reads Turkish days, lesson blocks and student bullets',()=>{
- const h=env();const groups=h.ImportParsers.schedule('PAZARTESİ\n09:00 - 10:30\n09:00 - 09:40 (1. Ders)\n09:50 - 10:30 (2. Ders)\nBYF 1-A\nMatematik\n■Örnek Öğrenci\n■Deneme Öğrenci\nSALI\n10:00 - 10:40\nGrup: B\nCoğrafya\n•Test Öğrenci');
+ const h=env();const groups=h.ImportParsers.schedule('PAZARTESİ\n09:00 - 10:30\n09:00 - 09:40 (1. Ders)\n09:50 - 10:30 (2. Ders)\nBYF 1-A\nMatematik\n■Örnek Öğrenci\n■Deneme Öğrenci\nSALI\n10:00 - 10:40\nGrup: B\nCoğrafya\n•Test Öğrenci').groups;
  assert.equal(groups.length,2);assert.equal(groups[0].day,'Pazartesi');assert.equal(groups[0].students.length,2);assert.equal(groups[0].lessons.length,2);assert.equal(groups[1].name,'B');
 });
 test('structured program table merges student rows for same group',()=>{
- const h=env();const groups=h.ImportParsers.schedule('Gün\tGrup\tSaat\tDers\tÖğrenci\nPazartesi\tA\t09:00 - 10:00\tMatematik\tÖrnek Bir\nPazartesi\tA\t09:00 - 10:00\tMatematik\tÖrnek İki');
+ const h=env();const groups=h.ImportParsers.schedule('Gün\tGrup\tSaat\tDers\tÖğrenci\nPazartesi\tA\t09:00 - 10:00\tMatematik\tÖrnek Bir\nPazartesi\tA\t09:00 - 10:00\tMatematik\tÖrnek İki').groups;
  assert.equal(groups.length,1);assert.equal(groups[0].students.length,2);
 });
 test('annual plan maps explicit date ranges and preserves learning outcomes',()=>{
@@ -66,7 +66,7 @@ test('Turkish month ranges cross months and academic years correctly',()=>{
 });
 test('ders_programi.txt full parse finds all groups with students and timeSlots',()=>{
  const h=env();const text=fs.readFileSync(path.join(__dirname,'..','ders_programi.txt'),'utf8');
- const groups=h.ImportParsers.schedule(text);
+ const groups=h.ImportParsers.schedule(text).groups;
  // Should find at least 9 groups across SALI, ÇARŞAMBA, PERŞEMBE, CUMA, CUMARTESİ
  assert.ok(groups.length>=9,`Expected >=9 groups, got ${groups.length}`);
  // Check days are detected
@@ -93,7 +93,7 @@ test('ders_programi.txt full parse finds all groups with students and timeSlots'
  assert.ok(withSlot.length>=1,`should have timeSlot on some groups, got ${withSlot.length}`);
 });
 test('branch filtering keeps only selected subjects',()=>{
- const h=env();const groups=h.ImportParsers.schedule('PAZARTESİ\n09:00 - 10:00\nBYF 1-A\nMatematik\n■A Öğrenci\nSALI\n10:00 - 11:00\nBYF 1-B\nCoğrafya\n■B Öğrenci\nÇARŞAMBA\n11:00 - 12:00\nBYF 1-C\nMatematik\n■C Öğrenci');
+ const h=env();const groups=h.ImportParsers.schedule('PAZARTESİ\n09:00 - 10:00\nBYF 1-A\nMatematik\n■A Öğrenci\nSALI\n10:00 - 11:00\nBYF 1-B\nCoğrafya\n■B Öğrenci\nÇARŞAMBA\n11:00 - 12:00\nBYF 1-C\nMatematik\n■C Öğrenci').groups;
  assert.equal(groups.length,3);
  const coğrafya=groups.filter(g=>g.subject.toLowerCase().includes('coğrafya'));
  assert.equal(coğrafya.length,1);
@@ -104,4 +104,38 @@ test('branch filtering keeps only selected subjects',()=>{
 test('annual plan recognizes etkinlik and icerik column headers',()=>{
  const h=env();const plans=h.ImportParsers.annual([['Hafta','Süre','Etkinlik'],['1','1 hafta','Harita çizimi'],['2','1 hafta','Yön bulma']],{year:2026,firstWeek:'2026-09-21'});
  assert.equal(plans.length,2);assert.equal(plans[0].topic,'Harita çizimi');assert.equal(plans[1].topic,'Yön bulma');
+});
+test('matrix schedule parser extracts side-by-side groups with days and students',()=>{
+ const h=env();
+ const matrixText = `DESTEK 1-B (H-S)\tDESTEK 1-A (H_İ)
+Saat\tCUMARTESİ\tSınıf\tÖğrenci Listesi\tSaat\tÇARŞAMBA\tCUMA\tSınıf\tÖğrenci Listesi
+09:00-09:40\tİNGİLİZCE\t4\t1\tBEYZA BEBEK Z-R\t16:15-16:55\tBİLİŞİM TEKN.\tDESTEK EĞİTİMİ\t2\t1\tALİ YAHYA İNAN
+09:50-10:30\tİNGİLİZCE\t4\t2\tZEYNEP ÇAKIR\t17:05-17:45\tBİLİŞİM TEKN.\tDESTEK EĞİTİMİ\t2\t2\tGÖKÇE DURU KEÇECİ`;
+ const parsed = h.ImportParsers.schedule(matrixText);
+ assert.equal(parsed.type, 'groups');
+ const groups = parsed.groups;
+ assert.equal(groups.length, 2, 'Should find 2 groups');
+ assert.equal(groups[0].name, 'DESTEK 1-B (H-S)');
+ assert.equal(groups[0].day, 'Cumartesi');
+ assert.equal(groups[0].students.length, 2);
+ assert.equal(groups[0].students[0].name, 'BEYZA BEBEK');
+ assert.equal(groups[0].lessons.length, 2);
+ assert.equal(groups[1].name, 'DESTEK 1-A (H_İ)');
+ assert.equal(groups[1].day, 'Çarşamba');
+});
+test('timesheet parser extracts time blocks from Zaman Çizelgesi',()=>{
+ const h=env();
+ const timesheetText = `FATSA BİLİM VE SANAT MERKEZİ GÜNLÜK ZAMAN ÇİZELGESİ
+HAFTAİÇİ GRUP (AKŞAM)
+SÜRE\tBAŞLAMA SAATİ\tBİTİŞ SAATİ\tÇALIŞMA ALANI
+40\t16:15\t16:55\t1. Ders
+10\t16:55\t17:05\tDinlenme
+40\t17:05\t17:45\t2. Ders`;
+ const parsed = h.ImportParsers.schedule(timesheetText);
+ assert.equal(parsed.type, 'timesheet');
+ assert.equal(parsed.times.length, 3);
+ assert.equal(parsed.times[0].start, '16:15');
+ assert.equal(parsed.times[0].end, '16:55');
+ assert.equal(parsed.times[2].start, '17:05');
+ assert.equal(parsed.times[2].end, '17:45');
 });
