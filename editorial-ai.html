@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Müsvedde — Editoryal Yapay Zeka Arayüzü</title>
+  
+  <!-- Google Fonts: Newsreader (Editorial Serif), Playfair Display (Display Titles), Plus Jakarta Sans (UI Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bone: '#F5F5DC',        // Kemik rengi (ana zemin)
+            parchment: '#FAF8F0',   // Sıcak kağıt tonu
+            linen: '#EFEBDC',       // Doğal keten / kart zemini
+            borderTone: '#DCD4BE',  // Organik sınır çizgisi
+            borderDark: '#C9BE9E',  // Koyu sınır çizgisi
+            coffee: {
+              DEFAULT: '#2C1E16',   // Koyu kahve metin
+              light: '#4A3B32',     // İkincil kahve
+              muted: '#7A6B5F',     // Soluk editoryal dipnot metni
+              faint: '#A69888'      // İpucu / sayaç metni
+            },
+            terracotta: {
+              DEFAULT: '#B84A28',   // Kiremit kırmızısı (vurgu rengi)
+              hover: '#9E3A1D',     // Kiremit hover
+              light: '#F4ECE6',     // Kiremit hafif zemin
+              border: '#9E3A1D'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Cormorant Garamond', 'Georgia', 'serif'],
+            display: ['Cormorant Garamond', 'Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Organik doku ve tipografik detaylar */
+    body {
+      background-color: #F5F5DC;
+      color: #2C1E16;
+      font-family: 'Newsreader', Georgia, serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Özel kaydırma çubuğu - minimalist organik */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F5F5DC;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #DCD4BE;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #B84A28;
+    }
+
+    /* Drop-cap (İlk harf editoryal büyük harf) */
+    .drop-cap::first-letter {
+      float: left;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.75rem;
+      line-height: 0.82;
+      padding-top: 4px;
+      padding-right: 10px;
+      padding-bottom: 2px;
+      color: #B84A28;
+      font-weight: 600;
+    }
+
+    /* Metin seçimi */
+    ::selection {
+      background-color: #B84A28;
+      color: #FAF8F0;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col antialiased selection:bg-terracotta selection:text-white">
+
+  <!-- ==================== ÜST MASTHEAD (EDITORIAL HEADER) ==================== -->
+  <header class="border-b border-borderTone bg-parchment/80 backdrop-blur-sm sticky top-0 z-40 px-6 py-4 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Sol: Arşiv Menüsü & Yayın Bilgisi -->
+      <div class="flex items-center gap-6">
+        <button id="toggle-sidebar" class="flex items-center gap-2 text-xs uppercase tracking-widest text-coffee-muted hover:text-coffee font-sans font-semibold transition-colors">
+          <svg class="w-4 h-4 text-terracotta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h10M4 18h16"></path>
+          </svg>
+          <span class="hidden sm:inline">Müsvedde Arşivi</span>
+        </button>
+
+        <div class="h-4 w-[1px] bg-borderTone hidden sm:block"></div>
+
+        <div class="hidden md:flex flex-col">
+          <span class="text-[10px] uppercase tracking-widest text-coffee-muted font-sans font-medium">Cilt IV · No. 18</span>
+          <span class="text-xs text-coffee-light italic font-serif">24 Eylül 2026 · İstanbul</span>
+        </div>
+      </div>
+
+      <!-- Orta: Logo & Ana Başlık -->
+      <div class="text-center">
+        <a href="#" class="inline-block group">
+          <h1 class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-coffee group-hover:text-terracotta transition-colors">
+            M Ü S V E D D E
+          </h1>
+          <p class="text-[10px] uppercase tracking-[0.25em] text-coffee-muted font-sans font-medium -mt-1">
+            Yapay Zeka & Editoryal Düşünce Atölyesi
+          </p>
+        </a>
+      </div>
+
+      <!-- Sağ: Model & Düz Minimalist Butonlar -->
+      <div class="flex items-center gap-3">
+        <div class="hidden lg:flex items-center gap-2 border border-borderTone px-3 py-1 bg-bone text-xs font-sans text-coffee-light">
+          <span class="w-2 h-2 rounded-full bg-terracotta"></span>
+          <span>Claude 3.5 Sonnet</span>
+          <span class="text-coffee-muted">· Metin Çekirdeği</span>
+        </div>
+
+        <button onclick="startNewDraft()" class="bg-terracotta hover:bg-terracotta-hover text-parchment text-xs font-sans font-medium tracking-wide uppercase px-4 py-2 transition-colors border border-terracotta cursor-pointer">
+          + Yeni Taslak
+        </button>
+
+        <button onclick="exportDraft()" class="hidden sm:inline-block border border-coffee text-coffee hover:bg-coffee hover:text-parchment text-xs font-sans font-medium tracking-wide uppercase px-4 py-2 transition-colors cursor-pointer">
+          Dışa Aktar
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== ANA ÇALIŞMA ALANI (GRID) ==================== -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- SOL KENAR ÇUBUĞU (ARŞİV & EDİTORYAL AYARLAR) -->
+    <aside id="sidebar" class="w-80 border-r border-borderTone bg-parchment/60 flex flex-col transition-all duration-300 z-30 shrink-0 absolute lg:relative inset-y-0 left-0 -translate-x-full lg:translate-x-0 overflow-y-auto">
+      
+      <!-- Üst Başlık & Kapatma (Mobilde) -->
+      <div class="p-5 border-b border-borderTone flex items-center justify-between">
+        <div>
+          <h3 class="font-display text-lg font-bold text-coffee">Koleksiyonlar & Notlar</h3>
+          <p class="text-xs text-coffee-muted font-sans mt-0.5">Kişisel araştırma ve metin dizini</p>
+        </div>
+        <button id="close-sidebar" class="lg:hidden text-coffee-muted hover:text-coffee p-1 text-sm font-sans">
+          ✕
+        </button>
+      </div>
+
+      <!-- Müsvedde Listesi -->
+      <div class="p-4 flex-1">
+        <div class="text-[11px] uppercase tracking-wider font-sans font-semibold text-coffee-muted mb-3 px-2">
+          Kayıtlı Müsveddeler
+        </div>
+
+        <nav class="space-y-1">
+          <a href="#" class="block p-3 border-l-2 border-terracotta bg-linen/70 transition-colors">
+            <div class="flex items-center justify-between text-xs text-coffee-muted font-sans mb-1">
+              <span>Felsefi Deneme</span>
+              <span>14:20</span>
+            </div>
+            <h4 class="font-serif font-semibold text-coffee text-sm leading-snug">
+              Zamanın Algısı ve Belleğin Mekânı
+            </h4>
+            <p class="text-xs text-coffee-light font-serif italic mt-1 line-clamp-1">
+              "Bergson'un süre kavramı ile Proust'un..."
+            </p>
+          </a>
+
+          <a href="#" class="block p-3 border-l-2 border-transparent hover:border-borderDark hover:bg-linen/40 transition-colors">
+            <div class="flex items-center justify-between text-xs text-coffee-muted font-sans mb-1">
+              <span>Şiirsel Tahlil</span>
+              <span>Dün</span>
+            </div>
+            <h4 class="font-serif font-medium text-coffee text-sm leading-snug">
+              İkinci Yeni'de Dilin Sınırları ve İmge
+            </h4>
+            <p class="text-xs text-coffee-muted font-serif italic mt-1 line-clamp-1">
+              Cemal Süreya ve Edip Cansever tahlili.
+            </p>
+          </a>
+
+          <a href="#" class="block p-3 border-l-2 border-transparent hover:border-borderDark hover:bg-linen/40 transition-colors">
+            <div class="flex items-center justify-between text-xs text-coffee-muted font-sans mb-1">
+              <span>Tarihsel İnceleme</span>
+              <span>21 Eyl</span>
+            </div>
+            <h4 class="font-serif font-medium text-coffee text-sm leading-snug">
+              Matbaanın Osmanlı Entelektüel Hayatına Etkisi
+            </h4>
+            <p class="text-xs text-coffee-muted font-serif italic mt-1 line-clamp-1">
+              İbrahim Müteferrika ve yazma kültürünün dönüşümü.
+            </p>
+          </a>
+        </nav>
+
+        <!-- Editoryal Üslup Parametreleri -->
+        <div class="mt-8 pt-6 border-t border-borderTone">
+          <div class="text-[11px] uppercase tracking-wider font-sans font-semibold text-coffee-muted mb-3 px-2">
+            Editoryal Üslup & Ton
+          </div>
+
+          <div class="space-y-3 px-2">
+            <div>
+              <label class="block text-xs font-sans text-coffee-light mb-1">Anlatım Formu</label>
+              <select id="tone-select" class="w-full bg-bone border border-borderTone text-coffee text-xs font-serif p-2 focus:outline-none focus:border-terracotta">
+                <option value="edebi">Edebi & Düşünsel (Deneme / Tahlil)</option>
+                <option value="akademik">Akademik & Referanslı</option>
+                <option value="yalin">Yalın & Minimalist</option>
+                <option value="elestirel">Eleştirel & Diyalektik</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-sans text-coffee-light mb-1">
+                <span>Düşünsel Serbestlik</span>
+                <span id="temp-display" class="font-mono text-terracotta">Dengeli</span>
+              </div>
+              <input type="range" id="temp-slider" min="0" max="100" value="45" class="w-full accent-terracotta bg-borderTone h-1 cursor-pointer">
+              <div class="flex justify-between text-[10px] text-coffee-muted font-sans mt-0.5">
+                <span>Katı / Dokümante</span>
+                <span>Şiirsel / Özgür</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Alt Bilgi / Telif Notu -->
+      <div class="p-4 border-t border-borderTone text-center text-xs text-coffee-muted font-serif italic">
+        "Dil düşüncenin evidir." — M. Heidegger
+      </div>
+
+    </aside>
+
+    <!-- SAĞ: MERKEZ YAZI VE DİYALOG TUVALİ (CANVAS) -->
+    <main class="flex-1 flex flex-col h-full bg-bone overflow-y-auto" id="chat-scroller">
+      
+      <div class="flex-1 max-w-3xl w-full mx-auto px-6 sm:px-10 py-10 space-y-12">
+        
+        <!-- Üst Editoryal Manifesto / Giriş Notu -->
+        <section class="border-b border-borderTone pb-8 text-center sm:text-left">
+          <div class="inline-block text-[11px] uppercase tracking-[0.2em] font-sans font-semibold text-terracotta bg-terracotta-light border border-terracotta/30 px-2.5 py-0.5 mb-3">
+            Atölye Kaydı No. 042
+          </div>
+          <h2 class="font-display text-3xl sm:text-4xl font-normal text-coffee tracking-tight leading-tight">
+            Metin Tahlili & Fikir Mimarlığı
+          </h2>
+          <p class="font-serif text-coffee-light text-base sm:text-lg leading-relaxed mt-3 max-w-2xl">
+            Bu tuval; gürültüden arındırılmış, tipografik ciddiyet taşıyan editoryal bir çalışma ortamıdır. Sorularınızı sorabilir, müsveddelerinizi tahlil ettirebilir veya düşüncenizi genişletebilirsiniz.
+          </p>
+
+          <!-- Hızlı İlham Çipleri (Minimalist Butonlar) -->
+          <div class="flex flex-wrap gap-2 mt-6">
+            <button onclick="insertPrompt('Zamanın ve mekânın insan hafızasındaki yerini Proust ve Tanpınar ekseninde edebi bir dille karşılaştır.')" class="border border-borderDark hover:border-terracotta hover:text-terracotta bg-parchment text-coffee-light text-xs font-serif px-3 py-1.5 transition-colors cursor-pointer">
+              ✒️ Proust & Tanpınar Karşılaştırması
+            </button>
+            <button onclick="insertPrompt('Bir denemenin giriş paragrafını vurucu, edebi ve akıcı kılmak için 3 farklı kurgu önerisi sun.')" class="border border-borderDark hover:border-terracotta hover:text-terracotta bg-parchment text-coffee-light text-xs font-serif px-3 py-1.5 transition-colors cursor-pointer">
+              📖 Vurucu Giriş Paragrafı Kurguları
+            </button>
+            <button onclick="insertPrompt('Yapay zekanın sanat ve edebiyat üretimindeki ontolojik sınırlarını eleştirel bir deneme olarak kaleme al.')" class="border border-borderDark hover:border-terracotta hover:text-terracotta bg-parchment text-coffee-light text-xs font-serif px-3 py-1.5 transition-colors cursor-pointer">
+              🏛️ Yapay Zeka ve Estetik Ontoloji
+            </button>
+          </div>
+        </section>
+
+        <!-- ==================== DİYALOG AKIŞI ==================== -->
+        <div id="thread-container" class="space-y-12">
+          
+          <!-- Soru 1 (Yazar / Kullanıcı) -->
+          <article class="flex flex-col space-y-3">
+            <div class="flex items-center gap-3 border-b border-borderTone/60 pb-2">
+              <span class="font-sans text-[11px] uppercase tracking-wider font-semibold text-terracotta">Soru & Taslak</span>
+              <span class="text-xs text-coffee-muted font-sans">· Yazar Notu</span>
+            </div>
+            <div class="font-serif text-lg text-coffee leading-relaxed pl-4 border-l-2 border-borderDark italic">
+              "Zamanın sürekliliği ve unutuş arasındaki gerilimi edebiyat kuramı açısından nasıl temellendirebiliriz? Tanpınar'ın 'ne içindeyim zamanın, ne de büsbütün dışında' mısrasını bir başlangıç noktası olarak alalım."
+            </div>
+          </article>
+
+          <!-- Yanıt 1 (Editoryal AI) -->
+          <article class="flex flex-col space-y-4">
+            <div class="flex items-center justify-between border-b border-borderTone/60 pb-2">
+              <div class="flex items-center gap-3">
+                <span class="font-sans text-[11px] uppercase tracking-wider font-semibold text-coffee">Editoryal Tahlil</span>
+                <span class="text-xs text-coffee-muted font-sans">· Müsvedde AI</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="copyResponse(this)" class="text-xs font-sans text-coffee-muted hover:text-terracotta transition-colors px-2 py-0.5">Metni Kopyala</button>
+                <button onclick="refineDraft()" class="text-xs font-sans text-terracotta hover:underline px-2 py-0.5">Paragrafı Genişlet →</button>
+              </div>
+            </div>
+
+            <!-- Editoryal Tipografi: Geniş Satır Aralığı, Drop-Cap, Zarif İtalikler -->
+            <div class="font-serif text-coffee-light text-lg sm:text-[1.18rem] leading-[2.1] space-y-6">
+              
+              <p class="drop-cap">
+                Zaman, edebiyatın yalnızca bir arka plan dekoru değil; insan bilincinin mekânla kurduğu en sancılı ve doğurgan çatışma alanıdır. Tanpınar’ın meşhur mısrasında ifadesini bulan durum, kronolojik takvim zamanı (kronos) ile bilincin saf akışı ve hafızanın iç içe geçmiş zamanı (kairos veya Bergsonyen süre) arasındaki yarılmadır.
+              </p>
+
+              <!-- Alıntı Bloğu (Editorial Blockquote) -->
+              <blockquote class="my-6 py-4 px-6 bg-linen/50 border-l-2 border-terracotta text-coffee font-serif italic text-base sm:text-lg leading-loose">
+                "Bellek, geçmişi bir arşiv çekmecesinden çıkarır gibi hatırlamaz; aksine her hatırlama eylemi, şimdiki zamanın ışığında geçmişi yeniden inşa eden estetik bir yaratımdır."
+              </blockquote>
+
+              <p>
+                Unutuş ise bu yapıda bir eksiklik ya da kusur değil, estetik bir filtreleme mekanizmasıdır. Hafıza, her ayrıntıyı kaydetmeye kalkışsaydı Borges'in <em>Bellek Bellek Funes</em> öyküsündeki gibi bilincin ağırlığı altında çökerdi. Tanpınar’ın poetikasında zamanın "yekpare, geniş bir anın parçalanmaz akışı" olarak tanımlanması, geçmişin şimdinin içine damıtılarak taşınması anlamına gelir.
+              </p>
+
+              <!-- Kenar Notu / Dipnot (Editorial Annotation) -->
+              <div class="p-4 border border-borderTone bg-parchment flex items-start gap-3 text-xs font-sans text-coffee-muted leading-relaxed">
+                <span class="text-terracotta font-serif font-bold text-sm">※</span>
+                <div>
+                  <strong class="text-coffee font-medium">Metin İçi Dipnot:</strong> Henri Bergson’un <em>Madde ve Bellek</em> (1896) yapıtında geliştirdiği "sezgisel süre" teorisi ile Tanpınar’ın roman kurguları arasındaki ontolojik bağ daha derin bir metin karşılaştırmasıyla ele alınabilir.
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Edebi Aksiyon Düğmeleri -->
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+              <button onclick="appendFollowUp('Bu düşünceyi Proust’un kayıp zaman arayışıyla zenginleştir.')" class="border border-borderTone hover:border-terracotta hover:text-terracotta bg-bone text-coffee text-xs font-sans font-medium px-3 py-1.5 transition-colors cursor-pointer">
+                + Proust Karşılaştırması Ekle
+              </button>
+              <button onclick="appendFollowUp('Bu tahlilden bir akademik makale özeti (abstract) çıkar.')" class="border border-borderTone hover:border-terracotta hover:text-terracotta bg-bone text-coffee text-xs font-sans font-medium px-3 py-1.5 transition-colors cursor-pointer">
+                📄 Makale Özeti Çıkar
+              </button>
+              <button onclick="appendFollowUp('Üslubu daha lirik ve şiirsel bir deneme diline dönüştür.')" class="border border-borderTone hover:border-terracotta hover:text-terracotta bg-bone text-coffee text-xs font-sans font-medium px-3 py-1.5 transition-colors cursor-pointer">
+                🖋️ Şiirsel Dille Yeniden Yaz
+              </button>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Yazma / Yanıt Alma İndikatörü -->
+        <div id="typing-indicator" class="hidden items-center gap-3 text-coffee-muted text-xs font-sans italic py-4">
+          <span class="inline-block w-2 h-2 rounded-full bg-terracotta animate-pulse"></span>
+          <span>Müsvedde düşünceyi örüyor ve biçimlendiriyor...</span>
+        </div>
+
+      </div>
+
+      <!-- ==================== ALT YAZMA PANELİ (MINIMALIST & FLAT) ==================== -->
+      <footer class="border-t border-borderTone bg-parchment/90 backdrop-blur-sm p-4 sm:p-6 sticky bottom-0 z-30">
+        <div class="max-w-3xl mx-auto">
+          
+          <form id="composer-form" onsubmit="handleSend(event)" class="relative border border-borderDark focus-within:border-terracotta bg-bone transition-all">
+            
+            <!-- Üst Küçük Yardımcı Çubuk -->
+            <div class="flex items-center justify-between px-3 py-1.5 border-b border-borderTone/50 text-[11px] font-sans text-coffee-muted">
+              <span class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>
+                <span>Editoryal Kalem Hazır</span>
+              </span>
+              <span id="char-counter">0 sözcük · Giriş: Enter</span>
+            </div>
+
+            <!-- Metin Alanı -->
+            <textarea 
+              id="prompt-input"
+              rows="3" 
+              placeholder="Düşüncenizi, eleştiri sorunuzu veya incelenecek metin parçasını buraya yazın..."
+              class="w-full bg-transparent p-4 font-serif text-coffee text-base leading-relaxed placeholder:text-coffee-muted/70 placeholder:italic focus:outline-none resize-none"
+              oninput="updateWordCount(this)"
+              onkeydown="handleKeyDown(event)"
+            ></textarea>
+
+            <!-- Alt Butonlar Barı -->
+            <div class="flex items-center justify-between px-3 py-2 bg-linen/40 border-t border-borderTone/50">
+              
+              <!-- Sol Yardımcılar -->
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="clearCanvas()" title="Sayfayı Temizle" class="text-xs font-sans text-coffee-muted hover:text-coffee px-2 py-1 transition-colors">
+                  Sayfayı Temizle
+                </button>
+                <div class="h-3 w-[1px] bg-borderTone"></div>
+                <button type="button" onclick="insertQuote()" title="Alıntı Ekle" class="text-xs font-serif italic text-coffee-muted hover:text-coffee px-2 py-1 transition-colors">
+                  "Alıntı Yap"
+                </button>
+              </div>
+
+              <!-- Sağ Gönder Butonu (Tamamen Düz, Kiremit Kırmızısı, Gölgesiz) -->
+              <button 
+                type="submit" 
+                id="send-btn"
+                class="bg-terracotta hover:bg-terracotta-hover text-parchment text-xs font-sans font-semibold tracking-wider uppercase px-5 py-2.5 transition-colors border border-terracotta cursor-pointer"
+              >
+                Metne Dönüştür
+              </button>
+
+            </div>
+
+          </form>
+
+          <p class="text-[11px] text-center text-coffee-muted font-serif italic mt-2">
+            Müsvedde AI · Edebiyat, Felsefe ve Beşeri Bilimler İçin Organik Düşünce Arayüzü
+          </p>
+
+        </div>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- ==================== ETKİLEŞİM VE MANTIK (JAVASCRIPT) ==================== -->
+  <script>
+    // Sidebar toggle (mobil ve masaüstü)
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggle-sidebar');
+    const closeBtn = document.getElementById('close-sidebar');
+
+    toggleBtn?.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      sidebar.classList.add('-translate-x-full');
+    });
+
+    // Sıcaklık slider göstergesi
+    const tempSlider = document.getElementById('temp-slider');
+    const tempDisplay = document.getElementById('temp-display');
+    tempSlider?.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      if (val < 30) tempDisplay.textContent = 'Katı / Dokümante';
+      else if (val < 70) tempDisplay.textContent = 'Dengeli';
+      else tempDisplay.textContent = 'Şiirsel / Özgür';
+    });
+
+    // Sözcük sayacı
+    function updateWordCount(textarea) {
+      const text = textarea.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      document.getElementById('char-counter').textContent = `${words} sözcük · Giriş: Enter`;
+    }
+
+    // Enter ile gönder (Shift+Enter yeni satır)
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('composer-form').dispatchEvent(new Event('submit'));
+      }
+    }
+
+    // Hızlı prompt yerleştirme
+    function insertPrompt(text) {
+      const input = document.getElementById('prompt-input');
+      input.value = text;
+      input.focus();
+      updateWordCount(input);
+    }
+
+    function insertQuote() {
+      const input = document.getElementById('prompt-input');
+      input.value += ' «Alıntı metniniz buraya» ';
+      input.focus();
+    }
+
+    // Gönderim ve Editoryal Simülasyon
+    function handleSend(e) {
+      e.preventDefault();
+      const input = document.getElementById('prompt-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById('thread-container');
+      const scroller = document.getElementById('chat-scroller');
+      const typing = document.getElementById('typing-indicator');
+
+      // 1. Kullanıcı sorusunu ekle
+      const userBlock = document.createElement('article');
+      userBlock.className = 'flex flex-col space-y-3';
+      userBlock.innerHTML = `
+        <div class="flex items-center gap-3 border-b border-borderTone/60 pb-2">
+          <span class="font-sans text-[11px] uppercase tracking-wider font-semibold text-terracotta">Soru & Taslak</span>
+          <span class="text-xs text-coffee-muted font-sans">· Şimdi</span>
+        </div>
+        <div class="font-serif text-lg text-coffee leading-relaxed pl-4 border-l-2 border-borderDark italic">
+          "${escapeHtml(text)}"
+        </div>
+      `;
+      container.appendChild(userBlock);
+
+      // Inputu temizle
+      input.value = '';
+      updateWordCount(input);
+
+      // Typing göster
+      typing.classList.remove('hidden');
+      typing.classList.add('flex');
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+
+      // Editoryal Yanıt Simülasyonu
+      setTimeout(() => {
+        typing.classList.remove('flex');
+        typing.classList.add('hidden');
+
+        const aiBlock = document.createElement('article');
+        aiBlock.className = 'flex flex-col space-y-4';
+        
+        // Yanıt içeriğini oluştur
+        const editorialResponse = generateEditorialResponse(text);
+
+        aiBlock.innerHTML = `
+          <div class="flex items-center justify-between border-b border-borderTone/60 pb-2">
+            <div class="flex items-center gap-3">
+              <span class="font-sans text-[11px] uppercase tracking-wider font-semibold text-coffee">Editoryal Tahlil</span>
+              <span class="text-xs text-coffee-muted font-sans">· Müsvedde AI</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="copyResponse(this)" class="text-xs font-sans text-coffee-muted hover:text-terracotta transition-colors px-2 py-0.5">Metni Kopyala</button>
+            </div>
+          </div>
+          <div class="font-serif text-coffee-light text-lg sm:text-[1.18rem] leading-[2.1] space-y-6">
+            ${editorialResponse}
+          </div>
+        `;
+
+        container.appendChild(aiBlock);
+        scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+      }, 900);
+    }
+
+    // Editoryal metin üretici şablonu
+    function generateEditorialResponse(query) {
+      const dropLetter = query.charAt(0).toUpperCase();
+      return `
+        <p class="drop-cap">
+          Ele aldığınız bu mesele, sadece kuramsal bir tespit değil; edebiyatın ontolojik köklerine dair temel bir içgörüdür. <em>"${escapeHtml(query)}"</em> izleği, metnin iç dokusunda çok katmanlı bir anlam ağı örer. Dilin imkânları, doğrudan anlatılamayanı sezdirme gücünde gizlidir.
+        </p>
+        <blockquote class="my-6 py-4 px-6 bg-linen/50 border-l-2 border-terracotta text-coffee font-serif italic text-base sm:text-lg leading-loose">
+          "Bir cümlenin ağırlığı, içinde barındırdığı kelimelerin sayısıyla değil; sustuğu boşlukların derinliğiyle ölçülür."
+        </blockquote>
+        <p>
+          Bu bağlamda önerilen yaklaşım, metni tek boyutlu bir cevapla tüketmek yerine, karşıtlıkların bir arada var olabildiği diyalektik bir deneme yapısına oturtmaktır. Bir yanda somut gerçekliğin kesin sınırları dururken, diğer yanda estetik algının yarattığı sonsuz çağrışım alanı mevcuttur.
+        </p>
+        <div class="p-4 border border-borderTone bg-parchment flex items-start gap-3 text-xs font-sans text-coffee-muted leading-relaxed">
+          <span class="text-terracotta font-serif font-bold text-sm">※</span>
+          <div>
+            <strong class="text-coffee font-medium">Editoryal Tavsiye:</strong> Bu fikri bir sonraki adımda somut edebi metin örnekleriyle (örneğin Ahmet Hamdi Tanpınar, Bilge Karasu veya Oğuz Atay metinleri) zenginleştirebiliriz.
+          </div>
+        </div>
+      `;
+    }
+
+    function appendFollowUp(promptText) {
+      insertPrompt(promptText);
+    }
+
+    function copyResponse(btn) {
+      const article = btn.closest('article');
+      const text = article.querySelector('.font-serif.text-coffee-light').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerText;
+        btn.innerText = '✓ Kopyalandı';
+        setTimeout(() => btn.innerText = orig, 1800);
+      });
+    }
+
+    function clearCanvas() {
+      if (confirm('Mevcut çalışma alanındaki müsveddeyi temizlemek istiyor musunuz?')) {
+        document.getElementById('thread-container').innerHTML = `
+          <div class="text-center py-12 text-coffee-muted font-serif italic text-base">
+            Yeni bir müsvedde başlatıldı. Lütfen sorunuzu veya metninizi aşağıya yazın.
+          </div>
+        `;
+      }
+    }
+
+    function startNewDraft() {
+      clearCanvas();
+    }
+
+    function refineDraft() {
+      insertPrompt('Bu paragrafı daha zengin benzetmeler ve karşılaştırmalı edebiyat örnekleriyle genişlet.');
+    }
+
+    function exportDraft() {
+      alert('Müsvedde editoryal PDF / Markdown formatında dışa aktarılmaya hazırlandı.');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
+  </script>
+</body>
+</html>
