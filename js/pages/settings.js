@@ -7,7 +7,6 @@ const SettingsPage = {
   render(container) {
     const school = BILSEM_DATA.school;
     const savedSchool = Store.getSetting('schoolInfo', school);
-    const theme = Store.getSetting('theme', 'dark');
     const notifEnabled = Store.getSetting('notificationsEnabled', false);
     const reminderMin = Store.getSetting('reminderMinutes', 10);
 
@@ -89,11 +88,16 @@ const SettingsPage = {
               <div class="settings-toggle-info">
                 <span class="settings-toggle-icon">🌓</span>
                 <div>
-                  <div class="settings-toggle-title">Karanlık Tema</div>
-                  <div class="settings-toggle-desc">Göz yormayan koyu renk teması</div>
+                  <div class="settings-toggle-title">Görünüm ve Hareket</div>
+                  <div class="settings-toggle-desc">Renk, köşe, gölge ve etkileşim stilini seçin</div>
                 </div>
               </div>
-              <div class="toggle ${theme === 'dark' ? 'active' : ''}" onclick="SettingsPage.toggleTheme(this)"></div>
+              <fieldset class="theme-switcher">
+                <legend>Tema</legend>
+                <button type="button" class="theme-choice" data-choice="organic" onclick="ThemeEngine.setTheme('organic')">Organic</button>
+                <button type="button" class="theme-choice" data-choice="brutalist" onclick="ThemeEngine.setTheme('brutalist')">Brutalist</button>
+                <button type="button" class="theme-choice" data-choice="ethereal" onclick="ThemeEngine.setTheme('ethereal')">Ethereal</button>
+              </fieldset>
             </div>
             <div class="settings-toggle-item">
               <div class="settings-toggle-info">
@@ -734,11 +738,6 @@ const SettingsPage = {
   },
 
   // ========== TEMA & BİLDİRİM ==========
-  toggleTheme(el) {
-    el.classList.toggle('active');
-    App.toggleTheme();
-  },
-
   async toggleNotifications(el) {
     const willEnable = !el.classList.contains('active');
     if (willEnable) {

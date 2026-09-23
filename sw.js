@@ -3,13 +3,16 @@
  * Offline çalışma, cache yönetimi
  */
 
-const CACHE_NAME = 'bilsem-v11';
+const CACHE_NAME = 'bilsem-v12';
 const ASSETS = [
   './',
   './index.html',
   './privacy-policy.html',
   './terms-of-service.html',
   './css/main.css',
+  './css/globals.css',
+  './js/theme.js',
+  './icons/geogo.svg',
   './css/components.css',
   './css/animations.css',
   './js/data.js',

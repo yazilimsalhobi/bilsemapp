@@ -5,11 +5,11 @@
 
 /* ============ PAGE TRANSITIONS ============ */
 .page-enter {
-  animation: pageEnter var(--transition-slow) ease-out;
+  animation: pageEnter var(--transition-slow);
 }
 
 .page-exit {
-  animation: pageExit var(--transition-base) ease-in;
+  animation: pageExit var(--transition-base);
 }
 
 @keyframes pageEnter {
@@ -42,7 +42,7 @@
 }
 
 .card-pop {
-  animation: cardPop var(--transition-spring) ease-out;
+  animation: cardPop var(--transition-spring);
 }
 
 /* ============ PULSE ============ */
@@ -66,8 +66,8 @@
 
 /* ============ SHIMMER / SKELETON ============ */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%, 100% { opacity: .45; }
+  50% { opacity: 1; }
 }
 
 .skeleton {
@@ -128,7 +128,7 @@
 }
 
 .slide-up {
-  animation: slideUp var(--transition-slow) ease-out;
+  animation: slideUp var(--transition-slow);
 }
 
 /* ============ SLIDE DOWN ============ */
@@ -138,7 +138,7 @@
 }
 
 .slide-down {
-  animation: slideDown var(--transition-slow) ease-out;
+  animation: slideDown var(--transition-slow);
 }
 
 /* ============ BOUNCE ============ */
@@ -174,9 +174,8 @@
 
 /* ============ GRADIENT SHIFT ============ */
 @keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0%, 100% { opacity: .85; }
+  50% { opacity: 1; }
 }
 
 .gradient-animate {
@@ -196,9 +195,8 @@
 
 /* ============ GLOW RING ============ */
 @keyframes glowRing {
-  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
-  70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  0%, 100% { opacity: 1; }
+  70% { opacity: .65; }
 }
 
 .glow-ring {
@@ -207,10 +205,12 @@
 
 /* ============ PROGRESS BAR ============ */
 @keyframes progressFill {
-  from { width: 0; }
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 .progress-animate {
+  transform-origin: left;
   animation: progressFill 1s ease-out;
 }
 

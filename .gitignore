@@ -17,6 +17,9 @@ scratch/
 *.pdf
 ders_programi.txt
 node_modules/
+dist/
+test-results/
+playwright-report/
 tests/migration-preview.html
 
 !tests/fixtures/*.pdf

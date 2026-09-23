@@ -1,1 +1,18 @@
-{}
+{
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "playwright test",
+    "dev:theme": "vite --host 127.0.0.1",
+    "build:theme": "vite build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "framer-motion": "^12.43.0",
+    "postcss": "^8.5.28",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^3.4.19",
+    "vite": "^7.3.6"
+  }
+}

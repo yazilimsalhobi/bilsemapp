@@ -275,16 +275,11 @@ const App = {
 
   // ====== TEMA ======
   loadTheme() {
-    const theme = Store.getSetting('theme', 'dark');
-    document.documentElement.setAttribute('data-theme', theme);
+    // Already restored before first paint by js/theme.js.
   },
 
   toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme') || 'dark';
-    const next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    Store.setSetting('theme', next);
-    Toast.show(`${next === 'dark' ? '🌙 Karanlık' : '☀️ Aydınlık'} tema aktif`, 'info');
+    ThemeEngine.cycle();
   },
 
   // ====== BİLDİRİM İZNİ ======
