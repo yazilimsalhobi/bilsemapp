@@ -1,287 +1,267 @@
 /**
  * Fatsa BİLSEM — Ana Sayfa (Dashboard)
- * Bugünün programı, aktif ders, geri sayım, hızlı eylemler
+ * Karşılama + canlı ders sayacı, özet kutucuklar, hızlı erişim,
+ * bugünün ders akışı, haftalık plan ilerlemesi, ödevler ve hatırlatmalar.
  */
 
 const HomePage = {
   countdownInterval: null,
+  tones: ['blue', 'green', 'amber', 'rose', 'violet', 'teal'],
 
   render(container) {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
 
     const now = new Date();
     const dayName = DataHelpers.getDayName(now);
-    let todayGroups = DataHelpers.getTodayGroups();
+    let todayGroups = DataHelpers.getTodayGroups().slice().sort((a, b) => DataHelpers.timeToMinutes(a.startTime) - DataHelpers.timeToMinutes(b.startTime));
     let currentLesson = DataHelpers.getCurrentLesson();
     let nextLesson = DataHelpers.getNextLesson();
-    const stats = Store.getOverallStats();
-    const dayColor = BILSEM_DATA.dayColors[dayName];
     const teacherFirst = BILSEM_DATA.school?.teacher ? BILSEM_DATA.school.teacher.split(' ')[0] : '';
     const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
     const isParent = user && user.role === 'parent';
-    const welcomeGreeting = isParent ? `${user.studentName || 'Öğrenci'} Velisi` : (teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim');
+    const greeting = isParent ? `${user.studentName || 'Öğrenci'} Velisi` : (teacherFirst ? `${teacherFirst} Öğretmenim` : 'Öğretmenim');
 
     if (isParent) {
-      // Veli ise, sadece öğrencisinin olduğu dersleri filtrele
-      const filterGroups = (groups) => groups.filter(g => g.students.some(s => s.id === user.studentId));
-      todayGroups = filterGroups(todayGroups);
-      if (currentLesson && !currentLesson.students.some(s => s.id === user.studentId)) currentLesson = null;
-      if (nextLesson && !nextLesson.students.some(s => s.id === user.studentId)) nextLesson = null;
+      // Veli yalnızca öğrencisinin olduğu dersleri görür.
+      const mine = g => g.students.some(s => s.id === user.studentId);
+      todayGroups = todayGroups.filter(mine);
+      if (currentLesson && !mine(currentLesson)) currentLesson = null;
+      if (nextLesson && !mine(nextLesson)) nextLesson = null;
     }
 
     container.innerHTML = `
-      <div class="page-container fade-in">
-        <!-- Karşılama -->
-        <div class="welcome-section">
-          <div class="welcome-date">${dayColor?.emoji || '📅'} ${dayName}, ${DataHelpers.formatDate(now)}</div>
-          <h1 class="welcome-title">Merhaba, <span class="text-gradient">${UI.escape(welcomeGreeting)}</span> 👋</h1>
-        </div>
-
+      <div class="page-container home fade-in" data-accordion="off">
+        ${this.renderHero({ now, dayName, greeting, todayGroups, currentLesson, nextLesson, isParent })}
         ${Store.syncError ? `<div class="sync-notice">${UI.escape(Store.syncError)}</div>` : ''}
-        ${!BILSEM_DATA.groups.length ? '<div class="card import-card"><h2>İlk ders programınızı ekleyin</h2><p>Henüz grubunuz veya öğrenciniz yok.</p><button class="btn btn-primary" onclick="Router.go(\'import\')">Program yükle</button><button class="btn btn-secondary" onclick="SettingsPage.editGroups()">Elle grup ekle</button></div>' : ''}
-        <!-- Aktif / Sonraki Ders -->
-        ${currentLesson ? this.renderCurrentLesson(currentLesson, isParent) : ''}
-        ${!currentLesson && nextLesson ? this.renderNextLesson(nextLesson) : ''}
-
-        ${isParent ? '' : `
-        ${Dashboard.render()}
-
-        <!-- Hatırlatmalarım -->
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">📌 Hatırlatmalarım</h2>
-          </div>
-          <div class="todo-container" style="background: var(--bg-card); border-radius: var(--radius-md); padding: var(--space-md); border: 1px solid var(--border-subtle);">
-            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-              <input type="text" id="new-todo-input" class="form-input" placeholder="Yeni hatırlatma ekle..." style="flex: 1;" onkeypress="if(event.key === 'Enter') HomePage.addTodo()">
-              <button class="btn btn-primary" onclick="HomePage.addTodo()">Ekle</button>
-            </div>
-            <div id="todo-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;">
-              <!-- ToDos here -->
-            </div>
-          </div>
-        </div>
-        `}
-
-        <!-- Bugünün Dersleri -->
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">${todayGroups.length > 0 ? '📅 Bugünün Dersleri' : '🌙 Bugün Ders Yok'}</h2>
-            ${todayGroups.length > 0 && !isParent ? '<button class="section-action" onclick="Router.go(\'schedule\')">Tümünü Gör →</button>' : ''}
-          </div>
-          ${todayGroups.length > 0 ? this.renderTodayGroups(todayGroups, currentLesson, isParent) : this.renderNoLesson()}
-        </div>
-
-        <!-- Yaklaşan Ödevler -->
+        ${!BILSEM_DATA.groups.length ? this.renderOnboarding() : ''}
+        ${isParent ? '' : this.renderStats()}
+        ${isParent ? '' : this.renderActions()}
+        ${BILSEM_DATA.groups.length ? this.renderToday(todayGroups, currentLesson, nextLesson, isParent) : ''}
+        ${isParent ? '' : this.renderWeekPlans()}
         ${this.renderUpcomingHomework(isParent)}
+        ${isParent ? '' : this.renderTodoBlock()}
       </div>
     `;
 
-    // Geri sayım başlat
-    if (nextLesson || currentLesson) {
-      this.startCountdown(nextLesson || currentLesson, !!currentLesson);
-    }
-    
-    // Hatırlatmaları yükle
+    if (nextLesson || currentLesson) this.startCountdown(currentLesson || nextLesson, !!currentLesson);
     this.renderTodos();
   },
 
-  renderCurrentLesson(lesson, isParent = false) {
+  renderHero({ now, dayName, greeting, todayGroups, currentLesson, nextLesson, isParent }) {
+    const holiday = AnnualPlans.holiday(UI.date(now));
+    const week = BILSEM_DATA.groups.map(g => AnnualPlans.forDate(g.id)[0]?.week).find(Boolean);
+    const studentCount = todayGroups.reduce((sum, g) => sum + g.students.length, 0);
+    const summary = holiday ? `🏖️ ${holiday.label} — iyi dinlenmeler!`
+      : todayGroups.length ? `Bugün <b>${todayGroups.length} ders</b> · <b>${studentCount} öğrenci</b> sizi bekliyor`
+      : 'Bugün dersiniz yok, iyi dinlenmeler 🌿';
+    const lesson = currentLesson || nextLesson;
+    const label = currentLesson ? 'ŞU AN DERSTESİNİZ' : nextLesson?.isToday ? 'SIRADAKİ DERS' : nextLesson ? `${nextLesson.day.toLocaleUpperCase('tr-TR')} GÜNÜ` : '';
     return `
-      <div class="countdown card-glass active-lesson-card glow-ring" style="border: 1px solid var(--success); margin-bottom: var(--space-lg);">
-        <div class="countdown-info">
-          <div class="countdown-label" style="color: var(--success);">🟢 ŞU AN DERSTESİNİZ</div>
-          <div class="countdown-group">${UI.escape(lesson.name)}</div>
-          <div style="font-size: var(--font-sm); color: var(--text-tertiary); margin-top: 2px;">
-            ${UI.escape(lesson.subject)} • ${lesson.startTime} - ${lesson.endTime}
-          </div>
-          ${!isParent ? `
-          <div style="margin-top: 8px; display: flex; gap: 8px;">
-            <button class="btn btn-success btn-sm" onclick="Router.go('attendance', '${lesson.id}')">
-              ✅ Yoklama Al
-            </button>
-          </div>
-          ` : ''}
+      <section class="home-hero" aria-label="Karşılama">
+        <span class="home-hero-orb one" aria-hidden="true"></span><span class="home-hero-orb two" aria-hidden="true"></span>
+        <div class="home-hero-top">
+          <span class="home-date">${UI.escape(dayName)} · ${DataHelpers.formatDate(now)}</span>
+          ${week ? `<span class="home-pill">📚 ${week}. hafta</span>` : ''}
         </div>
-        <div class="countdown-timer" id="countdown-display">--:--</div>
-      </div>
-    `;
-  },
-
-  renderNextLesson(lesson) {
-    const prefix = lesson.isToday ? '⏰ BİR SONRAKİ DERS' : `📅 ${lesson.day.toUpperCase()} GÜNÜ`;
-    return `
-      <div class="countdown card-glass" style="margin-bottom: var(--space-lg);">
-        <div class="countdown-info">
-          <div class="countdown-label">${prefix}</div>
-          <div class="countdown-group">${UI.escape(lesson.name)}</div>
-          <div style="font-size: var(--font-sm); color: var(--text-tertiary); margin-top: 2px;">
-            ${UI.escape(lesson.subject)} • ${lesson.startTime} - ${lesson.endTime}
+        <h1 class="home-hello">Merhaba,<br><span>${UI.escape(greeting)}</span> 👋</h1>
+        <p class="home-summary">${summary}</p>
+        ${lesson ? `
+        <div class="home-next ${currentLesson ? 'live' : ''}">
+          <div class="home-next-info">
+            <span class="home-next-label">${currentLesson ? '<i class="home-live-dot"></i>' : '⏰'} ${label}</span>
+            <strong>${UI.escape(lesson.name)}</strong>
+            <small>${UI.escape(lesson.subject || '')} · ${lesson.startTime}–${lesson.endTime}</small>
           </div>
+          <div class="home-next-timer"><b id="countdown-display">--</b><small>${currentLesson ? 'bitişe' : lesson.isToday ? 'başlamaya' : 'başlangıç'}</small></div>
+          ${currentLesson && !isParent ? `<button class="home-next-btn" onclick="Router.go('attendance', '${currentLesson.id}')">✅ Yoklama al</button>` : ''}
+        </div>` : ''}
+      </section>`;
+  },
+
+  renderOnboarding() {
+    return `
+      <section class="home-onboard">
+        <span class="home-onboard-icon" aria-hidden="true">🚀</span>
+        <div><h2>İlk ders programınızı ekleyin</h2><p>Programınızı yükleyin; dersleriniz, öğrencileriniz ve yıllık planınız burada canlansın.</p></div>
+        <div class="home-onboard-actions">
+          <button class="btn btn-primary" onclick="Router.go('import')">Program yükle</button>
+          <button class="btn btn-secondary" onclick="SettingsPage.editGroups()">Elle sınıf ekle</button>
         </div>
-        <div class="countdown-timer" id="countdown-display">--:--</div>
-      </div>
-    `;
+      </section>`;
   },
 
-  renderTodayGroups(groups, currentLesson, isParent = false) {
+  renderStats() {
+    const stats = Store.getOverallStats();
+    const values = { students: DataHelpers.getTotalStudentCount(), groups: DataHelpers.getTotalGroupCount(), attendance: stats.totalSessions, homework: stats.activeHomework };
+    const tones = { students: 'blue', groups: 'violet', attendance: 'green', homework: 'amber' };
+    const items = Dashboard.config('metrics').filter(s => s.visible);
+    if (!items.length) return '';
     return `
-      <div class="stagger-children">
-        ${groups.map(group => {
-          const isActive = currentLesson && currentLesson.id === group.id;
-          const color = group.color;
-          const todayDate = DataHelpers.formatDateShort(new Date());
-          const savedNote = Store.getNote(group.id, todayDate)?.note ?? AnnualPlans.outcome(group.id);
-          const planned = AnnualPlans.outcome(group.id);
-          
-          return `
-            <div class="group-card ${isActive ? 'active-lesson' : ''}" style="--card-color: ${color}; cursor: default;">
-              <div style="position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: ${color};"></div>
-              <div class="group-card-header" ${!isParent ? `onclick="Router.go('attendance', '${group.id}')" style="cursor: pointer;"` : ''}>
-                <div class="group-card-info">
-                  <div class="group-card-name">${UI.escape(group.name)}</div>
-                  <div class="group-card-subject">${UI.escape(group.subject)}</div>
-                </div>
-                <div class="group-card-time">
-                  🕐 ${group.startTime} - ${group.endTime}
-                </div>
-              </div>
-              ${isActive ? '<span class="active-badge">CANLI</span>' : ''}
-              
-              <div class="group-card-students" style="margin-top: 12px;">
-                <div class="student-avatars">
-                  ${group.students.slice(0, 4).map((s, i) => {
-                    const colors = ['#2563EB', '#0D9488', '#F59E0B', '#10B981', '#0284C7'];
-                    return `<div class="student-avatar" style="background: ${colors[i % colors.length]};">${UI.escape(s.name.charAt(0))}</div>`;
-                  }).join('')}
-                  ${group.students.length > 4 ? `<div class="student-avatar" style="background: var(--bg-glass-strong); color: var(--text-secondary); font-size: 0.6rem;">+${group.students.length - 4}</div>` : ''}
-                </div>
-                <span class="student-count">${group.students.length} öğrenci</span>
-              </div>
-              
-              <div class="group-card-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05);">
-                 <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
-                   <strong style="color: var(--text-primary);">🎯 Kazanım:</strong> 
-                   <span ${!isParent ? 'contenteditable="true"' : ''}
-                         ${!isParent ? `onblur="Store.saveNote('${group.id}', '${todayDate}', this.innerText)"` : ''} 
-                         style="${!isParent ? 'border-bottom: 1px dashed rgba(255,255,255,0.3);' : ''} outline: none; min-width: 100px; display: inline-block; padding: 2px 4px;" 
-                         data-placeholder="${!isParent ? 'Kazanım girmek için tıklayın...' : 'Henüz girilmedi'}">${UI.escape(savedNote)}</span>
-                   ${planned ? `<small class="plan-source">📅 Yıllık plan · ${UI.escape(planned)}</small>` : ''}
-                 </div>
-                 ${!isParent ? `
-                 <div style="display: flex; gap: 8px;">
-                   <button class="btn btn-sm" style="flex: 1; background: rgba(0, 184, 148, 0.15); color: #00B894; border: 1px solid rgba(0, 184, 148, 0.3);" onclick="Router.go('attendance', '${group.id}')">✅ Yoklama Al</button>
-                    <button class="btn btn-sm" style="flex: 1; background: rgba(37, 99, 235, 0.15); color: #60A5FA; border: 1px solid rgba(37, 99, 235, 0.3);" onclick="Router.go('homework', '${group.id}')">📝 Ödev Ver</button>
-                 </div>
-                 ` : ''}
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
+      <section class="home-stats" aria-label="Hızlı bakış">
+        ${items.map(s => `
+          <div class="home-stat tone-${tones[s.id] || 'teal'}">
+            <span class="home-stat-icon" aria-hidden="true">${UI.escape(s.icon)}</span>
+            <b>${values[s.id] ?? 0}</b><small>${UI.escape(s.label)}</small>
+          </div>`).join('')}
+      </section>`;
   },
 
-  renderNoLesson() {
+  renderActions() {
+    const items = Dashboard.config('links').filter(s => s.visible);
+    if (!items.length) return '';
     return `
-      <div class="empty-state" style="padding: var(--space-xl) var(--space-lg);">
-        <div class="empty-state-icon">🎉</div>
-        <div class="empty-state-title">Bugün ders yok!</div>
-        <div class="empty-state-text">İyi dinlenmeler. Sonraki ders programınızı görmek için ders programını kontrol edin.</div>
-      </div>
-    `;
+      <section class="home-block">
+        <div class="home-block-head"><h2>Hızlı erişim</h2><button class="section-action" onclick="Dashboard.edit()">Düzenle</button></div>
+        <div class="home-actions">
+          ${items.map((s, i) => `
+            <button class="home-action tone-${this.tones[i % this.tones.length]}" onclick="Router.go('${s.id}')">
+              <span class="home-action-icon" aria-hidden="true">${UI.escape(s.icon)}</span>
+              <span>${UI.escape(s.label)}</span>
+            </button>`).join('')}
+        </div>
+      </section>`;
+  },
+
+  renderToday(groups, currentLesson, nextLesson, isParent) {
+    const head = `<div class="home-block-head"><h2>Bugünün dersleri</h2>${groups.length && !isParent ? '<button class="section-action" onclick="Router.go(\'schedule\')">Program →</button>' : ''}</div>`;
+    if (!groups.length) {
+      return `
+        <section class="home-block">${head}
+          <div class="home-empty">
+            <span aria-hidden="true">🌙</span>
+            <div><strong>Bugün ders yok</strong><p>${nextLesson ? `Sıradaki ders: <b>${UI.escape(nextLesson.day)}</b> ${nextLesson.startTime} · ${UI.escape(nextLesson.name)}` : 'Programınızı kontrol edin.'}</p></div>
+          </div>
+        </section>`;
+    }
+    const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const todayDate = DataHelpers.formatDateShort(new Date());
+    return `
+      <section class="home-block">${head}
+        <ol class="home-timeline">
+          ${groups.map(group => {
+            const live = currentLesson && currentLesson.id === group.id;
+            const done = !live && DataHelpers.timeToMinutes(group.endTime) < nowMinutes;
+            const plan = AnnualPlans.forDate(group.id)[0];
+            const note = Store.getNote(group.id, todayDate)?.note ?? '';
+            return `
+              <li class="home-lesson ${live ? 'live' : ''} ${done ? 'done' : ''}" style="--lesson:${UI.escape(group.color || 'var(--primary)')}">
+                <div class="home-lesson-time"><b>${group.startTime}</b><small>${group.endTime}</small></div>
+                <div class="home-lesson-card">
+                  <div class="home-lesson-head">
+                    <div><strong>${UI.escape(group.name)}</strong><small>${UI.escape(group.subject || '')}</small></div>
+                    ${live ? '<span class="home-badge live">CANLI</span>' : done ? '<span class="home-badge">Bitti</span>' : ''}
+                  </div>
+                  ${plan ? `<div class="home-lesson-plan"><span>🎯 ${plan.week}. hafta${plan.unit ? ` · ${UI.escape(plan.unit)}` : ''}</span><p>${UI.escape(plan.topic)}</p></div>` : ''}
+                  <div class="home-lesson-foot">
+                    <div class="student-avatars">
+                      ${group.students.slice(0, 4).map((s, i) => `<div class="student-avatar tone-${this.tones[i % this.tones.length]}">${UI.escape(s.name.charAt(0))}</div>`).join('')}
+                      ${group.students.length > 4 ? `<div class="student-avatar more">+${group.students.length - 4}</div>` : ''}
+                    </div>
+                    <span class="home-lesson-count">${group.students.length} öğrenci</span>
+                  </div>
+                  ${!isParent ? `
+                  <label class="home-note"><span>Ders notu</span>
+                    <input class="form-input" value="${UI.escape(note)}" placeholder="Bugün işlenen konu, not…" onchange="Store.saveNote('${group.id}', '${todayDate}', this.value)">
+                  </label>
+                  <div class="home-lesson-actions">
+                    <button class="btn btn-sm tone-green" onclick="Router.go('attendance', '${group.id}')">✅ Yoklama</button>
+                    <button class="btn btn-sm tone-blue" onclick="Router.go('homework', '${group.id}')">📝 Ödev ver</button>
+                  </div>` : ''}
+                </div>
+              </li>`;
+          }).join('')}
+        </ol>
+      </section>`;
+  },
+
+  renderWeekPlans() {
+    const rows = BILSEM_DATA.groups.map(group => ({ group, status: AnnualPlans.status(group.id) })).filter(r => r.status);
+    if (!rows.length) {
+      if (!BILSEM_DATA.groups.length) return '';
+      return `
+        <section class="home-block">
+          <div class="home-block-head"><h2>Bu haftanın planı</h2></div>
+          <button class="home-empty action" onclick="Router.go('annual_plan')">
+            <span aria-hidden="true">🗂️</span><div><strong>Yıllık planlarınızı yükleyin</strong><p>Her sınıfın haftalık konusu ve kazanımı burada görünsün.</p></div>
+          </button>
+        </section>`;
+    }
+    return `
+      <section class="home-block">
+        <div class="home-block-head"><h2>Bu haftanın planı</h2><button class="section-action" onclick="Router.go('annual_plan')">Tümü →</button></div>
+        <div class="home-plans">
+          ${rows.map(({ group, status }) => {
+            const focus = status.current || status.next;
+            return `
+              <button class="home-plan" style="--lesson:${UI.escape(group.color || 'var(--primary)')}" onclick="Router.go('annual_plan')">
+                <span class="home-plan-head"><strong>${UI.escape(group.name)}</strong><small>${status.done}/${status.total}</small></span>
+                <span class="plan-progress"><span style="width:${status.percent}%"></span></span>
+                ${status.holiday && !status.current ? `<span class="home-plan-unit">🏖️ ${UI.escape(status.holiday.label)}</span>` : ''}
+                ${focus ? `<span class="home-plan-unit">${status.current ? '' : 'Sıradaki · '}${UI.escape(focus.unit || focus.topic)}</span>${focus.unit ? `<span class="home-plan-topic">${UI.escape(focus.topic)}</span>` : ''}` : '<span class="home-plan-unit">Plan tamamlandı 🎉</span>'}
+              </button>`;
+          }).join('')}
+        </div>
+      </section>`;
   },
 
   renderUpcomingHomework(isParent = false) {
     let activeHw = Store.getActiveHomework();
     const user = Auth.getCurrentUser();
-    
     if (isParent) {
       activeHw = activeHw.filter(hw => {
         const group = DataHelpers.getGroupById(hw.groupId);
         return group && group.students.some(s => s.id === user.studentId);
       });
     }
-
     if (activeHw.length === 0) return '';
 
     return `
-      <div class="section">
-        <div class="section-header">
-          <h2 class="section-title">📝 Aktif Ödevler</h2>
-          <button class="section-action" onclick="Router.go('homework')">Tümü →</button>
-        </div>
-        <div class="stagger-children">
+      <section class="home-block">
+        <div class="home-block-head"><h2>Aktif ödevler</h2><button class="section-action" onclick="Router.go('homework')">Tümü →</button></div>
+        <div class="home-list">
           ${activeHw.slice(0, 3).map(hw => {
             const group = DataHelpers.getGroupById(hw.groupId);
-            const dueDate = hw.dueDate ? new Date(hw.dueDate) : null;
-            const today = new Date();
-            const diffDays = dueDate ? Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24)) : null;
-            let urgency = 'relaxed';
-            if (diffDays !== null && diffDays <= 1) urgency = 'urgent';
-            else if (diffDays !== null && diffDays <= 3) urgency = 'normal';
-
-            // Teslim oranı hesapla
-            const totalStudents = group ? group.students.length : 0;
+            const diffDays = hw.dueDate ? Math.ceil((new Date(hw.dueDate) - new Date()) / 86400000) : null;
+            const urgency = diffDays === null ? 'relaxed' : diffDays <= 1 ? 'urgent' : diffDays <= 3 ? 'normal' : 'relaxed';
+            const total = group ? group.students.length : 0;
             const submitted = hw.studentStatuses ? Object.values(hw.studentStatuses).filter(s => s.status !== 'assigned').length : 0;
-            const progress = totalStudents > 0 ? Math.round((submitted / totalStudents) * 100) : 0;
-
+            const progress = total > 0 ? Math.round(submitted / total * 100) : 0;
             return `
-              <div class="homework-card" onclick="Router.go('homework', '${hw.id}')">
-                <div class="homework-card-header">
-                  <div class="homework-title">${hw.title}</div>
-                  ${dueDate ? `<span class="homework-due ${urgency}">${diffDays <= 0 ? 'BUGÜN' : diffDays + ' gün'}</span>` : ''}
-                </div>
-                <div class="homework-group">${group ? group.name : ''} • ${group ? group.subject : ''}</div>
-                <div class="homework-progress">
-                  <div class="homework-progress-bar progress-animate" style="width: ${progress}%;"></div>
-                </div>
-              </div>
-            `;
+              <button class="home-hw" onclick="Router.go('homework', '${hw.id}')">
+                <span class="home-hw-head"><strong>${UI.escape(hw.title)}</strong>${diffDays !== null ? `<span class="homework-due ${urgency}">${diffDays <= 0 ? 'BUGÜN' : diffDays + ' gün'}</span>` : ''}</span>
+                <small>${UI.escape(group ? `${group.name} · ${group.subject}` : '')} · ${submitted}/${total} teslim</small>
+                <span class="plan-progress"><span style="width:${progress}%"></span></span>
+              </button>`;
           }).join('')}
         </div>
-      </div>
-    `;
+      </section>`;
+  },
+
+  renderTodoBlock() {
+    return `
+      <section class="home-block">
+        <div class="home-block-head"><h2>Hatırlatmalarım</h2></div>
+        <div class="home-todo">
+          <form class="home-todo-add" onsubmit="event.preventDefault(); HomePage.addTodo()">
+            <input type="text" id="new-todo-input" class="form-input" placeholder="Yeni hatırlatma ekle…" aria-label="Yeni hatırlatma">
+            <button class="btn btn-primary" type="submit">Ekle</button>
+          </form>
+          <div id="todo-list" class="home-todo-list"></div>
+        </div>
+      </section>`;
   },
 
   startCountdown(lesson, isActive) {
     const display = document.getElementById('countdown-display');
     if (!display) return;
-
     const update = () => {
+      if (!isActive && !lesson.isToday) { display.textContent = lesson.startTime; return; }
       const now = new Date();
-      let targetMinutes;
-
-      if (isActive) {
-        // Ders bitimine kalan
-        targetMinutes = DataHelpers.timeToMinutes(lesson.endTime);
-      } else if (lesson.isToday) {
-        // Ders başlangıcına kalan
-        targetMinutes = DataHelpers.timeToMinutes(lesson.startTime);
-      } else {
-        // Farklı gün — sadece saati göster
-        display.textContent = lesson.startTime;
-        return;
-      }
-
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      let diff = targetMinutes - currentMinutes;
-
-      if (diff < 0) {
-        display.textContent = '00:00';
-        return;
-      }
-
-      const hours = Math.floor(diff / 60);
-      const mins = diff % 60;
-
-      if (hours > 0) {
-        display.textContent = `${hours}s ${String(mins).padStart(2, '0')}dk`;
-      } else {
-        display.textContent = `${mins} dk`;
-      }
+      const diff = DataHelpers.timeToMinutes(isActive ? lesson.endTime : lesson.startTime) - (now.getHours() * 60 + now.getMinutes());
+      if (diff < 0) { display.textContent = '0 dk'; return; }
+      const hours = Math.floor(diff / 60), mins = diff % 60;
+      display.textContent = hours > 0 ? `${hours}s ${String(mins).padStart(2, '0')}dk` : `${mins} dk`;
     };
-
     update();
     this.countdownInterval = setInterval(update, 30000);
   },
@@ -289,18 +269,15 @@ const HomePage = {
   renderTodos() {
     const list = document.getElementById('todo-list');
     if (!list) return;
-    const todos = Store.getTodos().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const todos = Store.getTodos().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     if (todos.length === 0) {
-      list.innerHTML = '<div style="text-align: center; color: var(--text-tertiary); font-size: 0.9rem; padding: 16px;">Henüz hatırlatma eklenmemiş.</div>';
+      list.innerHTML = '<p class="home-todo-empty">Henüz hatırlatma yok. Yukarıdan ekleyin ✍️</p>';
       return;
     }
     list.innerHTML = todos.map(t => `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border-left: 3px solid ${t.completed ? 'var(--success)' : 'var(--primary)'}; opacity: ${t.completed ? '0.6' : '1'};">
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer;" onclick="HomePage.toggleTodo('${t.id}')">
-          <input type="checkbox" ${t.completed ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
-          <span style="font-size: 0.95rem; text-decoration: ${t.completed ? 'line-through' : 'none'};">${t.text}</span>
-        </div>
-        <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 0.7rem; min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px;" onclick="HomePage.deleteTodo('${t.id}')">✕</button>
+      <div class="home-todo-item ${t.completed ? 'done' : ''}">
+        <label><input type="checkbox" ${t.completed ? 'checked' : ''} onchange="HomePage.toggleTodo('${t.id}')"><span>${UI.escape(t.text)}</span></label>
+        <button class="home-todo-del" onclick="HomePage.deleteTodo('${t.id}')" aria-label="Hatırlatmayı sil">✕</button>
       </div>
     `).join('');
   },

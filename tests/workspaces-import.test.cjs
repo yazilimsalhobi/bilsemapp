@@ -348,3 +348,40 @@ test('attendance page only displays groups belonging to the teacher’s selected
 });
 
 
+
+test('annual plan reads abbreviated months, cross-month weeks and skips holiday rows', () => {
+  const h = env();
+  const rows = [
+    ['Hafta / Tarih', 'Konu / Etkinlik Adı', 'Kazanımlar (TYMM)', 'Öğrenme Ortamı / Yöntem'],
+    ['1. Hafta\n14-18 Eyl 2026', 'Doğal Ortam', 'Doğa-insan etkileşimini tanımlar.', 'Soru-cevap'],
+    ['3. Hafta (28 Eyl-2 Eki 2026)', 'Harita', 'Konum ve hafta kavramlarıyla bu konuyu ilişkilendirir.', 'Oyun'],
+    ['7. Hafta\n26-30 Eki 2026\n(28-29 Ekim Cumhuriyet Bayramı)', 'Taşlar', 'Kayaçları sınıflandırır.', 'Deney'],
+    ['16-20 Kasım 2026 - I. DÖNEM ARA TATİLİ'],
+    ['15. Hafta 28 Ara - 1 Oca 2027 (1 Ocak Yılbaşı Tatili)', 'İklim', 'İklim tiplerini yorumlar.', 'Grafik']
+  ];
+  const { weeks, holidays } = h.ImportParsers.annualPlan(rows, { year: 2026 });
+  assert.deepEqual(JSON.parse(JSON.stringify(weeks.map(w => [w.week, w.start, w.end]))), [[1, '2026-09-14', '2026-09-18'], [3, '2026-09-28', '2026-10-02'], [7, '2026-10-26', '2026-10-30'], [15, '2026-12-28', '2027-01-01']]);
+  assert.equal(weeks[0].unit, 'Doğal Ortam'); assert.equal(weeks[0].topic, 'Doğa-insan etkileşimini tanımlar.'); assert.equal(weeks[0].activity, 'Soru-cevap');
+  assert.equal(holidays.length, 1); assert.equal(holidays[0].start, '2026-11-16'); assert.equal(holidays[0].label, 'I. DÖNEM ARA TATİLİ');
+});
+
+test('annual plan without week column uses full month names and prefers the etkinlik column', () => {
+  const h = env();
+  const rows = [['TARİH', 'ÜNİTE / ÖĞRENME ALANI', 'KAZANIM', 'ÖĞRENME ORTAMI', 'ETKİNLİK VE PROJELER'], ['30 Kasım-4 Aralık 2026', 'Doğal Sistemler', 'Akarsuları açıklar.', 'Laboratuvar', 'Akarsu modeli'], ['8-12 Mart 2027', 'II. DÖNEM ARA TATİLİ', '', '', '']];
+  const { weeks, holidays } = h.ImportParsers.annualPlan(rows, { year: 2026 });
+  assert.equal(weeks.length, 1); assert.equal(weeks[0].start, '2026-11-30'); assert.equal(weeks[0].end, '2026-12-04'); assert.equal(weeks[0].activity, 'Akarsu modeli');
+  assert.equal(holidays[0].end, '2027-03-12');
+});
+
+test('plan files are matched to classes by program, level and subject', () => {
+  const h = env();
+  const targets = [
+    h.ImportParsers.planTarget('2026-2027_Okul_BYF1_Sosyal_Bilgiler_Plan.docx', ['SOSYAL BİLGİLER BYF-1 YILLIK ÇALIŞMA PLANI']),
+    h.ImportParsers.planTarget('2026-2027_Okul_Cografya_BYF1_Yillik_Plan.docx', ['COĞRAFYA BYF-1 (5. SINIF) YILLIK ÇALIŞMA PLANI']),
+    h.ImportParsers.planTarget('2026-2027_Okul_Cografya_OYG-1-2_YILLIK_PLAN.docx', []),
+    h.ImportParsers.planTarget('2026-2027_Okul_Cografya_PROJE1_Yillik_Plan.docx', [])
+  ];
+  assert.equal(targets[2].label, 'ÖYG-1/2 · Coğrafya'); assert.deepEqual(Array.from(targets[3].levels), [1]);
+  const groups = [{ id: 'a', name: 'BYF 1-A', subject: 'Coğrafya' }, { id: 'b', name: 'BYF 1-B', subject: 'Sosyal Bilgiler' }, { id: 'c', name: 'ÖYG 2', subject: 'Coğrafya' }, { id: 'd', name: 'PROJE 1', subject: '' }, { id: 'e', name: 'BYF 2', subject: 'Coğrafya' }];
+  assert.deepEqual(JSON.parse(JSON.stringify(h.ImportParsers.matchPlans(targets, groups))), [['b'], ['a'], ['c'], ['d']]);
+});

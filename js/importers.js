@@ -80,9 +80,13 @@ const FileReaders = {
       const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
       // Untrusted document HTML is parsed inertly, never inserted into the page.
       const doc = new DOMParser().parseFromString(result.value, 'text/html');
-      const rows = Array.from(doc.querySelectorAll('tr')).map(row => Array.from(row.cells).map(cell => cell.textContent.trim()));
-      if (!rows.length) rows.push(...Array.from(doc.querySelectorAll('p')).map(p => [p.textContent.trim()]));
-      return { rows, text: rows.map(row => row.join('\t')).join('\n') };
+      // Hücre içindeki paragraf ve satır sonları korunur ("1. Hafta" ile tarih birbirine yapışmasın).
+      doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+      const cellText = cell => { const paragraphs = cell.querySelectorAll('p'); return (paragraphs.length ? Array.from(paragraphs, p => p.textContent.trim()).join('\n') : cell.textContent).trim(); };
+      const rows = Array.from(doc.querySelectorAll('tr')).map(row => Array.from(row.cells).map(cellText));
+      const headings = Array.from(doc.querySelectorAll('p')).filter(p => !p.closest('table')).map(p => p.textContent.trim()).filter(Boolean);
+      if (!rows.length) rows.push(...headings.map(text => [text]));
+      return { rows, headings, text: rows.map(row => row.join('\t')).join('\n') };
     }
     throw new Error(ext === 'doc' ? 'Eski .doc dosyasını Word ile .docx olarak kaydedip tekrar yükleyin.' : 'Desteklenen dosyalar: PDF, JSON, JPEG, PNG, Excel (.xlsx, .xls), Word (.docx).');
   },
@@ -630,49 +634,73 @@ const ImportParsers = {
     const date = new Date(+y, +month - 1, +day);
     return date.getFullYear() === +y && date.getMonth() === +month - 1 && date.getDate() === +day ? UI.date(date) : '';
   },
+  monthIndex(word) {
+    const i = ['oca', 'sub', 'mar', 'nis', 'may', 'haz', 'tem', 'agu', 'eyl', 'eki', 'kas', 'ara'].indexOf(String(word).slice(0, 3));
+    return i < 0 ? -1 : i + 1;
+  },
+  // Eğitim yılı Eylül'de başlar: Ocak–Ağustos ayları bir sonraki takvim yılına düşer.
+  schoolYearOf(month, year) { return +year + (month < 9 ? 1 : 0); },
   dateRange(text, year) {
-    const shortRange = String(text).match(/\b(\d{1,2})\s*[-–—]\s*(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?\b/);
+    // "3. Hafta" gibi önekler tarih sanılmasın.
+    const source = String(text).replace(/\b\d{1,2}\s*\.\s*hafta\b/gi, ' ');
+    const shortRange = source.match(/\b(\d{1,2})\s*[-–—]\s*(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?\b/);
     if (shortRange) {
       const [, first, last, month, explicitYear] = shortRange;
-      const y = explicitYear || (+year + (+month < 9 ? 1 : 0));
+      const y = explicitYear || this.schoolYearOf(+month, year);
       return { start: this.isoDate(`${first}.${month}.${y}`, year), end: this.isoDate(`${last}.${month}.${y}`, year) };
     }
-    const full = [...String(text).matchAll(/\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?)\b/g)].map(m => {
+    const full = [...source.matchAll(/\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?)\b/g)].map(m => {
       const short = m[0].match(/^\d{1,2}[./](\d{1,2})$/);
-      return this.isoDate(m[0], short && +short[1] < 9 ? +year + 1 : year);
+      return this.isoDate(m[0], short ? this.schoolYearOf(+short[1], year) : year);
     }).filter(Boolean);
     if (full.length) return { start: full[0], end: full[1] || full[0] };
-    const months = ['ocak', 'subat', 'mart', 'nisan', 'mayis', 'haziran', 'temmuz', 'agustos', 'eylul', 'ekim', 'kasim', 'aralik'];
-    const normalized = UI.normalize(text);
-    const namedDates = [...normalized.matchAll(/(\d{1,2})\s+(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)(?:\s+(20\d{2}))?/g)];
-    if (namedDates.length >= 2) {
-      const dates = namedDates.map(m => { const month = months.indexOf(m[2]) + 1; return this.isoDate(`${m[1]}.${month}.${m[3] || (+year + (month < 9 ? 1 : 0))}`, year); });
-      return { start: dates[0], end: dates[1] };
-    }
-    const month = months.findIndex(m => normalized.includes(m));
-    if (month >= 0) {
-      const m = normalized.match(/(\d{1,2})(?:\s*[-–—]\s*(\d{1,2}))?\s*[a-z]+(?:\s+(20\d{2}))?/);
-      const inferredYear = +year + (month < 8 ? 1 : 0);
-      if (m) return { start: this.isoDate(`${m[1]}.${month + 1}.${m[3] || inferredYear}`, year), end: this.isoDate(`${m[2] || m[1]}.${month + 1}.${m[3] || inferredYear}`, year) };
-    }
-    return { start: '', end: '' };
+    // "14-18 Eyl 2026", "28 Eylül - 2 Ekim", "28 Ara-1 Oca 2027": ilk aralık esas alınır, parantez içi notlar değil.
+    const month = '(oca|sub|mar|nis|may|haz|tem|agu|eyl|eki|kas|ara)[a-z]*';
+    const named = UI.normalize(source).match(new RegExp(`\\b(\\d{1,2})(?:\\s+${month})?(?:\\s+(20\\d{2}))?(?:\\s*[-–—]\\s*(\\d{1,2}))?\\s+${month}(?:\\s+(20\\d{2}))?`));
+    if (!named) return { start: '', end: '' };
+    const [, firstDay, firstMonthWord, firstYear, lastDay, lastMonthWord, lastYear] = named;
+    const endMonth = this.monthIndex(lastMonthWord);
+    const startMonth = firstMonthWord ? this.monthIndex(firstMonthWord) : endMonth;
+    const endYear = +(lastYear || firstYear) || this.schoolYearOf(endMonth, year);
+    const startYear = +firstYear || (lastYear ? endYear - (startMonth > endMonth ? 1 : 0) : this.schoolYearOf(startMonth, year));
+    const start = this.isoDate(`${firstDay}.${startMonth}.${startYear}`, year);
+    return { start, end: lastDay ? this.isoDate(`${lastDay}.${endMonth}.${endYear}`, year) : start };
   },
-  annual(rows, { year = new Date().getFullYear(), firstWeek = '' } = {}) {
+  annual(rows, options = {}) { return this.annualPlan(rows, options).weeks; },
+  annualPlan(rows, { year = new Date().getFullYear(), firstWeek = '' } = {}) {
     let columns = null;
-    const result = [];
+    const weeks = [], holidays = [];
+    const find = (labels, pattern, taken = []) => labels.findIndex((v, i) => pattern.test(v) && !taken.includes(i));
     for (const raw of rows) {
       const row = raw.map(v => String(v ?? '').trim());
       const normalized = row.map(UI.normalize);
-      if (normalized.some(v => /kazanim|ogrenme cikti|hedef|konu|etkinlik|icerik|aciklama/.test(v)) && normalized.some(v => /tarih|hafta|sure/.test(v))) {
-        columns = { topic: normalized.findIndex(v => /kazanim|ogrenme cikti|hedef/.test(v)), date: normalized.findIndex(v => /tarih/.test(v)), week: normalized.findIndex(v => /hafta/.test(v)) };
-        if (columns.topic < 0) columns.topic = normalized.findIndex(v => /konu|etkinlik|icerik|aciklama/.test(v));
+      // Başlık satırı kısa hücrelerden oluşur ve tarih içermez; uzun kazanım metinleri başlık sanılmaz.
+      const isHeader = normalized.every(v => v.length < 60) && !this.dateRange(row.join(' '), year).start;
+      if (isHeader && normalized.some(v => /kazanim|ogrenme cikti|hedef|konu|etkinlik|icerik|aciklama/.test(v)) && normalized.some(v => /tarih|hafta|sure/.test(v))) {
+        const topic = find(normalized, /kazanim|ogrenme cikti|hedef/);
+        const unit = find(normalized, /konu|tema|unite|ogrenme alani/, [topic]);
+        columns = { topic, unit, date: find(normalized, /tarih/), week: find(normalized, /hafta/) };
+        if (columns.topic < 0) columns.topic = find(normalized, /etkinlik|icerik|aciklama/, [unit]);
+        columns.activity = find(normalized, /etkinlik/, [columns.topic, columns.unit]);
+        if (columns.activity < 0) columns.activity = find(normalized, /yontem|ortam/, [columns.topic, columns.unit]);
         continue;
       }
+      const filled = row.filter(Boolean);
+      if (!filled.length) continue;
       const range = this.dateRange(columns?.date >= 0 ? row[columns.date] : row.join(' '), year);
-      const weekMatch = (columns?.week >= 0 ? row[columns.week] : row.join(' ')).match(/(?:^|\s)(\d{1,2})(?:\.?\s*hafta|$)/i);
-      const week = weekMatch ? +weekMatch[1] : result.length + 1;
-      let topic = columns?.topic >= 0 ? row[columns.topic] : row.filter(cell => cell && !/^\d+\.?\s*(hafta)?$/i.test(cell)).join(' — ')
+      // Tatil satırları kazanım değildir; ayrı listelenir.
+      if (filled.length <= 2 && /tatil/.test(UI.normalize(filled.join(' ')))) {
+        const label = filled.join(' ').split('\n')[0].replace(/^.*?\d{4}\s*(?:\([^)]*\))?\s*[-–—]?\s*/, '').trim();
+        if (range.start) holidays.push({ start: range.start, end: range.end, label: label || 'Tatil' });
+        continue;
+      }
+      const weekMatch = (columns?.week >= 0 ? row[columns.week] : row.join(' ')).match(/(?:^|\s)(\d{1,2})(?:\.?\s*hafta|$)/im);
+      const week = weekMatch ? +weekMatch[1] : weeks.length + 1;
+      const cell = key => (columns?.[key] >= 0 ? row[columns[key]] || '' : '').replace(/\s*\n\s*/g, ' ').trim();
+      let topic = columns?.topic >= 0 ? cell('topic') : row.filter(cell => cell && !/^\d+\.?\s*(hafta)?$/i.test(cell)).join(' — ')
         .replace(/\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?)\b/g, '').replace(/^\s*\d+\.?\s*hafta\s*/i, '').replace(/^[\s—–-]+/, '').trim();
+      const unit = cell('unit');
+      if (!topic && unit) topic = unit;
       if (!topic || (!range.start && !weekMatch && !columns)) continue;
       if (!range.start && firstWeek) {
         const start = new Date(firstWeek + 'T12:00:00'); start.setDate(start.getDate() + (week - 1) * 7);
@@ -680,8 +708,51 @@ const ImportParsers = {
         range.start = UI.date(start); range.end = UI.date(end);
       }
       // Rows without dates remain visibly incomplete for user correction.
-      result.push({ id: UI.id('plan'), week, start: range.start, end: range.end, topic });
+      weeks.push({ id: UI.id('plan'), week, start: range.start, end: range.end, topic, unit: unit !== topic ? unit : '', activity: cell('activity') });
     }
-    return result;
+    return { weeks, holidays };
+  },
+  // Dosya adı ve başlıktan program türünü (BYF, ÖYG…), seviyesini ve dersini çıkarır.
+  planTarget(fileName = '', headings = []) {
+    const clean = value => UI.normalize(value).replace(/_+/g, ' ');
+    const name = clean(fileName.replace(/\.[a-z]+$/i, '')), title = clean(headings.slice(0, 6).join(' \n '));
+    // "PROJE1", "BYF-1", "OYG-1-2" ve "PROJE ÜRETİMİ / YÖNETİMİ-1" biçimleri.
+    const read = text => {
+      const m = text.match(/\b(byf|oyg|uyum|destek|proje)(?![a-z])[^a-z0-9\n]*(\d(?:\s*(?:[-,/]|ve)\s*\d)*)?/);
+      if (!m) return null;
+      const levels = m[2] || (m[1] === 'proje' ? text.match(/\bproje(?![a-z])[^\n\d]{0,40}?(\d)/)?.[1] : '');
+      return { program: m[1], levels: [...new Set(String(levels || '').match(/\d/g) || [])].map(Number) };
+    };
+    let found = read(name) || read(title) || { program: '', levels: [] };
+    const fromTitle = read(title);
+    if (!found.levels.length && fromTitle?.program === found.program) found = fromTitle;
+    const subjectOf = text => /sosyal bilgiler/.test(text) ? 'sosyal bilgiler' : /cografya/.test(text) ? 'cografya' : '';
+    const subject = subjectOf(name) || subjectOf(clean(headings[0] || '')) || subjectOf(title);
+    const labels = { byf: 'BYF', oyg: 'ÖYG', uyum: 'Uyum', destek: 'Destek', proje: 'Proje' };
+    const label = [found.program ? labels[found.program] + (found.levels.length ? '-' + found.levels.join('/') : '') : '', { 'sosyal bilgiler': 'Sosyal Bilgiler', cografya: 'Coğrafya' }[subject] || ''].filter(Boolean).join(' · ');
+    return { ...found, subject, label };
+  },
+  groupKey(group) {
+    const m = UI.normalize(group.name || '').match(/\b(byf|oyg|uyum|destek|proje)(?![a-z])[^a-z0-9]*(\d)?/);
+    return { program: m?.[1] || '', level: m?.[2] ? +m[2] : null, subject: UI.normalize(group.subject || '') };
+  },
+  // Bir planın bir gruba ne kadar uyduğu; 0 = eşleşmez.
+  planScore(target, group) {
+    const key = this.groupKey(group);
+    if (!target.program || key.program !== target.program) return 0;
+    let score = 10;
+    if (target.levels.length && key.level !== null) { if (!target.levels.includes(key.level)) return 0; score += 5; }
+    if (target.subject && ['sosyal bilgiler', 'cografya'].some(s => key.subject.includes(s))) { if (!key.subject.includes(target.subject)) return 0; score += 3; }
+    return score;
+  },
+  // Her grubu en iyi uyan plana atar; sonuç planlarla aynı sırada grup kimlikleri listesidir.
+  matchPlans(targets, groups) {
+    const assigned = targets.map(() => []);
+    for (const group of groups) {
+      let best = -1, bestScore = 0;
+      targets.forEach((target, i) => { const score = this.planScore(target, group); if (score > bestScore) { best = i; bestScore = score; } });
+      if (best >= 0) assigned[best].push(group.id);
+    }
+    return assigned;
   }
 };

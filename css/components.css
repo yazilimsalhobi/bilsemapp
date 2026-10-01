@@ -1155,9 +1155,11 @@ button.quick-action { color: inherit; font: inherit; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(11, 19, 41, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* Alt menü görünür kalır; popup hangi sekmeden açıldığı belli olur */
+  bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+  background: color-mix(in srgb, var(--text-primary) 35%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 950;
   opacity: 0;
   transition: opacity 0.22s ease;
@@ -1171,7 +1173,7 @@ button.quick-action { color: inherit; font: inherit; }
 .nav-popup {
   display: none;
   position: fixed;
-  bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 14px);
+  bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 10px);
   left: 50%;
   transform: translateX(-50%) translateY(16px) scale(0.96);
   width: calc(100% - 32px);
@@ -1179,8 +1181,8 @@ button.quick-action { color: inherit; font: inherit; }
   background: var(--bg-card);
   border: var(--border-width) solid var(--border-medium);
   border-radius: var(--radius-xl);
-  padding: 16px;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  padding: 14px;
+  box-shadow: var(--shadow-raised);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   z-index: 960;
@@ -1251,31 +1253,40 @@ button.quick-action { color: inherit; font: inherit; }
 .nav-popup-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  overflow: hidden;
 }
 
 .nav-popup-card {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 64px;
   padding: 12px 14px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-secondary);
-  border: var(--border-width) solid var(--border-subtle);
+  background: transparent;
   text-decoration: none;
   transition: all var(--transition-base);
   color: var(--text-primary);
   cursor: pointer;
 }
 
-.nav-popup-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-strong);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+.nav-popup-card + .nav-popup-card {
+  border-top: var(--border-width) solid var(--border-color);
+}
+
+.nav-popup-card:hover,
+.nav-popup-card.active {
+  background: var(--surface-muted);
+}
+
+.nav-popup-card.active .nav-popup-card-title {
+  color: var(--accent);
 }
 
 .nav-popup-card:active {
-  transform: scale(0.98);
+  background: var(--primary-subtle);
 }
 
 .nav-popup-card-icon {
@@ -1297,24 +1308,15 @@ button.quick-action { color: inherit; font: inherit; }
   background: rgba(16, 185, 129, 0.15);
   color: #10B981;
 }
-.nav-popup-card.yoklama:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-}
 
 .nav-popup-card.odev .nav-popup-card-icon {
   background: rgba(245, 158, 11, 0.15);
   color: #F59E0B;
 }
-.nav-popup-card.odev:hover {
-  border-color: rgba(245, 158, 11, 0.4);
-}
 
 .nav-popup-card.ogrenci .nav-popup-card-icon {
   background: rgba(37, 99, 235, 0.15);
   color: #2563EB;
-}
-.nav-popup-card.ogrenci:hover {
-  border-color: rgba(37, 99, 235, 0.4);
 }
 
 .nav-popup-card-content {
@@ -1333,9 +1335,6 @@ button.quick-action { color: inherit; font: inherit; }
   font-size: 0.76rem;
   color: var(--text-secondary);
   line-height: 1.35;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .nav-popup-card-arrow {

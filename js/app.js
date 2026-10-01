@@ -152,6 +152,11 @@ const App = {
     if (isOpen) {
       this.closeNavPopup();
     } else {
+      popup.querySelectorAll('.nav-popup-card').forEach(card => {
+        const current = card.dataset.page === Router.currentPage;
+        card.classList.toggle('active', current);
+        if (current) card.setAttribute('aria-current', 'page'); else card.removeAttribute('aria-current');
+      });
       popup.classList.add('open');
       if (backdrop) backdrop.classList.add('open');
       if (trigger) {

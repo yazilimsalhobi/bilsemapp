@@ -65,9 +65,20 @@ body::before { background: none; }
 .btn-primary, .btn-primary:hover { background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-soft); }
 .text-gradient { background: none; color: var(--accent); -webkit-text-fill-color: currentColor; }
 .page-title span, .section-action { color: var(--accent); }
-.app-accordion > summary { border-radius: var(--radius); }
-.app-accordion > summary::after { color: var(--accent); }
+.app-accordion > summary { border-radius: var(--radius); border-color: var(--border-color); background: var(--surface); }
 .import-card > .app-accordion > .accordion-body { border-radius: 0 0 var(--radius) var(--radius); }
+/* Akordeon oku: +/− yerine dönen chevron */
+.app-accordion > summary::after { content: ''; flex: none; width: 8px; height: 8px; margin-right: 4px; border: solid var(--text-secondary); border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform var(--motion-time) var(--motion-ease); }
+.app-accordion[open] > summary::after { content: ''; border-color: var(--accent); transform: translateY(2px) rotate(-135deg); }
+/* Art arda gelen menüler tek bir gruplu liste kartında birleşir */
+.accordion-group { margin: 0 0 var(--space-lg); border: var(--border-width) solid var(--border-color); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-soft); backdrop-filter: blur(var(--glass-blur)); overflow: hidden; }
+.accordion-group > [data-collapsible] { margin: 0 !important; padding: 0 !important; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.accordion-group > [data-collapsible] + [data-collapsible] { border-top: var(--border-width) solid var(--border-color); }
+.accordion-group .app-accordion > summary { min-height: 56px; padding: 14px 16px; font-size: .95rem; text-align: left; border: 0; border-radius: 0; background: transparent; }
+.accordion-group .app-accordion > summary:hover { background: var(--surface-muted); }
+.accordion-group .app-accordion[open] > summary { color: var(--accent); background: var(--primary-subtle); }
+.accordion-group .app-accordion > summary:focus-visible { outline-offset: -3px; }
+.accordion-group .accordion-body, .accordion-group .import-card > .app-accordion > .accordion-body { padding: 16px; border-radius: 0; background: transparent; }
 #splash-screen { background: var(--bg-primary); }
 .splash-title { color: var(--accent); }
 .splash-subtitle { color: var(--text-secondary); }

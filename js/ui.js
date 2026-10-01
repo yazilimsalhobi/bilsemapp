@@ -1,7 +1,8 @@
 const UI = {
   collapseSections(container) {
     for (const section of container.querySelectorAll('.section, .import-card, [data-accordion-title]')) {
-      if (section.dataset.collapsible === 'true' || section.closest('details.app-accordion')) continue;
+      // data-accordion="off": sayfa kendi düzenini kurar (ana sayfa, yıllık plan).
+      if (section.dataset.collapsible === 'true' || section.closest('details.app-accordion, [data-accordion="off"]')) continue;
       const header = section.querySelector(':scope > .section-header');
       const heading = header?.querySelector('h2, h3, strong') || section.querySelector(':scope > h2, :scope > h3');
       const title = section.dataset.accordionTitle || heading?.textContent.trim();
@@ -14,6 +15,23 @@ const UI = {
       if (header && !header.children.length) header.remove();
       while (section.firstChild) body.appendChild(section.firstChild);
       details.append(summary, body); section.appendChild(details);
+      // Açık/kapalı durumu sayfa yeniden çizildiğinde korunur.
+      const key = `accordion:${typeof Router !== 'undefined' ? Router.currentPage : ''}:${title}`;
+      try { details.open = sessionStorage.getItem(key) === '1'; } catch { /* Storage kapalı. */ }
+      details.addEventListener('toggle', () => {
+        try { sessionStorage.setItem(key, details.open ? '1' : '0'); } catch { /* Storage kapalı. */ }
+      });
+    }
+    this.groupAccordions(container);
+  },
+  // Art arda gelen akordeonları tek bir liste kartında birleştirir.
+  groupAccordions(container) {
+    for (const section of container.querySelectorAll('[data-collapsible="true"]')) {
+      if (section.parentElement.classList.contains('accordion-group')) continue;
+      const prev = section.previousElementSibling;
+      if (prev?.classList.contains('accordion-group')) { prev.appendChild(section); continue; }
+      const group = document.createElement('div'); group.className = 'accordion-group';
+      section.before(group); group.appendChild(section);
     }
   },
   escape(value = '') {
