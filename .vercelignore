@@ -1,0 +1,12 @@
+# Yalnızca uygulama dosyaları yayınlanır; testler, örnekler ve veri dosyaları (ör. final_output.json) dışarıda kalır.
+/*
+!vercel.json
+!index.html
+!privacy-policy.html
+!terms-of-service.html
+!manifest.json
+!sw.js
+!favicon.ico
+!css
+!js
+!icons
