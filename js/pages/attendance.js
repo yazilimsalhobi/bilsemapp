@@ -196,9 +196,10 @@ const AttendancePage = {
       <!-- Kaydet Butonu -->
       ${!isParent ? `
       <div style="position: sticky; bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 12px); padding: var(--space-md) 0; z-index: 10;">
-        <button class="btn btn-primary btn-lg btn-block" onclick="AttendancePage.save()" id="save-attendance-btn">
-          💾 Yoklamayı Kaydet
+        <button class="btn btn-primary btn-lg btn-block" onclick="${lessonMode ? 'AttendancePage.sendToMebbis()' : 'AttendancePage.save()'}" id="save-attendance-btn" style="white-space:normal">
+          ${lessonMode ? 'Yoklamayı kaydet ve MEBBİS’e işle' : '💾 Uygulamaya kaydet'}
         </button>
+        ${lessonMode ? '<button class="btn btn-secondary btn-block" id="save-local-attendance-btn" onclick="AttendancePage.save()" style="margin-top:8px">Yalnızca uygulamaya kaydet</button>' : ''}
       </div>
       ` : ''}
     `;
@@ -226,7 +227,12 @@ const AttendancePage = {
         if(!Store.saveLessonAttendance(this.currentGroupId,this.currentDate,this.currentLessonId,records)) throw new Error('Seçimler cihaza kaydedilemedi.');
         this.dirty=false;
       }
-      NativeTransfer.open(this.currentDate);
+      const draft=Store.lessonTransferDraft(this.currentDate);
+      const group=DataHelpers.getGroupById(this.currentGroupId),lesson=group?.lessons.find(l=>l.id===this.currentLessonId);
+      const rows=draft.rows.filter(r=>r.status==='absent' && r.institution===group?.mebbis?.institution && r.branch===group.mebbis.branch && r.subject===group.mebbis.subject && r.period===lesson?.period && r.lessonOrder===lesson.order);
+      if(!rows.length) {Toast.show('Bu derste aktarılabilir Gelmedi kaydı yok. Öğrenci seçimini ve MEBBİS eşleştirmesini kontrol edin.','warning');return;}
+      const selected={...draft,rows,blocked:[]};
+      if(!NativeTransfer.enqueue(selected)) NativeTransfer.open(this.currentDate,selected);
     } catch(error) {Toast.show(error.message,'warning');}
   },
   exportDraft() {

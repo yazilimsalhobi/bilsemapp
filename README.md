@@ -72,3 +72,6 @@ doğrulama beklemektedir; [kullanım ve sınırlar](docs/android-automatic-trans
 
 [Kullanım ve veri modeli](docs/mebbis-import.md) ·
 [Android prototipini derleme](android-companion/README.md)
+
+Android 0.4 ekranları APK içinde paketler ve isteğe bağlı MEBBİS girişini cihazda
+şifreli saklar. [Android kurulum ve kullanım](docs/android-standalone-app.md).

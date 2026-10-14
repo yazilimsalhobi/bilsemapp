@@ -1,4 +1,4 @@
-((request,attendance) => {
+((request,attendance,extract,resolveSelection) => {
   const norm=s=>String(s||'').toLocaleUpperCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/İ/g,'I').replace(/[^A-Z0-9]/g,'');
   const visible=e=>e.getClientRects().length>0&&!e.disabled;
   const label=e=>norm(e.innerText||e.value||e.alt||e.title);
@@ -20,7 +20,7 @@
     }
     if(document.querySelector('input[type=password]')) return reply({ok:true,state:'login'});
     if(window.Sys?.WebForms?.PageRequestManager?.getInstance().get_isInAsyncPostBack()) return reply({ok:true,state:'waiting'});
-    if(request.action==='navigate') {
+    if(request.action==='navigate' || (request.action==='resolve' && location.hostname==='mebbis.meb.gov.tr')) {
       if(document.querySelector('input[type=password]') || location.hostname==='mebbis.meb.gov.tr') {
         const links=Array.from(document.querySelectorAll('a,button,[role=button],[onclick]')).filter(e=>visible(e)&&label(e)==='BILIMVESANATMERKEZIMODULU');
         if(links.length===1&&!document.querySelector('input[type=password]')) {links[0].click();return reply({ok:true,state:'navigating'});}
@@ -28,6 +28,17 @@
       }
       if(/^\/BLS00048\.ASPX$/i.test(location.pathname))return reply({ok:true,state:'ready'});
       return reply({ok:true,state:'navigate',url:'https://bilsem.meb.gov.tr/BLS00048.ASPX'});
+    }
+    if(request.action==='resolve' && location.hostname==='bilsem.meb.gov.tr') {
+      const source=JSON.parse(extract());
+      if(source.schedule?.length && source.students?.length) {
+        const institutions=[...new Set(Array.from(document.body.innerText.matchAll(/\((\d{6,8})\)/g),m=>m[1]))];
+        if(institutions.length!==1)fail('Kurum kodu ekrandan doğrulanamadı.');
+        return reply({ok:true,state:'resolved',resolution:resolveSelection(request.draft,source,institutions[0])});
+      }
+      const links=Array.from(document.querySelectorAll('a,button,[role=button],[onclick]')).filter(e=>visible(e)&&label(e)==='OGRETMENBILGILERI');
+      if(links.length!==1)fail('Otomatik eşleştirme için Öğretmen Bilgileri bağlantısı tanınamadı.');
+      links[0].click();return reply({ok:true,state:'navigating'});
     }
     if(location.hostname!=='bilsem.meb.gov.tr'||!/^\/BLS00048\.ASPX$/i.test(location.pathname))return reply({ok:true,state:'login'});
     const draft=request.draft;

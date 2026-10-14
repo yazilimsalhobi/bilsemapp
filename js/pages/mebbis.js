@@ -1,28 +1,29 @@
 const MebbisPage = {
   render(container) {
-    this.owner=Store.userId; this.parsed=null; this.mappings={}; this.container=container;
+    this.owner=Store.userId; this.parsed=null; this.mappings={}; this.container=container; this.institution=Mebbis.personalInstitution;
     container.innerHTML=`<div class="page-container" data-accordion="off">
-      <h1 class="page-title">BİLSEM <span>veri aktarımı</span></h1>
+      <h1 class="page-title">MEBBİS <span>işlemleri</span></h1>
+      <p>${UI.escape(Mebbis.personalSchool)}</p>
+      <a class="btn btn-primary btn-block" href="#absences">Devamsızlıkları seç ve MEBBİS’e işle</a>
+      <p>Kurumunuz hazır tanımlı. Devamsızlık göndermek için yukarıdaki düğmeyi kullanın.</p>
+      <details id="mebbis-program-tools"><summary>Program ve öğrenci verilerini güncelle</summary>
       <p>Android yardımcı uygulamasından kaydettiğiniz JSON dosyasını seçin. Program ve öğrenciler, kontrolünüzden sonra bu hesaba eklenir.</p>
-      <label class="form-label" for="mebbis-institution">BİLSEM kurum kodu</label>
-      <input class="form-input" id="mebbis-institution" inputmode="numeric" maxlength="8" placeholder="6–8 rakam" value="${UI.escape(Store.getSetting('mebbisInstitution',''))}">
       <label class="form-label" for="mebbis-file">Program ve öğrenci JSON dosyası</label>
       <input class="form-input" type="file" accept=".json,application/json" id="mebbis-file">
       <p id="mebbis-status" role="status" aria-live="polite"></p><div id="mebbis-preview"></div>
       <p>Bu ekran MEBBİS’e giriş yapmaz veya kayıt göndermez. Dosyadaki listelerin BİLSEM’deki programınızın tamamı olduğunu kontrol edin.</p>
-      <button class="btn btn-secondary" onclick="Router.go('attendance')">Ders yoklamasına git</button>
+      </details>
     </div>`;
     document.getElementById('mebbis-file').onchange=e=>this.read(e.target.files[0]);
-    document.getElementById('mebbis-institution').oninput=()=>{this.parsed=null;document.getElementById('mebbis-preview').innerHTML='';document.getElementById('mebbis-status').textContent='Kurum değişti. JSON dosyasını yeniden seçin.';document.getElementById('mebbis-file').value='';};
   },
   async read(file) {
     const owner=this.owner, token=this.readToken=(this.readToken || 0)+1;
-    const institution=document.getElementById('mebbis-institution').value.trim();
+    const institution=this.institution;
     this.parsed=null; document.getElementById('mebbis-preview').innerHTML='';
     try {
       if(!file || file.size>5*1024*1024) throw new Error('En fazla 5 MB JSON dosyası seçin.');
       const data=JSON.parse(await file.text());
-      if(Store.userId!==owner || !this.container.isConnected || this.readToken!==token || document.getElementById('mebbis-institution')?.value.trim()!==institution) return;
+      if(Store.userId!==owner || !this.container.isConnected || this.readToken!==token || this.institution!==institution) return;
       this.parsed=Mebbis.parse(data,institution); this.mappings={};
       this.preview();
     } catch(error) { if(Store.userId===owner && this.readToken===token && document.getElementById('mebbis-status')) document.getElementById('mebbis-status').textContent=error.message; }
@@ -50,7 +51,7 @@ const MebbisPage = {
         <details><summary>Öğrencileri kontrol et (${g.students.length})</summary><ul>${g.students.map(s=>`<li>${UI.escape(s.studentNumber)} · ${UI.escape(s.name)}</li>`).join('')}</ul></details>
       </div>`;
     }).join('')+`<p>Adla eşleştirme yalnızca seçilen gruptaki numarasız, tek eşleşen öğrenciler için kullanılır. Eşleştirmeleri kontrol edin. Eski gruplar, öğrenciler ve yoklama kayıtları silinmez.</p>
-      <label><input type="checkbox" id="mebbis-confirm"> Kurumu, grup ve öğrenci eşleştirmelerini kontrol ettim.</label>
+      <label><input type="checkbox" id="mebbis-confirm"> Grup ve öğrenci eşleştirmelerini kontrol ettim.</label>
       <button class="btn btn-primary btn-block" id="mebbis-save">Programı ve öğrencileri kaydet</button>`;
     document.querySelectorAll('[data-map]').forEach(select=>select.onchange=()=>{
       this.mappings[select.dataset.map]=select.value;
