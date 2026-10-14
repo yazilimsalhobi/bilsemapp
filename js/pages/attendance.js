@@ -144,6 +144,7 @@ const AttendancePage = {
         <select class="form-select" id="attendance-lesson" onchange="AttendancePage.changeContext(null,this.value)">${group.lessons.map(l=>`<option value="${UI.escape(l.id)}" ${l.id===this.currentLessonId?'selected':''}>${UI.escape(l.period)} · ${l.order}. ders · ${l.start}–${l.end}</option>`).join('')}</select>
         <p>Her dersin yoklaması ayrı kaydedilir. Eski günlük kayıtlar derslere otomatik kopyalanmaz.</p>
         ${BILSEM_DATA.dayIndexMap[new Date(`${Store.attendanceDate(this.currentDate)}T12:00:00`).getDay()]!==group.day?`<p role="alert">Bu grubun ders günü ${UI.escape(group.day)}. Kaydetmek için uygun tarihi seçin.</p>`:''}
+        <button class="btn btn-primary btn-block" onclick="AttendancePage.sendToMebbis()">MEBBİS’e işle</button>
         <button class="btn btn-secondary" onclick="AttendancePage.exportDraft()">Bu tarihin aktarım taslağını indir</button>`:''}
       </div>
       <!-- Toplu İşlemler -->
@@ -215,6 +216,18 @@ const AttendancePage = {
     }
     if(lessonId) this.currentLessonId=lessonId;
     Router.pageContainer.innerHTML=`<div class="page-container"><h1 class="page-title">✅ Yoklama</h1>${this.renderGroupAttendance(this.currentGroupId)}</div>`;
+  },
+  sendToMebbis() {
+    if(Store.userId!==this.owner || Auth.getCurrentUser()?.role==='parent') return;
+    try {
+      if(this.dirty && this.currentLessonId) {
+        const records=Object.entries(this.records).map(([studentId,status])=>({studentId,status}));
+        if(!records.length) {Toast.show('Önce işlenecek öğrencileri işaretleyin.','warning');return;}
+        if(!Store.saveLessonAttendance(this.currentGroupId,this.currentDate,this.currentLessonId,records)) throw new Error('Seçimler cihaza kaydedilemedi.');
+        this.dirty=false;
+      }
+      NativeTransfer.open(this.currentDate);
+    } catch(error) {Toast.show(error.message,'warning');}
   },
   exportDraft() {
     if(Store.userId!==this.owner || Auth.getCurrentUser()?.role==='parent') return;
