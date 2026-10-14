@@ -67,6 +67,7 @@ const App = {
     Router.register('login', (container) => LoginPage.render(container));
     Router.register('home', (container) => HomePage.render(container));
     Router.register('schedule', (container) => SchedulePage.render(container));
+    Router.register('absences', container => AbsencesPage.render(container));
     Router.register('attendance', (container, params) => AttendancePage.render(container, params));
     Router.register('homework', (container, params) => HomeworkPage.render(container, params));
     Router.register('students', (container, params) => StudentsPage.render(container, params));
@@ -175,7 +176,7 @@ const App = {
     if (backdrop) backdrop.classList.remove('open');
     if (trigger) {
       trigger.setAttribute('aria-expanded', 'false');
-      const groupedPages = ['attendance', 'homework', 'students'];
+      const groupedPages = ['attendance', 'absences', 'homework', 'students'];
       trigger.classList.toggle('active', groupedPages.includes(Router.currentPage));
     }
   },
