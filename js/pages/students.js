@@ -205,7 +205,7 @@ const StudentsPage = {
                 const statusObj = BILSEM_DATA.attendanceStatuses.find(s => s.id === record.status);
                 return `
                   <div class="card" style="padding: 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: var(--font-sm); font-weight: 600;">${record.date}</span>
+                    <span style="font-size: var(--font-sm); font-weight: 600;">${UI.escape(record.date)}${record.lesson ? ` · ${UI.escape(record.lesson.period)} ${record.lesson.order}. ders` : ' · Günlük'}</span>
                     <span class="chip chip-sm" style="background: ${statusObj?.color}20; color: ${statusObj?.color}; border-color: ${statusObj?.color}40;">
                       ${statusObj?.icon} ${statusObj?.label}
                     </span>

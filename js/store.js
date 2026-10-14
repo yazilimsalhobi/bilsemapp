@@ -6,6 +6,7 @@
 const Store = {
   KEYS: {
     ATTENDANCE: 'bilsem_attendance',
+    LESSON_ATTENDANCE: 'bilsem_lesson_attendance',
     HOMEWORK: 'bilsem_homework',
     PROJECTS: 'bilsem_projects',
     PARENTS: 'bilsem_parents',
@@ -152,9 +153,7 @@ const Store = {
     };
     
     // UI için hızlıca LocalStorage'a kaydet
-    this._set(this.KEYS.ATTENDANCE, all);
-
-    return true;
+    return this._set(this.KEYS.ATTENDANCE, all);
   },
 
   /**
@@ -165,11 +164,82 @@ const Store = {
     return all[`${groupId}_${date}`] || null;
   },
 
+  attendanceDate(value) {
+    const text=String(value || '');
+    const parts=text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    const iso=parts ? `${parts[3]}-${parts[2]}-${parts[1]}` : text;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+    const date=new Date(`${iso}T12:00:00`);
+    return !Number.isNaN(date.getTime()) && UI.date(date)===iso ? iso : '';
+  },
+  getLessonAttendance(groupId, date, lessonId) {
+    return (this._get(this.KEYS.LESSON_ATTENDANCE) || {})[JSON.stringify([groupId,this.attendanceDate(date),lessonId])] || null;
+  },
+  saveLessonAttendance(groupId, date, lessonId, records) {
+    const group=DataHelpers.getGroupById(groupId), iso=this.attendanceDate(date);
+    const lesson=group?.lessons?.find(l=>l.id===lessonId);
+    if(!iso || !group || !lesson || BILSEM_DATA.dayIndexMap[new Date(`${iso}T12:00:00`).getDay()]!==group.day) throw new Error('Tarih, grup veya ders seçimi geçersiz. Grubun ders gününü seçin.');
+    const students=new Set(group.students.map(s=>s.id));
+    if(!Array.isArray(records) || new Set(records.map(r=>r.studentId)).size!==records.length || records.some(r=>!students.has(r.studentId) || !['present','absent','late','excused'].includes(r.status))) throw new Error('Geçersiz öğrenci veya yoklama durumu.');
+    const all=this._get(this.KEYS.LESSON_ATTENDANCE) || {};
+    all[JSON.stringify([groupId,iso,lessonId])]={groupId,date:iso,lessonId,lesson:{...lesson},mebbis:group.mebbis ? {...group.mebbis} : null,records:structuredClone(records),savedAt:new Date().toISOString()};
+    return this._set(this.KEYS.LESSON_ATTENDANCE,all);
+  },
+  getAttendanceEntries() {
+    const legacy=Object.values(this._get(this.KEYS.ATTENDANCE) || {});
+    const lessons=Object.values(this._get(this.KEYS.LESSON_ATTENDANCE) || {});
+    const covered=new Set(lessons.map(e=>JSON.stringify([e.groupId,this.attendanceDate(e.date)])));
+    // Keep daily records in storage/history, but do not count them again on a day
+    // for which explicit lesson records have been started.
+    return [...legacy.filter(e=>!covered.has(JSON.stringify([e.groupId,this.attendanceDate(e.date)]))), ...lessons];
+  },
+  getLessonAttendanceProgress(groupId,date) {
+    const group=DataHelpers.getGroupById(groupId);
+    const lessons=group?.lessons?.filter(l=>l.id) || [];
+    const completed=lessons.filter(l=>{
+      const entry=this.getLessonAttendance(groupId,date,l.id);
+      return entry && group.students.length>0 && group.students.every(s=>entry.records.some(r=>r.studentId===s.id));
+    }).length;
+    return {completed,total:lessons.length};
+  },
+  lessonTransferDraft(date) {
+    const iso=this.attendanceDate(date);
+    if(!iso) throw new Error('Geçerli bir tarih seçin.');
+    const rows=[], blocked=[];
+    for(const entry of Object.values(this._get(this.KEYS.LESSON_ATTENDANCE) || {}).filter(e=>e.date===iso)) {
+      const group=DataHelpers.getGroupById(entry.groupId);
+      for(const record of entry.records) {
+        const student=group?.students.find(s=>s.id===record.studentId);
+        const source=entry.mebbis;
+        if(!student?.studentNumber || !source || student.mebbisInstitution!==source.institution || !['Sabah','Öğle','Akşam'].includes(entry.lesson.period) || !Number.isInteger(entry.lesson.order)) {
+          blocked.push({groupId:entry.groupId,studentId:record.studentId,reason:'Kurum / öğrenci / ders eşleştirmesi eksik'}); continue;
+        }
+        // No implicit conversion of late arrival or excused absence to official categories.
+        if(['late','excused'].includes(record.status)) {
+          blocked.push({groupId:entry.groupId,studentId:record.studentId,reason:'Geç / izinli durumunun resmî karşılığı ayrıca doğrulanmalı'});continue;
+        }
+        rows.push({institution:source.institution,date:iso,branch:source.branch,subject:source.subject,period:entry.lesson.period,lessonOrder:entry.lesson.order,studentNumber:student.studentNumber,status:record.status});
+      }
+    }
+    const byKey=new Map();
+    for(const row of rows) {
+      const key=JSON.stringify([row.institution,row.date,row.branch,row.subject,row.period,row.lessonOrder,row.studentNumber]);
+      if(!byKey.has(key)) byKey.set(key,[]);
+      byKey.get(key).push(row);
+    }
+    const unique=[];
+    for(const candidates of byKey.values()) {
+      if(candidates.length>1) blocked.push({...candidates[0],reason:'Aynı resmî ders/öğrenci için birden fazla grup kaydı var'});
+      else unique.push(candidates[0]);
+    }
+    return {format:'bilsem-attendance-draft',version:1,date:iso,rows:unique,blocked,submitted:false};
+  },
+
   /**
    * Bir öğrencinin tüm yoklama kayıtlarını getir
    */
   getStudentAttendance(studentId) {
-    const all = this._get(this.KEYS.ATTENDANCE) || {};
+    const all = this.getAttendanceEntries();
     const records = [];
     Object.values(all).forEach(entry => {
       const studentRecord = entry.records.find(r => r.studentId === studentId);
@@ -177,21 +247,22 @@ const Store = {
         records.push({
           date: entry.date,
           groupId: entry.groupId,
+          lesson: entry.lesson || null,
           status: studentRecord.status
         });
       }
     });
-    return records.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return records.sort((a, b) => this.attendanceDate(b.date).localeCompare(this.attendanceDate(a.date)));
   },
 
   /**
    * Bir grubun tüm yoklama kayıtlarını getir
    */
   getGroupAttendanceHistory(groupId) {
-    const all = this._get(this.KEYS.ATTENDANCE) || {};
+    const all = this.getAttendanceEntries();
     return Object.values(all)
       .filter(entry => entry.groupId === groupId)
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+      .sort((a, b) => this.attendanceDate(b.date).localeCompare(this.attendanceDate(a.date)) || (b.lesson?.order || 0)-(a.lesson?.order || 0));
   },
 
   /**
@@ -462,7 +533,7 @@ const Store = {
    * Genel istatistikleri getir
    */
   getOverallStats() {
-    const allAttendance = this._get(this.KEYS.ATTENDANCE) || {};
+    const allAttendance = this.getAttendanceEntries();
     const allHomework = this._get(this.KEYS.HOMEWORK) || [];
 
     let totalSessions = Object.keys(allAttendance).length;
@@ -499,6 +570,7 @@ const Store = {
   exportAll() {
     return {
       attendance: this._get(this.KEYS.ATTENDANCE),
+      lessonAttendance: this._get(this.KEYS.LESSON_ATTENDANCE),
       homework: this._get(this.KEYS.HOMEWORK),
       projects: this._get(this.KEYS.PROJECTS),
       parents: this._get(this.KEYS.PARENTS),
@@ -515,6 +587,7 @@ const Store = {
    * Verileri içe aktar
    */
   importAll(data) {
+    if (data.lessonAttendance) this._set(this.KEYS.LESSON_ATTENDANCE, data.lessonAttendance);
     if (data.attendance) this._set(this.KEYS.ATTENDANCE, data.attendance);
     if (data.homework) this._set(this.KEYS.HOMEWORK, data.homework);
     if (data.projects) this._set(this.KEYS.PROJECTS, data.projects);

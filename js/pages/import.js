@@ -14,6 +14,7 @@ const ImportPage = {
       <div class="setup-steps" id="import-steps">
         <span class="active">1 · Dosya yükle</span><span>2 · Branş seç</span><span>3 · Kontrol et</span>
       </div>
+      <button class="btn btn-secondary" onclick="Router.go('mebbis')">Android BİLSEM JSON dosyasını aktar</button>
       <div id="import-step-content"></div>
       ${onboarding ? '<button class="btn btn-ghost" id="skip-import">Boş programla başla, daha sonra yükle</button>' : ''}
     </div>`;
@@ -76,6 +77,9 @@ const ImportPage = {
   parseAndAdvance() {
     const textEl = document.getElementById('schedule-text');
     if (!textEl) return;
+    if (textEl.value.trim().startsWith('{')) {
+      try { if (JSON.parse(textEl.value).format === 'bilsem-companion') { Toast.show('Bu dosya için BİLSEM JSON aktarımı düğmesini kullanın.', 'warning'); return; } } catch { /* Normal parser will report invalid input. */ }
+    }
     const parsed = ImportParsers.schedule(textEl.value);
     
     // Zaman Çizelgesi PDF'i yüklendiyse

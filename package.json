@@ -4,7 +4,8 @@
     "test": "node --test tests/*.test.cjs",
     "test:browser": "playwright test",
     "dev:theme": "vite --host 127.0.0.1",
-    "build:theme": "vite build"
+    "build:theme": "vite build",
+    "test:mebbis": "playwright test --config=playwright.mebbis.config.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
