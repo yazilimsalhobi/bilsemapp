@@ -131,7 +131,7 @@ const Router = {
    * Bottom nav aktif durumu güncelle
    */
   updateNav(page) {
-    const groupedPages = ['attendance', 'homework', 'students'];
+    const groupedPages = ['attendance', 'absences', 'homework', 'students'];
     document.querySelectorAll('.nav-item').forEach(item => {
       if (item.classList.contains('nav-group-trigger')) {
         item.classList.toggle('active', groupedPages.includes(page));

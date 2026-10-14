@@ -1,9 +1,9 @@
 /** Native Android takes this in-memory queue only from the application's HTTPS origin. */
 const NativeTransfer = {
   pending:null,
-  open(date) {
+  open(date, selectedDraft = null) {
     if(Auth.getCurrentUser()?.role==='parent') return;
-    const draft=Store.lessonTransferDraft(date),owner=Store.userId;
+    const draft=selectedDraft || Store.lessonTransferDraft(date),owner=Store.userId;
     if(this.pending && this.pending.owner!==owner) this.pending=null;
     if(!draft.rows.length) {Toast.show('Önce ders yoklamasını kaydedin. Aktarılabilir kayıt bulunamadı.','warning');return;}
     App.showModal('MEBBİS’e işlenecek kayıtlar',`<p>${UI.escape(draft.date)} · İşlenecek öğrenci ve dersleri seçin. Seçili kayıtlar, girişinizden sonra MEBBİS’te kaydedilip yeniden kontrol edilecek.</p>

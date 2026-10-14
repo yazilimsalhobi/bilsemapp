@@ -64,3 +64,12 @@ tek Kaydet davranışını, reddedilmiş kaydın başarı sayılmamasını, giri
 async postback beklemeyi, tekrar işlemde yazma yapılmamasını ve native bellek
 kuyruğunun yalnızca seçilen kayıtları taşımasını sınar. Android Gradle derlemesi
 ayrıca yapılır; fiziksel cihaz/gerçek hesap testi yerine geçmez.
+
+## Devamsızlık seçme ekranına erişim
+
+Ana sayfadaki **Devamsızlıkları seç → MEBBİS’e işle** düğmesi veya **Dersler →
+Devamsızlıkları seç** menüsü `#absences` ekranını açar. Tarih ve grup seçildikten
+sonra öğrenci başına ders kutuları gösterilir. Bu ekran MEBBİS eşleştirmesi olmayan
+eski gruplarda da görünür; seçimler hesaba özel korunur. Eksik resmî eşleştirmeler
+uyarıyla belirtilir ve tamamlanana kadar gönderim yapılmaz. Sadece o ekranda seçilen
+öğrenci/dersler kuyruğa alınır; aynı tarihteki diğer yoklamalar kendiliğinden seçilmez.

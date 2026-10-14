@@ -32,6 +32,7 @@ const HomePage = {
     container.innerHTML = `
       <div class="page-container home fade-in" data-accordion="off">
         ${this.renderHero({ now, dayName, greeting, todayGroups, currentLesson, nextLesson, isParent })}
+        ${!isParent ? '<a class="btn btn-primary btn-block" href="#absences" style="margin:16px 0">Devamsızlıkları seç → MEBBİS’e işle</a>' : ''}
         ${Store.syncError ? `<div class="sync-notice">${UI.escape(Store.syncError)}</div>` : ''}
         ${!BILSEM_DATA.groups.length ? this.renderOnboarding() : ''}
         ${isParent ? '' : this.renderStats()}
