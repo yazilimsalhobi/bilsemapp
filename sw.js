@@ -3,7 +3,7 @@
  * Offline çalışma, cache yönetimi
  */
 
-const CACHE_NAME = 'bilsem-v14';
+const CACHE_NAME = 'bilsem-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -21,6 +21,7 @@ const ASSETS = [
   './js/importers.js',
   './js/dashboard.js',
   './js/mebbis.js',
+  './js/native-transfer.js',
   './js/pages/mebbis.js',
   './js/pages/setup.js',
   './js/pages/import.js',

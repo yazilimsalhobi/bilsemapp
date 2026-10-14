@@ -65,8 +65,10 @@ Dosya okuyucuları: [PDF.js](https://mozilla.github.io/pdf.js/examples/), [Tesse
 Android yardımcı uygulamasından alınan `bilsem-companion` JSON dosyaları **Ayarlar →
 BİLSEM JSON aktarımı** ekranında önizlenip mevcut gruplarla birleştirilebilir.
 Aktarılan gruplarda yoklama tarih, gün bölümü ve ders sırası bazında ayrı tutulur.
-Eski günlük kayıtlar korunur. Resmî BİLSEM'e gönderim henüz yapılmaz; yalnızca
-kontrol edilebilir bir aktarım taslağı indirilebilir.
+Eski günlük kayıtlar korunur. Web tarayıcısından bir aktarım taslağı indirilebilir. Android 0.3 içinde
+**MEBBİS’e işle** seçilen kayıtları dosyasız alır; kullanıcı girişinden sonra
+tanınan resmî ekranlarda kayıt ve yeniden okuma adımlarını yürütür. Canlı formda
+doğrulama beklemektedir; [kullanım ve sınırlar](docs/android-automatic-transfer.md).
 
 [Kullanım ve veri modeli](docs/mebbis-import.md) ·
 [Android prototipini derleme](android-companion/README.md)

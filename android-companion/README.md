@@ -45,3 +45,21 @@ yöntemi denenmelidir. TLS hataları atlanmaz.
 
 Depo kökünde `node --test tests/mebbis-extractor.test.cjs`: Türkçe başlıklar,
 öğrenci numarası, ders sırası/gün bölümü, gizli tablo ve hassas sütunların dışlanması.
+
+## 0.2 — Devamsızlık dosyasını ekrana doldurma
+
+**Yoklama JSON**, bilsemapp'ten indirilen taslağı BİLSEM devamsızlık listesindeki
+satırlarla eşleştirir ve kontrolünüzden sonra kutuları doldurur. Resmî **Kaydet**
+düğmesine siz basarsınız. **Kayıt Kontrol**, sayfa yeniden yüklendikten sonra listeyi
+tekrar karşılaştırır. Canlı formda henüz sınanmadı; tanınmayan ekranlarda işlem durur.
+[Kullanım ve sınırlamalar](../docs/android-attendance-transfer.md).
+
+## 0.3 — Dosyasız işlem
+
+Uygulama artık BİLSEM Takip ve MEBBİS ekranlarını birlikte açar. BİLSEM Takip'te
+**MEBBİS'e işle** üzerinden seçilen kayıtlar Android'e bellekten geçer; dosya
+indirme/yükleme gerekmez. MEBBİS girişini kullanıcı tamamlar. Tanınan ekranlarda
+filtreleme, Listele, Kaydet ve yeni listeden doğrulama otomatik ilerler. Zaten doğru
+olan kayıtlar yeniden yazılmaz. Gerçek formda henüz doğrulanmamıştır; tanınmayan
+adımda işlem durur. [Kullanım ve sınırlar](../docs/android-automatic-transfer.md).
+Eski dosya araçları **Araçlar** menüsüne taşındı.
