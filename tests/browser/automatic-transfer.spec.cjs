@@ -2,8 +2,10 @@ const {test,expect}=require('@playwright/test');
 const fs=require('node:fs');
 const automation=fs.readFileSync('android-companion/app/src/main/assets/automation.js','utf8');
 const attendance=fs.readFileSync('android-companion/app/src/main/assets/attendance.js','utf8');
+const extract=fs.readFileSync('android-companion/app/src/main/assets/extract.js','utf8');
+const resolver=fs.readFileSync('android-companion/app/src/main/assets/resolve-selection.js','utf8');
 const draft=()=>({format:'bilsem-attendance-draft',version:1,submitted:false,blocked:[],date:'2026-10-17',rows:[{institution:'123456',date:'2026-10-17',period:'Sabah',branch:'A',subject:'COĞRAFYA',studentNumber:'42',lessonOrder:1,status:'absent'}]});
-async function auto(page,action,other={}){return page.evaluate(({automation,attendance,request})=>JSON.parse((0,eval)(`(${automation})`)(request,(0,eval)(`(${attendance})`))),{automation,attendance,request:{action,draft:draft(),period:'Sabah',...other}});}
+async function auto(page,action,other={}){return page.evaluate(({automation,attendance,extract,resolver,request})=>JSON.parse((0,eval)(`(${automation})`)(request,(0,eval)(`(${attendance})`),()=>(0,eval)(extract),(0,eval)(`(${resolver})`))),{automation,attendance,extract,resolver,request:{action,draft:draft(),period:'Sabah',...other}});}
 function form(state,options={}){
  const checked=state.absent?'checked':'';
  return `<html><body><header>Kurum (123456)</header><form method="post"><input name="date" value="${state.date}"><select name="period">${['Sabah','Öğle','Akşam'].map(p=>`<option ${state.period===p?'selected':''}>${p}</option>`).join('')}</select><button name="action" value="list">Listele</button><button name="action" value="save">Kaydet</button>${options.duplicateSave?'<button>Kaydet</button>':''}
@@ -75,6 +77,14 @@ test('native queue requires selected records and native capability; it carries o
   AttendancePage.sendToMebbis();
  });
  expect(await page.evaluate(()=>Store.getLessonAttendance('g','2026-10-17','Sabah:1').records.length)).toBe(1);
- await expect(page.locator('[data-transfer-row]')).toHaveCount(1);
+ const next=await page.evaluate(()=>NativeTransfer.takeRequest());expect(next.draft.rows.length).toBe(1);
 
+});
+test('official teacher tables resolve legacy selections automatically without a file',async({page})=>{
+ const headers=a=>`<tr>${a.map(h=>`<th>${h}</th>`).join('')}</tr>`;
+ const cells=a=>`<tr>${a.map(v=>`<td>${v}</td>`).join('')}</tr>`;
+ const html=`<header>Kurum (765146)</header><table>${headers(['DERS_GÜNÜ','ZAMAN','KAÇINCI_DERS','DERS_SAATLERİ','DERS_ADI','ŞUBE_ADI'])}${cells(['Cumartesi','Sabah','1. Ders','09:00-09:40','COĞRAFYA (2)','Official-A'])}</table><table>${headers(['DERS_ADI','ŞUBE_ADI','ÖĞR_NO','ÖĞR_ADI','ÖĞR_SOYADI'])}${cells(['COĞRAFYA','Official-A','42','Örnek','Öğrenci'])}</table>`;
+ await page.route('https://bilsem.meb.gov.tr/test-teacher',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}));await page.goto('https://bilsem.meb.gov.tr/test-teacher');
+ const selection={format:'bilsem-attendance-selection',version:1,date:'2026-10-17',rows:[{localGroupId:'old',localStudentId:'s',studentName:'Örnek Öğrenci',day:'Cumartesi',subject:'Coğrafya',start:'09:00',end:'09:40',status:'absent'}]};
+ const result=await auto(page,'resolve',{draft:selection});expect(result.ok,JSON.stringify(result)).toBe(true);expect(result.state).toBe('resolved');expect(result.resolution.draft.rows[0].studentNumber).toBe('42');
 });

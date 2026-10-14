@@ -6,7 +6,19 @@ android {
         applicationId 'tr.bilsem.companion'
         minSdk 26
         targetSdk 35
-        versionCode 3
-        versionName '0.3.0'
+        versionCode 4
+        versionName '0.4.0'
     }
 }
+
+// Ship only public application assets; never include source documents, local backups or credentials.
+def packagedTracker = layout.buildDirectory.dir('generated/tracker-assets')
+tasks.register('bundleTracker', Sync) {
+    from('../..') {
+        include 'index.html', 'manifest.json', 'sw.js', 'favicon.ico', 'privacy-policy.html', 'terms-of-service.html'
+        include 'js/**', 'css/**', 'icons/**'
+    }
+    into(packagedTracker.map { it.dir('tracker') })
+}
+android.sourceSets.main.assets.srcDir(packagedTracker)
+tasks.named('preBuild').configure { dependsOn tasks.named('bundleTracker') }

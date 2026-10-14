@@ -63,3 +63,9 @@ filtreleme, Listele, Kaydet ve yeni listeden doğrulama otomatik ilerler. Zaten 
 olan kayıtlar yeniden yazılmaz. Gerçek formda henüz doğrulanmamıştır; tanınmayan
 adımda işlem durur. [Kullanım ve sınırlar](../docs/android-automatic-transfer.md).
 Eski dosya araçları **Araçlar** menüsüne taşındı.
+
+## 0.4 — Paketlenmiş BİLSEM Takip ve güvenli MEBBİS girişi
+
+BİLSEM Takip ekranları APK içinde paketlidir. Native MEBBİS kontrol/gönderim modülü,
+cihazda AndroidKeyStore ile korunan isteğe bağlı giriş kaydı ve tek Kaydet düğmesi
+birleşmiştir. Kurum kodu hazır tanımlıdır. [Kurulum, güvenlik ve doğrulama sınırları](../docs/android-standalone-app.md).

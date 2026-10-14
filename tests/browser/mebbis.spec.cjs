@@ -10,7 +10,7 @@ async function login(page) {
  await page.locator('#form-login').getByRole('button',{name:'Giriş Yap',exact:true}).click();
  await page.waitForFunction(()=>Store.ready && Store.userId);
  await page.evaluate(()=>{Store.setSetting('onboardingComplete',true);Router.go('mebbis');});
- await page.locator('#mebbis-institution').fill('123456');
+ await page.locator('#mebbis-program-tools summary').click();
 }
 async function upload(page) {
  await page.locator('#mebbis-file').setInputFiles({name:'synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(sample))});
@@ -27,9 +27,9 @@ test('Android-sized import preview, repeated import, per-lesson register and rel
  expect(await page.evaluate(()=>BILSEM_DATA.groups.length)).toBe(1);
  await page.evaluate(()=>Router.go('attendance',BILSEM_DATA.groups[0].id));
  await page.locator('#attendance-date').fill('2026-10-17');await page.locator('#attendance-date').dispatchEvent('change');
- await page.getByRole('button',{name:'✅ Hepsi Geldi',exact:true}).click();await page.locator('#save-attendance-btn').click();
+ await page.getByRole('button',{name:'✅ Hepsi Geldi',exact:true}).click();await page.locator('#save-local-attendance-btn').click();
  await page.locator('#attendance-lesson').selectOption('Sabah:2');
- await page.getByRole('button',{name:'❌ Hepsi Gelmedi',exact:true}).click();await page.locator('#save-attendance-btn').click();
+ await page.getByRole('button',{name:'❌ Hepsi Gelmedi',exact:true}).click();await page.locator('#save-local-attendance-btn').click();
  await page.locator('#attendance-lesson').selectOption('Sabah:1');
  await expect(page.locator('.attendance-btn.selected-present')).toHaveCount(1);
  await page.reload();await expect(page.locator('#splash-screen')).toHaveCount(0);await page.locator('#attendance-date').fill('2026-10-17');await page.locator('#attendance-date').dispatchEvent('change');
@@ -57,7 +57,7 @@ test('first-time setup can enter companion import without an existing schedule',
  await page.locator('#setup-dept').fill('Coğrafya');await page.locator('#setup-year').fill('2026-2027');
  await page.locator('#setup-form button[type=submit]').click();
  await page.getByRole('button',{name:'Android BİLSEM JSON dosyasını aktar'}).click();
- await expect(page.locator('#mebbis-institution')).toBeVisible();
- await page.locator('#mebbis-institution').fill('123456');await upload(page);
+ await expect(page.locator('#mebbis-institution')).toHaveCount(0);
+ await page.locator('#mebbis-program-tools summary').click();await upload(page);
  expect(await page.evaluate(()=>Store.getSetting('onboardingComplete',false))).toBe(false);
 });

@@ -1,5 +1,7 @@
 /** Read-only companion import. No requests are made to MEBBİS. */
 const Mebbis = {
+  personalInstitution: '765146',
+  personalSchool: 'Fatsa Bilim ve Sanat Merkezi',
   text(value, label) {
     if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error(`${label} boş veya geçersiz.`);
     return value.trim().replace(/\s+/g, ' ');
