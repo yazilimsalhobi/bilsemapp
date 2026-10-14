@@ -4,6 +4,7 @@ const Dashboard = {
     { id: 'students', label: 'Öğrenciler', icon: '👥' }, { id: 'schedule', label: 'Ders Programı', icon: '🗓️' },
     { id: 'annual_plan', label: 'Yıllık Plan', icon: '📅' }, { id: 'import', label: 'Program Yükle', icon: '📄' },
     { id: 'stats', label: 'İstatistik', icon: '📊' }, { id: 'settings', label: 'Ayarlar', icon: '⚙️' },
+    { id: 'mebbis', label: 'BİLSEM Aktarımı', icon: '🔄' },
     { id: 'competitions', label: 'Yarışmalar', icon: '🏆' }
   ],
   metrics: [

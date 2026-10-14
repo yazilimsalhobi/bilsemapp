@@ -44,7 +44,7 @@ const SettingsPage = {
           </div>
         </div>
 
-        <div class="card import-card"><h2 class="section-title">Dosyadan aktarım</h2><div class="import-toolbar"><button class="btn btn-primary" onclick="Router.go('import')">PDF / fotoğraftan program yükle</button><button class="btn btn-secondary" onclick="Router.go('annual_plan')">Excel / Word yıllık plan yükle</button></div>${Auth.getCurrentUser()?.email?.toLowerCase() === 'admin@fatsabilsem.com' ? '<button class="btn btn-secondary" onclick="SetupPage.restoreLegacy()">Bu cihazdaki eski yönetici kayıtlarını aktar</button>' : ''}<p id="sync-status">${UI.escape(Store.syncError || 'Bu hesabın verileri ayrı tutulur.')}</p><button class="btn btn-secondary" onclick="SettingsPage.syncWorkspace()">Bulut kaydını yeniden dene</button></div>
+        <div class="card import-card"><h2 class="section-title">Dosyadan aktarım</h2><div class="import-toolbar"><button class="btn btn-primary" onclick="Router.go('mebbis')">BİLSEM JSON aktarımı</button><button class="btn btn-primary" onclick="Router.go('import')">PDF / fotoğraftan program yükle</button><button class="btn btn-secondary" onclick="Router.go('annual_plan')">Excel / Word yıllık plan yükle</button></div>${Auth.getCurrentUser()?.email?.toLowerCase() === 'admin@fatsabilsem.com' ? '<button class="btn btn-secondary" onclick="SetupPage.restoreLegacy()">Bu cihazdaki eski yönetici kayıtlarını aktar</button>' : ''}<p id="sync-status">${UI.escape(Store.syncError || 'Bu hesabın verileri ayrı tutulur.')}</p><button class="btn btn-secondary" onclick="SettingsPage.syncWorkspace()">Bulut kaydını yeniden dene</button></div>
         <!-- Program & Öğrenci Yönetimi -->
         <div class="section">
           <div class="section-header">

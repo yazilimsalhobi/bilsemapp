@@ -59,3 +59,14 @@ Uygulama Progressive Web App (PWA) olarak tasarlanmıştır; uygulama mağazası
 `node tests/dev-server.cjs` sadece `127.0.0.1:8765` üzerinde yerel arayüz testi başlatır; Supabase yerine sahte test oturumu kullanır. Bu sunucu gerçek hesap veya bulut verisine bağlanmaz. Sentetik örnek dosyalar `tests/fixtures/` altındadır.
 
 Dosya okuyucuları: [PDF.js](https://mozilla.github.io/pdf.js/examples/), [Tesseract.js](https://github.com/naptha/tesseract.js), [SheetJS](https://docs.sheetjs.com/docs/solutions/input/), [Mammoth](https://github.com/mwilliamson/mammoth.js).
+
+## Android BİLSEM JSON ve ders yoklaması
+
+Android yardımcı uygulamasından alınan `bilsem-companion` JSON dosyaları **Ayarlar →
+BİLSEM JSON aktarımı** ekranında önizlenip mevcut gruplarla birleştirilebilir.
+Aktarılan gruplarda yoklama tarih, gün bölümü ve ders sırası bazında ayrı tutulur.
+Eski günlük kayıtlar korunur. Resmî BİLSEM'e gönderim henüz yapılmaz; yalnızca
+kontrol edilebilir bir aktarım taslağı indirilebilir.
+
+[Kullanım ve veri modeli](docs/mebbis-import.md) ·
+[Android prototipini derleme](android-companion/README.md)

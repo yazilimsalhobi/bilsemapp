@@ -6,8 +6,11 @@ const AttendancePage = {
   currentGroupId: null,
   currentDate: null,
   records: {},
+  currentLessonId: null,
+  dirty: false,
 
   render(container, params = []) {
+    this.owner=Store.userId; this.currentLessonId=null; this.dirty=false;
     const groupId = params[0] || null;
     this.currentDate = DataHelpers.formatDateShort();
 
@@ -74,6 +77,7 @@ const AttendancePage = {
 
   renderGroupCard(group, isToday) {
     const attendance = Store.getAttendance(group.id, this.currentDate);
+    const progress=Store.getLessonAttendanceProgress(group.id,this.currentDate);
     const dayColor = BILSEM_DATA.dayColors[group.day];
 
     return `
@@ -83,7 +87,7 @@ const AttendancePage = {
           <div class="group-card-info">
             <div class="group-card-name" style="display: flex; align-items: center; gap: 8px;">
               ${UI.escape(group.name)}
-              ${attendance ? '<span class="chip chip-sm" style="background: rgba(0,184,148,0.15); color: var(--success); border-color: var(--success);">✅ Alındı</span>' : ''}
+              ${progress.total ? `<span class="chip chip-sm">${progress.completed}/${progress.total} ders</span>` : attendance ? '<span class="chip chip-sm" style="background: rgba(0,184,148,0.15); color: var(--success); border-color: var(--success);">✅ Alındı</span>' : ''}
             </div>
             <div class="group-card-subject">${group.day} • ${UI.escape(group.subject)} • ${group.students.length} öğrenci</div>
           </div>
@@ -99,7 +103,11 @@ const AttendancePage = {
     if (!group) return '<div class="empty-state"><div class="empty-state-title">Grup bulunamadı</div></div>';
 
     // Mevcut yoklama varsa yükle
-    const existing = Store.getAttendance(groupId, this.currentDate);
+    const lessonMode=!!group.mebbis && group.lessons?.length>0 && group.lessons.every(l=>l.id);
+    if(lessonMode && !group.lessons.some(l=>l.id===this.currentLessonId)) this.currentLessonId=group.lessons[0].id;
+    if(!lessonMode) this.currentLessonId=null;
+    const existing = lessonMode ? Store.getLessonAttendance(groupId,this.currentDate,this.currentLessonId) : Store.getAttendance(groupId, this.currentDate);
+    this.dirty=false;
     this.records = {};
     if (existing) {
       existing.records.forEach(r => { this.records[r.studentId] = r.status; });
@@ -129,6 +137,15 @@ const AttendancePage = {
         </div>
       </div>
 
+      <div class="card" style="padding:12px;margin-bottom:16px">
+        <label class="form-label" for="attendance-date">Yoklama tarihi</label>
+        <input class="form-input" type="date" id="attendance-date" value="${Store.attendanceDate(this.currentDate)}" onchange="AttendancePage.changeContext(this.value,null)">
+        ${lessonMode ? `<label class="form-label" for="attendance-lesson">Ders saati</label>
+        <select class="form-select" id="attendance-lesson" onchange="AttendancePage.changeContext(null,this.value)">${group.lessons.map(l=>`<option value="${UI.escape(l.id)}" ${l.id===this.currentLessonId?'selected':''}>${UI.escape(l.period)} · ${l.order}. ders · ${l.start}–${l.end}</option>`).join('')}</select>
+        <p>Her dersin yoklaması ayrı kaydedilir. Eski günlük kayıtlar derslere otomatik kopyalanmaz.</p>
+        ${BILSEM_DATA.dayIndexMap[new Date(`${Store.attendanceDate(this.currentDate)}T12:00:00`).getDay()]!==group.day?`<p role="alert">Bu grubun ders günü ${UI.escape(group.day)}. Kaydetmek için uygun tarihi seçin.</p>`:''}
+        <button class="btn btn-secondary" onclick="AttendancePage.exportDraft()">Bu tarihin aktarım taslağını indir</button>`:''}
+      </div>
       <!-- Toplu İşlemler -->
       ${!isParent ? `
       <div style="display: flex; gap: 6px; margin-bottom: var(--space-lg); flex-wrap: wrap;">
@@ -186,7 +203,31 @@ const AttendancePage = {
     `;
   },
 
+  changeContext(date, lessonId) {
+    if(this.dirty && !window.confirm('Kaydedilmemiş yoklama değişiklikleri silinecek. Devam edilsin mi?')) {
+      document.getElementById('attendance-date').value=Store.attendanceDate(this.currentDate);
+      const select=document.getElementById('attendance-lesson'); if(select) select.value=this.currentLessonId;
+      return;
+    }
+    if(date) {
+      const iso=Store.attendanceDate(date); if(!iso) return;
+      this.currentDate=iso.split('-').reverse().join('.');
+    }
+    if(lessonId) this.currentLessonId=lessonId;
+    Router.pageContainer.innerHTML=`<div class="page-container"><h1 class="page-title">✅ Yoklama</h1>${this.renderGroupAttendance(this.currentGroupId)}</div>`;
+  },
+  exportDraft() {
+    if(Store.userId!==this.owner || Auth.getCurrentUser()?.role==='parent') return;
+    const draft=Store.lessonTransferDraft(this.currentDate);
+    if(!draft.rows.length && !draft.blocked.length) {Toast.show('Bu tarihte kayıtlı ders yoklaması yok.', 'warning');return;}
+    App.showModal('BİLSEM aktarım taslağı', `<p>${draft.date}: ${draft.rows.length} satır hazır, ${draft.blocked.length} satır resmî eşleştirme gerektiriyor.</p><p>Bu dosya BİLSEM’e gönderilmedi. İşaretlenmeyen öğrenciler dahil edilmez; bu dosya günün yoklamasının tamamlandığı anlamına gelmez. Geç ve izinli durumları otomatik çevrilmez.</p><button class="btn btn-primary" id="download-lesson-draft">JSON indir</button>`);
+    document.getElementById('download-lesson-draft').onclick=()=>{
+      const url=URL.createObjectURL(new Blob([JSON.stringify(draft,null,2)],{type:'application/json'}));
+      const a=document.createElement('a');a.href=url;a.download=`bilsem-yoklama-taslak-${draft.date}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    };
+  },
   toggleStatus(studentId, status) {
+    this.dirty=true;
     // Aynı duruma tekrar tıklandıysa kaldır
     if (this.records[studentId] === status) {
       delete this.records[studentId];
@@ -212,6 +253,7 @@ const AttendancePage = {
   },
 
   markAll(status) {
+    this.dirty=true;
     const group = DataHelpers.getGroupById(this.currentGroupId);
     if (!group) return;
 
@@ -238,8 +280,8 @@ const AttendancePage = {
     Toast.show(`Tüm öğrenciler "${BILSEM_DATA.attendanceStatuses.find(s => s.id === status)?.label}" olarak işaretlendi`, 'success');
   },
 
-  save() {
-    if (!this.currentGroupId) return;
+  async save() {
+    if (!this.currentGroupId || Store.userId!==this.owner || Auth.getCurrentUser()?.role==='parent') return;
 
     const group = DataHelpers.getGroupById(this.currentGroupId);
     if (!group) return;
@@ -248,7 +290,7 @@ const AttendancePage = {
     const unmarked = group.students.filter(s => !this.records[s.id]);
     if (unmarked.length > 0) {
       Toast.show(`${unmarked.length} öğrenci işaretlenmedi!`, 'warning');
-      // Yine de kaydet
+      if(this.currentLessonId) return; // Imported lesson registers must be complete.
     }
 
     const records = Object.entries(this.records).map(([studentId, status]) => ({
@@ -256,7 +298,11 @@ const AttendancePage = {
       status
     }));
 
-    Store.saveAttendance(this.currentGroupId, this.currentDate, records);
+    try {
+      const saved=this.currentLessonId ? Store.saveLessonAttendance(this.currentGroupId,this.currentDate,this.currentLessonId,records) : await Store.saveAttendance(this.currentGroupId, this.currentDate, records);
+      if(!saved) throw new Error('Yoklama kaydedilemedi. Cihaz depolamasını kontrol edin.');
+      this.dirty=false;
+    } catch(error) {Toast.show(error.message,'error');return;}
 
     // Kaydet butonunu güncelle
     const btn = document.getElementById('save-attendance-btn');
@@ -314,7 +360,9 @@ const AttendancePage = {
   },
 
   showHistory(groupId) {
-    const history = Store.getGroupAttendanceHistory(groupId);
+    const effective = Store.getGroupAttendanceHistory(groupId);
+    const hiddenLegacy=Object.values(Store._get(Store.KEYS.ATTENDANCE) || {}).filter(e=>e.groupId===groupId && effective.some(r=>r.lesson && Store.attendanceDate(r.date)===Store.attendanceDate(e.date)));
+    const history=[...effective,...hiddenLegacy].sort((a,b)=>Store.attendanceDate(b.date).localeCompare(Store.attendanceDate(a.date)));
     const group = DataHelpers.getGroupById(groupId);
 
     const user = Auth.getCurrentUser();
@@ -347,7 +395,7 @@ const AttendancePage = {
             <div class="card" style="margin-bottom: 8px; padding: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                  <div style="font-weight: 600;">${entry.date}</div>
+                  <div style="font-weight: 600;">${UI.escape(entry.date)} · ${entry.lesson ? `${UI.escape(entry.lesson.period)} ${entry.lesson.order}. ders` : 'Eski günlük kayıt'}</div>
                   <div style="font-size: var(--font-xs); color: var(--text-tertiary);">${total} öğrenci</div>
                 </div>
                 <div style="display: flex; gap: 8px;">

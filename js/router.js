@@ -65,7 +65,9 @@ const Router = {
         Store.loadAllFromSupabase().then(() => this.handleRoute());
         return;
       }
-      if (page !== 'setup' && !Store.getSetting('onboardingComplete', false)) {
+      const setupInfo = Store.getSetting('schoolInfo', {});
+      const importingAfterSetup = page === 'mebbis' && setupInfo.teacher && setupInfo.name && setupInfo.department && setupInfo.year;
+      if (page !== 'setup' && !importingAfterSetup && !Store.getSetting('onboardingComplete', false)) {
         this.go('setup');
         return;
       }

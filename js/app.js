@@ -62,6 +62,7 @@ const App = {
 
   setupRouter() {
     Router.register('setup', (container) => SetupPage.render(container));
+    Router.register('mebbis', (container) => MebbisPage.render(container));
     Router.register('import', (container) => ImportPage.render(container));
     Router.register('login', (container) => LoginPage.render(container));
     Router.register('home', (container) => HomePage.render(container));
