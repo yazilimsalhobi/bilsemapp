@@ -2,6 +2,13 @@ plugins { id 'com.android.application' }
 android {
     namespace 'tr.bilsem.companion'
     compileSdk 35
+    buildTypes {
+        release {
+            debuggable false
+            minifyEnabled false
+            signingConfig signingConfigs.debug // Preserve updates over the APK already installed on this device.
+        }
+    }
     defaultConfig {
         applicationId 'tr.bilsem.companion'
         minSdk 26

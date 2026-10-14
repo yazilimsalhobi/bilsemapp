@@ -91,3 +91,7 @@ Seçili ders yoklaması bu kimliklerle kaydedildikten sonra normal gönderim sü
 Bu işlemde JSON dosyası taşıma veya kurum kodu sorma yoktur. Kaynak tablo
 sayfalanmışsa ve seçilen öğrenci görünür kayıtlarda bulunamazsa işlem durur;
 görülmeyen öğrenci numarası tahmin edilmez.
+
+Dağıtılan yerel APK `assembleRelease` ile üretilir ve `debuggable=false` taşır.
+Önceki APK'nın üzerine güncelleme kurulabilmesi için mevcut yerel imza kimliği
+korunur. Release lint, APK imzası ve paketlenen dosya karşılaştırmaları doğrulanır.
