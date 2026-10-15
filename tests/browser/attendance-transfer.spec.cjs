@@ -63,3 +63,17 @@ test('other day periods remain pending and mismatching readback is reported',asy
  const p=await run(page,{action:'preview',draft:d});expect(p.ok).toBe(true);expect(p.otherPeriods).toBe(1);expect(p.summary.length).toBe(2);
  const v=await run(page,{action:'verify',draft:d});expect(v.readbackMatches).toBe(false);expect(v.differences.length).toBe(1);
 });
+
+for (const header of ['(123456 )', '( 123456\u00a0)', '(\n123456\n)', '(123456 ) (123456)']) {
+ test(`institution whitespace is accepted for attendance: ${JSON.stringify(header)}`,async({page})=>{
+  const bound=await load(page,html().replace('(123456)',header));
+  expect(bound.ok,JSON.stringify(bound)).toBe(true);
+  expect((await run(page,{action:'preview',draft:draft()})).ok).toBe(true);
+ });
+}
+test('different institution codes still block attendance without changing records',async({page})=>{
+ const bound=await load(page,html().replace('(123456)','(123456 ) (654321 )'));
+ expect(bound.ok).toBe(false);
+ expect((await run(page,{action:'preview',draft:draft()})).ok).toBe(false);
+ expect(await page.locator('input[name=s42d2]').first().isChecked()).toBe(false);
+});

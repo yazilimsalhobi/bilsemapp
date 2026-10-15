@@ -26,7 +26,7 @@
     }
     if(request.action==='diagnose') return JSON.stringify({ok:true,format:'bilsem-attendance-diagnostic',version:1,headerLabels,tables:diagnostics,controls:tables.flatMap(t=>t.rows.filter(visible).map(r=>Object.fromEntries(['absent','excused'].map(k=>[k,Array.from(r.cells[t.indexes[k]]?.querySelectorAll('input')||[]).filter(e=>e.type!=='hidden').map(e=>({type:e.type,disabled:e.disabled,visible:visible(e)}))]))))});
     if(tables.length!==1) fail('Tek bir devamsızlık tablosu tanınamadı. Listele yapın; gerekirse Ekranı Tanı ile tanı dosyasını paylaşın.');
-    const institutions=[...new Set(Array.from(document.body.innerText.matchAll(/\((\d{6,8})\)/g),m=>m[1]))];
+    const institutions=[...new Set(Array.from(document.body.innerText.matchAll(/\(\s*(\d{6,8})\s*\)/g),m=>m[1]))];
     const dates=[...new Set(Array.from(document.querySelectorAll('input')).filter(e=>visible(e)&&['text','date'].includes(e.type)).map(e=>date(e.value)).filter(Boolean))];
     const periods=[...new Set(Array.from(document.querySelectorAll('select')).filter(visible).map(e=>e.selectedOptions[0]?.textContent.trim()).filter(s=>['Sabah','Öğle','Akşam'].includes(s)))];
     if(institutions.length!==1 || dates.length!==1 || periods.length!==1) fail('Kurum kodu, tarih ve gün bölümü ekrandan kesin doğrulanamadı. Aktarım durduruldu.');

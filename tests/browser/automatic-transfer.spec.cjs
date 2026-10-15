@@ -80,11 +80,14 @@ test('native queue requires selected records and native capability; it carries o
  const next=await page.evaluate(()=>NativeTransfer.takeRequest());expect(next.draft.rows.length).toBe(1);
 
 });
-test('official teacher tables resolve legacy selections automatically without a file',async({page})=>{
+for (const institutionHeader of ['(765146)', '(765146 )', '( 765146\u00a0)', '(\n765146\n)']) {
+test(`official teacher tables resolve legacy selections with header ${JSON.stringify(institutionHeader)}`,async({page})=>{
  const headers=a=>`<tr>${a.map(h=>`<th>${h}</th>`).join('')}</tr>`;
  const cells=a=>`<tr>${a.map(v=>`<td>${v}</td>`).join('')}</tr>`;
- const html=`<header>Kurum (765146)</header><table>${headers(['DERS_GÜNÜ','ZAMAN','KAÇINCI_DERS','DERS_SAATLERİ','DERS_ADI','ŞUBE_ADI'])}${cells(['Cumartesi','Sabah','1. Ders','09:00-09:40','COĞRAFYA (2)','Official-A'])}</table><table>${headers(['DERS_ADI','ŞUBE_ADI','ÖĞR_NO','ÖĞR_ADI','ÖĞR_SOYADI'])}${cells(['COĞRAFYA','Official-A','42','Örnek','Öğrenci'])}</table>`;
+ const html=`<header>Kurum ${institutionHeader}</header><table>${headers(['DERS_GÜNÜ','ZAMAN','KAÇINCI_DERS','DERS_SAATLERİ','DERS_ADI','ŞUBE_ADI'])}${cells(['Cumartesi','Sabah','1. Ders','09:00-09:40','COĞRAFYA (2)','Official-A'])}</table><table>${headers(['DERS_ADI','ŞUBE_ADI','ÖĞR_NO','ÖĞR_ADI','ÖĞR_SOYADI'])}${cells(['COĞRAFYA','Official-A','42','Örnek','Öğrenci'])}</table>`;
  await page.route('https://bilsem.meb.gov.tr/test-teacher',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}));await page.goto('https://bilsem.meb.gov.tr/test-teacher');
  const selection={format:'bilsem-attendance-selection',version:1,date:'2026-10-17',rows:[{localGroupId:'old',localStudentId:'s',studentName:'Örnek Öğrenci',day:'Cumartesi',subject:'Coğrafya',start:'09:00',end:'09:40',status:'absent'}]};
  const result=await auto(page,'resolve',{draft:selection});expect(result.ok,JSON.stringify(result)).toBe(true);expect(result.state).toBe('resolved');expect(result.resolution.draft.rows[0].studentNumber).toBe('42');
 });
+
+}

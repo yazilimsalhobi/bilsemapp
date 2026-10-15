@@ -32,7 +32,7 @@
     if(request.action==='resolve' && location.hostname==='bilsem.meb.gov.tr') {
       const source=JSON.parse(extract());
       if(source.schedule?.length && source.students?.length) {
-        const institutions=[...new Set(Array.from(document.body.innerText.matchAll(/\((\d{6,8})\)/g),m=>m[1]))];
+        const institutions=[...new Set(Array.from(document.body.innerText.matchAll(/\(\s*(\d{6,8})\s*\)/g),m=>m[1]))];
         if(institutions.length!==1)fail('Kurum kodu ekrandan doğrulanamadı.');
         return reply({ok:true,state:'resolved',resolution:resolveSelection(request.draft,source,institutions[0])});
       }
